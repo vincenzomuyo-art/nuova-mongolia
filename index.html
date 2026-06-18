@@ -1078,6 +1078,7 @@
             <button data-page="presidenti"><span class="icon">👤</span> Biografia Partecipanti della Nuova Mongolia</button>
             <button data-page="progetti"><span class="icon">🚀</span> Progetti dell'anno attuale</button>
             <button data-page="notizie"><span class="icon">📰</span> Notizie</button>
+            <button data-page="conferenze"><span class="icon">🎙️</span> Conferenze Stampa</button>
         </nav>
     </aside>
 
@@ -1158,6 +1159,19 @@
                 <div class="loading"><div class="spinner"></div> Caricamento...</div>
             </div>
         </section>
+
+        <!-- CONFERENZE STAMPA -->
+<section class="page" id="page-conferenze">
+    <div class="flex-between">
+        <div>
+            <div class="page-title">🎙️ Conferenze Stampa</div>
+            <div class="page-sub">I video delle conferenze della Nuova Mongolia</div>
+        </div>
+    </div>
+    <div id="conferenzeContent" class="rte-display" style="background:#fff;border-radius:16px;padding:24px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.06);min-height:120px;line-height:1.7;">
+        <div class="loading"><div class="spinner"></div> Caricamento...</div>
+    </div>
+</section>
 
     </main>
 
@@ -1246,6 +1260,7 @@
                     this.presidents = data.presidents || [];
                     this.projects = data.projects || '';
                     this.news = data.news || '';
+                    this.conferenze = data.conferenze || '';
                     this.flag = data.flag || null;
                     this.nextLawId = data.nextLawId || 0;
                     this.nextPresidentId = data.nextPresidentId || 0;
@@ -1269,6 +1284,7 @@
                     presidents: this.presidents,
                     projects: this.projects,
                     news: this.news,
+                    conferenze: this.conferenze,
                     flag: this.flag,
                     nextLawId: this.nextLawId,
                     nextPresidentId: this.nextPresidentId
@@ -1365,6 +1381,10 @@
             setNews(c) { this.news = c;
                 this.saveToCloud();
                 this._notify('news'); },
+
+            // ===== CONFERENZE STAMPA =====
+            getConferenze() { return this.conferenze || ''; },
+            setConferenze(c) { this.conferenze = c || ''; this.saveToCloud(); this._notify('conferenze'); },    
 
             getFlag() { return this.flag; },
             setFlag(f) { this.flag = f;
@@ -1469,6 +1489,7 @@ const BANDIERE_ANNI = {
             presidenti: { title: 'Biografia Partecipanti', plus: true },
             progetti: { title: 'Progetti dell\'anno attuale', plus: true },
             notizie: { title: 'Notizie', plus: true },
+            conferenze: { title: 'Conferenze Stampa', plus: true },
         };
 
         let currentPage = 'home';
@@ -1657,6 +1678,13 @@ const BANDIERE_ANNI = {
             el.innerHTML = content || '<span class="text-muted">Nessuna notizia. Clicca + per aggiungere.</span>';
         }
 
+        // ===== RENDER CONFERENZE =====
+function renderConferenze() {
+    const el = $('conferenzeContent');
+    const content = DATA.getConferenze();
+    el.innerHTML = content || '<span class="text-muted">Nessuna conferenza pubblicata. Clicca + per aggiungere.</span>';
+}
+
         // ======================================================================
         //  SETUP LISTENERS
         // ======================================================================
@@ -1664,6 +1692,7 @@ const BANDIERE_ANNI = {
         DATA.onChange('presidents', renderPresidents);
         DATA.onChange('projects', renderProjects);
         DATA.onChange('news', renderNotizie);
+        DATA.onChange('conferenze', renderConferenze);
         DATA.onChange('flag', renderHome);
 
         // ======================================================================
@@ -1683,6 +1712,11 @@ const BANDIERE_ANNI = {
                 case 'notizie':
                     askPassword('AREA-RISERVATA-A-MANUEL-BELLO', () => openContentEditor('notizie'));
                     break;
+                case 'conferenze':
+    askPassword('benito;MUSSOliNI-AmOrE,.,.', () => openConferenzeEditor());
+    break;
+                
+                    
             }
         });
 
@@ -2158,6 +2192,42 @@ document.getElementById('settingsBtn').addEventListener('click', function() {
 
             initRte('contentRte');
         }
+
+        // ===== EDITOR CONFERENZE =====
+function openConferenzeEditor() {
+    const current = DATA.getConferenze();
+
+    let html = `
+        <div class="form-group">
+            <label>🎙️ Conferenza Stampa</label>
+            <p style="font-size:0.85rem;color:#6a7a8a;margin-bottom:8px;">Inserisci il contenuto della conferenza (testo, link video, ecc.)</p>
+            <div class="rte-wrapper" id="conferenzeRteWrapper">
+                ${buildRteToolbar('conferenzeRte')}
+                <div class="rte-editor" id="conferenzeRte" contenteditable="true">${current}</div>
+            </div>
+        </div>
+    `;
+
+    openModal(
+        '🎙️ Modifica Conferenza Stampa',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-primary" id="modalConfirmInner">💾 Salva</button>`,
+        () => {
+            const content = document.getElementById('conferenzeRte').innerHTML;
+            if (!content || content.trim() === '') {
+                alert('Inserisci il contenuto della conferenza.');
+                return;
+            }
+            DATA.setConferenze(content);
+            closeModal();
+            renderConferenze();
+        },
+        () => { closeModal(); }
+    );
+
+    initRte('conferenzeRte');
+}
 
         // ======================================================================
         //  RICH TEXT EDITOR – TOOLBAR
