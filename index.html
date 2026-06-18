@@ -1100,6 +1100,9 @@
                 <div class="year-badge">🏛️ Anno 2026 · Presidente in carica · Mattia Ferrazzano</div>
                 <div class="visite-counter" style="margin-top:12px;font-size:0.9rem;color:#aab;">
     👀 Questa pagina è stata visitata <span id="visiteCount">0</span> volte
+</div>          
+                <div class="online-counter" style="margin-top:8px;font-size:0.9rem;color:#aab;">
+    🟢 Utenti online: <span id="onlineCount">0</span>
 </div>
             </div>
         </section>
@@ -2990,6 +2993,100 @@ function aggiornaVisite() {
 // Esegui quando la pagina è caricata
 document.addEventListener('DOMContentLoaded', function() {
     aggiornaVisite();
+});
+
+// ======================================================================
+//  UTENTI ONLINE IN TEMPO REALE (FIREBASE)
+// ======================================================================
+const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+const userRef = db.ref('nuovaMongolia/online/' + userId);
+const onlineCounterRef = db.ref('nuovaMongolia/onlineCount');
+
+// ===== AGGIORNA PRESENZA =====
+function updatePresence() {
+    userRef.set({
+        lastSeen: firebase.database.ServerValue.TIMESTAMP
+    });
+}
+
+// ===== PULISCI UTENTI OFFLINE =====
+function cleanupOfflineUsers() {
+    const now = Date.now();
+    const timeout = 15000; // 15 secondi di timeout
+    
+    db.ref('nuovaMongolia/online').once('value')
+        .then(snapshot => {
+            const updates = {};
+            let count = 0;
+            
+            snapshot.forEach(child => {
+                const data = child.val();
+                if (data && data.lastSeen) {
+                    const diff = now - data.lastSeen;
+                    if (diff > timeout) {
+                        updates[child.key] = null; // Rimuovi utente offline
+                    } else {
+                        count++;
+                    }
+                }
+            });
+            
+            // Aggiorna il contatore
+            if (Object.keys(updates).length > 0) {
+                db.ref('nuovaMongolia/online').update(updates);
+            }
+            
+            // Salva il conteggio
+            onlineCounterRef.set(count);
+            document.getElementById('onlineCount').textContent = count;
+        })
+        .catch(err => console.warn('Errore cleanup:', err));
+}
+
+// ===== ASCOLTA CAMBIAMENTI ONLINE =====
+db.ref('nuovaMongolia/online').on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) {
+        document.getElementById('onlineCount').textContent = '0';
+        return;
+    }
+    
+    let count = 0;
+    const now = Date.now();
+    const timeout = 15000;
+    
+    Object.keys(data).forEach(key => {
+        const user = data[key];
+        if (user && user.lastSeen) {
+            const diff = now - user.lastSeen;
+            if (diff <= timeout) {
+                count++;
+            }
+        }
+    });
+    
+    document.getElementById('onlineCount').textContent = count;
+});
+
+// ===== AVVIA =====
+function startPresence() {
+    // Aggiorna presenza ogni 10 secondi
+    updatePresence();
+    setInterval(updatePresence, 10000);
+    
+    // Pulisci offline ogni 15 secondi
+    cleanupOfflineUsers();
+    setInterval(cleanupOfflineUsers, 15000);
+}
+
+// Avvia quando la pagina è caricata
+document.addEventListener('DOMContentLoaded', function() {
+    startPresence();
+});
+
+// Quando l'utente chiude la pagina, rimuovi la presenza
+window.addEventListener('beforeunload', function() {
+    userRef.remove();
 });
     </script>
 
