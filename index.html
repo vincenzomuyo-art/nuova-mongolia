@@ -2534,7 +2534,7 @@ function apriModificaPresidente() {
         '👤 Modifica Presidente',
         html,
         `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
-         <button class="btn-primary" id="modalConfirmInner">💾 Salva</button>`,
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaPresidente()">💾 Salva</button>`,
         () => {
             const nome = document.getElementById('nuovoPresidenteInput').value.trim();
             if (!nome) { alert('Inserisci un nome valido.'); return; }
@@ -2568,7 +2568,7 @@ function apriModificaAnno() {
         '📅 Modifica Anno',
         html,
         `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
-         <button class="btn-primary" id="modalConfirmInner">💾 Salva</button>`,
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaAnno()">💾 Salva</button>`,
         () => {
             const anno = parseInt(document.getElementById('nuovoAnnoInput').value);
             if (!anno || anno < 2021) { alert('Inserisci un anno valido (≥ 2021).'); return; }
@@ -2703,8 +2703,8 @@ function salvaBandieraAnno() {
     }
 }
 
-        // ============================================================
-//  SALVA PRESIDENTE
+// ============================================================
+//  SALVA PRESIDENTE (SOLO FIREBASE)
 // ============================================================
 function salvaPresidente() {
     const nome = document.getElementById('nuovoPresidenteInput').value.trim();
@@ -2712,17 +2712,32 @@ function salvaPresidente() {
         alert('Inserisci un nome valido.');
         return;
     }
+    
+    // 1. Aggiorna la variabile
     currentPresident = nome;
-    DB.set('currentPresident', nome);
-    DATA.saveToCloud();
+    
+    // 2. Salva su Firebase DIRETTAMENTE
+    db.ref('nuovaMongolia/currentPresident').set(nome)
+        .then(() => {
+            console.log('✅ Presidente salvato su Firebase:', nome);
+        })
+        .catch(err => {
+            console.error('❌ Errore salvataggio presidente:', err);
+            alert('Errore durante il salvataggio su Firebase. Controlla la connessione.');
+        });
+    
+    // 3. Aggiorna la Home
     renderHome();
+    
+    // 4. Chiudi e riapri
     closeModal();
     openSettings();
+    
     alert('✅ Presidente aggiornato a: ' + nome);
 }
 
 // ============================================================
-//  SALVA ANNO
+//  SALVA ANNO (SOLO FIREBASE)
 // ============================================================
 function salvaAnno() {
     const anno = parseInt(document.getElementById('nuovoAnnoInput').value);
@@ -2730,17 +2745,32 @@ function salvaAnno() {
         alert('Inserisci un anno valido (≥ 2021).');
         return;
     }
+    
+    // 1. Aggiorna la variabile
     currentYear = anno;
-    DB.set('currentYear', anno);
-    DATA.saveToCloud();
+    
+    // 2. Salva su Firebase DIRETTAMENTE
+    db.ref('nuovaMongolia/currentYear').set(anno)
+        .then(() => {
+            console.log('✅ Anno salvato su Firebase:', anno);
+        })
+        .catch(err => {
+            console.error('❌ Errore salvataggio anno:', err);
+            alert('Errore durante il salvataggio su Firebase. Controlla la connessione.');
+        });
+    
+    // 3. Aggiorna la Home
     renderHome();
+    
+    // 4. Chiudi e riapri
     closeModal();
     openSettings();
+    
     alert('✅ Anno aggiornato a: ' + anno);
 }
 
 // ============================================================
-//  SALVA BANDIERA
+//  SALVA BANDIERA (SOLO FIREBASE)
 // ============================================================
 function salvaBandieraAnno() {
     const input = document.getElementById('flagYearInput');
@@ -2773,19 +2803,33 @@ function salvaBandieraAnno() {
             return;
         }
         
+        // 1. Aggiorna la variabile
         currentFlag = imageData;
-        const bandiere = DB.get('bandiere_anni', {});
-        bandiere[currentYear] = currentFlag;
-        DB.set('bandiere_anni', bandiere);
         
-        if (typeof BANDIERE_ANNI !== 'undefined') {
-            BANDIERE_ANNI[currentYear] = currentFlag;
-        }
-        
-        DATA.saveToCloud();
-        closeModal();
-        openSettings();
-        alert('✅ Bandiera dell\'anno ' + currentYear + ' caricata con successo!');
+        // 2. Leggi le bandiere esistenti da Firebase
+        db.ref('nuovaMongolia/bandiere_anni').once('value')
+            .then(snapshot => {
+                const bandiere = snapshot.val() || {};
+                bandiere[currentYear] = currentFlag;
+                
+                // 3. Salva su Firebase
+                return db.ref('nuovaMongolia/bandiere_anni').set(bandiere);
+            })
+            .then(() => {
+                // 4. Aggiorna BANDIERE_ANNI per la galleria
+                if (typeof BANDIERE_ANNI !== 'undefined') {
+                    BANDIERE_ANNI[currentYear] = currentFlag;
+                }
+                
+                console.log('✅ Bandiera salvata su Firebase per l\'anno:', currentYear);
+                closeModal();
+                openSettings();
+                alert('✅ Bandiera dell\'anno ' + currentYear + ' caricata con successo!');
+            })
+            .catch(err => {
+                console.error('❌ Errore salvataggio bandiera:', err);
+                alert('Errore durante il salvataggio su Firebase. Controlla la connessione.');
+            });
     }
 }
 
@@ -2793,6 +2837,44 @@ function salvaBandieraAnno() {
 //  AVVIA APP
 // ======================================================================
 DATA.loadFromCloud().then(() => {
+    // ======================================================================
+//  CARICA DATI SALVATI DA FIREBASE (PRESIDENTE, ANNO, BANDIERE)
+// ======================================================================
+
+// Leggi il presidente da Firebase
+db.ref('nuovaMongolia/currentPresident').once('value')
+    .then(snapshot => {
+        const val = snapshot.val();
+        if (val) {
+            currentPresident = val;
+        }
+    })
+    .catch(err => console.warn('Errore lettura presidente:', err));
+
+// Leggi l'anno da Firebase
+db.ref('nuovaMongolia/currentYear').once('value')
+    .then(snapshot => {
+        const val = snapshot.val();
+        if (val) {
+            currentYear = val;
+        }
+    })
+    .catch(err => console.warn('Errore lettura anno:', err));
+
+// Leggi le bandiere da Firebase
+db.ref('nuovaMongolia/bandiere_anni').once('value')
+    .then(snapshot => {
+        const val = snapshot.val();
+        if (val && typeof BANDIERE_ANNI !== 'undefined') {
+            Object.keys(val).forEach(anno => {
+                BANDIERE_ANNI[anno] = val[anno];
+                if (parseInt(anno) === currentYear) {
+                    currentFlag = val[anno];
+                }
+            });
+        }
+    })
+    .catch(err => console.warn('Errore lettura bandiere:', err));
     if (DATA.getLaws().length === 0 && DATA.getPresidents().length === 0) {
         DATA.addLaw(
             '<b>Legge fondamentale:</b> La Nuova Mongolia è una repubblica democratica fondata sull\'amicizia.'
@@ -2801,29 +2883,6 @@ DATA.loadFromCloud().then(() => {
         DATA.addPresident('Manuel',
             '<b>Manuel</b> è il presidente fondatore della Nuova Mongolia. <span style="color:#e67e22;">Leader carismatico</span> e amante del mare.',
             '');
-    }
-    
-    // ======================================================================
-    //  CARICA DATI SALVATI (PRESIDENTE, ANNO, BANDIERE)
-    // ======================================================================
-    const savedPresident = DB.get('currentPresident', null);
-    if (savedPresident) {
-        currentPresident = savedPresident;
-    }
-
-    const savedYear = DB.get('currentYear', null);
-    if (savedYear) {
-        currentYear = savedYear;
-    }
-
-    const savedBandiere = DB.get('bandiere_anni', {});
-    if (savedBandiere && typeof BANDIERE_ANNI !== 'undefined') {
-        Object.keys(savedBandiere).forEach(anno => {
-            BANDIERE_ANNI[anno] = savedBandiere[anno];
-            if (parseInt(anno) === currentYear) {
-                currentFlag = savedBandiere[anno];
-            }
-        });
     }
     
     renderHome();
