@@ -2703,6 +2703,92 @@ function salvaBandieraAnno() {
     }
 }
 
+        // ============================================================
+//  SALVA PRESIDENTE
+// ============================================================
+function salvaPresidente() {
+    const nome = document.getElementById('nuovoPresidenteInput').value.trim();
+    if (!nome) {
+        alert('Inserisci un nome valido.');
+        return;
+    }
+    currentPresident = nome;
+    DB.set('currentPresident', nome);
+    DATA.saveToCloud();
+    renderHome();
+    closeModal();
+    openSettings();
+    alert('✅ Presidente aggiornato a: ' + nome);
+}
+
+// ============================================================
+//  SALVA ANNO
+// ============================================================
+function salvaAnno() {
+    const anno = parseInt(document.getElementById('nuovoAnnoInput').value);
+    if (!anno || anno < 2021) {
+        alert('Inserisci un anno valido (≥ 2021).');
+        return;
+    }
+    currentYear = anno;
+    DB.set('currentYear', anno);
+    DATA.saveToCloud();
+    renderHome();
+    closeModal();
+    openSettings();
+    alert('✅ Anno aggiornato a: ' + anno);
+}
+
+// ============================================================
+//  SALVA BANDIERA
+// ============================================================
+function salvaBandieraAnno() {
+    const input = document.getElementById('flagYearInput');
+    const box = document.getElementById('flagYearBox');
+    const preview = box ? box.querySelector('.preview') : null;
+    
+    let imageData = null;
+    
+    if (preview && preview.src && !preview.src.includes('undefined')) {
+        imageData = preview.src;
+    } else if (input && input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            imageData = e.target.result;
+            salva(imageData);
+        };
+        reader.readAsDataURL(input.files[0]);
+        return;
+    }
+    
+    if (imageData) {
+        salva(imageData);
+    } else {
+        alert('❌ Seleziona un\'immagine prima di salvare.');
+    }
+    
+    function salva(imageData) {
+        if (!imageData) {
+            alert('❌ Seleziona un\'immagine prima di salvare.');
+            return;
+        }
+        
+        currentFlag = imageData;
+        const bandiere = DB.get('bandiere_anni', {});
+        bandiere[currentYear] = currentFlag;
+        DB.set('bandiere_anni', bandiere);
+        
+        if (typeof BANDIERE_ANNI !== 'undefined') {
+            BANDIERE_ANNI[currentYear] = currentFlag;
+        }
+        
+        DATA.saveToCloud();
+        closeModal();
+        openSettings();
+        alert('✅ Bandiera dell\'anno ' + currentYear + ' caricata con successo!');
+    }
+}
+
         // ======================================================================
 //  AVVIA APP
 // ======================================================================
