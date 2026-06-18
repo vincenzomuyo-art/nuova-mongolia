@@ -1652,10 +1652,112 @@ const BANDIERE_ANNI = {
         }
 
         function renderNotizie() {
-            const el = $('notizieContent');
-            const content = DATA.getNews();
-            el.innerHTML = content || '<span class="text-muted">Nessuna notizia. Clicca + per aggiungere.</span>';
+    const el = $('notizieContent');
+    const imageUrl = DATA.getNews();
+    if (imageUrl) {
+        el.innerHTML = `
+            <div style="width:100%;overflow:hidden;border-radius:12px;">
+                <img src="${imageUrl}" alt="Notizia" style="width:100%;height:auto;display:block;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
+            </div>
+        `;
+    } else {
+        el.innerHTML = '<span class="text-muted">Nessuna notizia caricata. Clicca + per aggiungere.</span>';
+    }
+}
+
+        function openNotizieUpload() {
+    closeModal();
+    const hasNews = !!DATA.getNews();
+    
+    let html = `
+        <div style="text-align:center;margin-bottom:20px;">
+            <h2 style="color:#1a2634;">📰 Gestisci Notizia</h2>
+            <p style="color:#6a7a8a;">Carica una nuova notizia o elimina quella attuale</p>
+        </div>
+        <div class="form-group">
+            <div class="image-upload-box" id="notiziaBox" style="border:3px dashed #ccc;border-radius:16px;padding:32px 20px;text-align:center;color:#888;cursor:pointer;background:#faf8f6;">
+                ${hasNews ? `<img src="${DATA.getNews()}" class="preview" style="max-width:100%;max-height:200px;border-radius:12px;" />` : `<div class="hint">📷 Clicca per caricare un'immagine</div>`}
+                <input type="file" id="notiziaInput" accept="image/*" />
+            </div>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:#f8f6f3;border-radius:10px;font-size:0.85rem;color:#6a7a8a;">
+            💡 La notizia verrà visualizzata come immagine a tutta larghezza.
+        </div>
+        ${hasNews ? `
+        <div style="margin-top:12px;text-align:center;">
+            <button onclick="eliminaNotizia()" style="padding:10px 24px;background:#dc3545;color:#fff;border-radius:10px;font-weight:600;font-size:0.95rem;transition:0.2s;border:none;cursor:pointer;">
+                🗑️ Elimina notizia attuale
+            </button>
+        </div>
+        ` : ''}
+    `;
+
+    openModal(
+        '📰 Gestisci Notizia',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaNotizia()">💾 Salva</button>`,
+        () => {},
+        () => { closeModal(); }
+    );
+
+    // Upload immagine
+    setTimeout(() => {
+        const box = document.getElementById('notiziaBox');
+        const input = document.getElementById('notiziaInput');
+        if (box && input) {
+            box.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON' && e.target.id !== 'modalConfirmInner') {
+                    input.click();
+                }
+            });
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const box = document.getElementById('notiziaBox');
+                        const prev = box.querySelector('.preview');
+                        const hint = box.querySelector('.hint');
+                        if (prev) {
+                            prev.src = e.target.result;
+                        } else if (hint) {
+                            const img = document.createElement('img');
+                            img.className = 'preview';
+                            img.src = e.target.result;
+                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
+                            hint.replaceWith(img);
+                        } else {
+                            const img = document.createElement('img');
+                            img.className = 'preview';
+                            img.src = e.target.result;
+                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
+                            box.appendChild(img);
+                        }
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
         }
+    }, 100);
+}       
+        
+        // ===== ELIMINA NOTIZIA =====
+function eliminaNotizia() {
+    if (confirm('🗑️ Sei sicuro di voler eliminare la notizia attuale?')) {
+        DATA.setNews('');
+        db.ref('nuovaMongolia/news').set('')
+            .then(() => {
+                console.log('✅ Notizia eliminata da Firebase');
+                closeModal();
+                renderNotizie();
+                alert('✅ Notizia eliminata con successo!');
+            })
+            .catch(err => {
+                console.error('❌ Errore eliminazione notizia:', err);
+                alert('Errore durante l\'eliminazione su Firebase.');
+            });
+    }
+}
 
         // ======================================================================
         //  SETUP LISTENERS
@@ -1680,9 +1782,9 @@ const BANDIERE_ANNI = {
                 case 'progetti':
                     askPassword('non,SOCHEPASSWORDINVENTARMI', () => openContentEditor('progetti'));
                     break;
-                case 'notizie':
-                    askPassword('AREA-RISERVATA-A-MANUEL-BELLO', () => openContentEditor('notizie'));
-                    break;
+                        case 'notizie':
+            askPassword('AREA-RISERVATA-A-MANUEL-BELLO', () => openNotizieUpload());
+            break;
             }
         });
 
@@ -2876,6 +2978,107 @@ function salvaBandieraAnno() {
             });
     }
 }
+    // ======================================================================
+//  CARICA NOTIZIA (SOLO IMMAGINE)
+// ======================================================================
+function openNotizieUpload() {
+    closeModal();
+    
+    let html = `
+        <div style="text-align:center;margin-bottom:20px;">
+            <h2 style="color:#1a2634;">📰 Carica Notizia</h2>
+            <p style="color:#6a7a8a;">Seleziona un'immagine per la notizia (creata con Canva)</p>
+        </div>
+        <div class="form-group">
+            <div class="image-upload-box" id="notiziaBox" style="border:3px dashed #ccc;border-radius:16px;padding:32px 20px;text-align:center;color:#888;cursor:pointer;background:#faf8f6;">
+                ${DATA.getNews() ? `<img src="${DATA.getNews()}" class="preview" style="max-width:100%;max-height:200px;border-radius:12px;" />` : `<div class="hint">📷 Clicca per caricare un'immagine</div>`}
+                <input type="file" id="notiziaInput" accept="image/*" />
+            </div>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:#f8f6f3;border-radius:10px;font-size:0.85rem;color:#6a7a8a;">
+            💡 La notizia verrà visualizzata come immagine a tutta larghezza.
+        </div>
+    `;
+
+    openModal(
+        '📰 Carica Notizia',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaNotizia()">💾 Salva</button>`,
+        () => {},
+        () => { closeModal(); openSettings(); }
+    );
+
+    // Upload immagine
+    setTimeout(() => {
+        const box = document.getElementById('notiziaBox');
+        const input = document.getElementById('notiziaInput');
+        if (box && input) {
+            box.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON' && e.target.id !== 'modalConfirmInner') {
+                    input.click();
+                }
+            });
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const box = document.getElementById('notiziaBox');
+                        const prev = box.querySelector('.preview');
+                        const hint = box.querySelector('.hint');
+                        if (prev) {
+                            prev.src = e.target.result;
+                        } else if (hint) {
+                            const img = document.createElement('img');
+                            img.className = 'preview';
+                            img.src = e.target.result;
+                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
+                            hint.replaceWith(img);
+                        } else {
+                            const img = document.createElement('img');
+                            img.className = 'preview';
+                            img.src = e.target.result;
+                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
+                            box.appendChild(img);
+                        }
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+    }, 100);
+}
+
+// ===== SALVA NOTIZIA =====
+function salvaNotizia() {
+    const box = document.getElementById('notiziaBox');
+    const preview = box ? box.querySelector('.preview') : null;
+    let imageData = null;
+
+    if (preview && preview.src && !preview.src.includes('undefined')) {
+        imageData = preview.src;
+    }
+
+    if (!imageData) {
+        alert('❌ Seleziona un\'immagine prima di salvare.');
+        return;
+    }
+
+    // Salva su Firebase
+    DATA.setNews(imageData);
+    db.ref('nuovaMongolia/news').set(imageData)
+        .then(() => {
+            console.log('✅ Notizia salvata su Firebase');
+            closeModal();
+            renderNotizie();
+            alert('✅ Notizia caricata con successo!');
+        })
+        .catch(err => {
+            console.error('❌ Errore salvataggio notizia:', err);
+            alert('Errore durante il salvataggio su Firebase.');
+        });
+} 
+
 
         // ======================================================================
 //  AVVIA APP
