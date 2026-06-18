@@ -1361,7 +1361,23 @@
                 this.saveToCloud();
                 this._notify('projects'); },
 
-            getNews() { return this.news; },
+            getNews() { return this.news || []; },
+setNews(c) { 
+    this.news = Array.isArray(c) ? c : (c ? [c] : []);
+    this.saveToCloud();
+    this._notify('news');
+},
+addNews(image) {
+    const news = this.getNews();
+    news.push(image);
+    this.setNews(news);
+    return news;
+},
+removeNews(index) {
+    const news = this.getNews();
+    news.splice(index, 1);
+    this.setNews(news);
+},
             setNews(c) { this.news = c;
                 this.saveToCloud();
                 this._notify('news'); },
@@ -1651,52 +1667,72 @@ const BANDIERE_ANNI = {
             el.innerHTML = content || '<span class="text-muted">Nessun progetto inserito. Clicca + per aggiungere.</span>';
         }
 
-        function renderNotizie() {
+       function renderNotizie() {
     const el = $('notizieContent');
-    const imageUrl = DATA.getNews();
-    if (imageUrl) {
-        el.innerHTML = `
-            <div style="width:100%;overflow:hidden;border-radius:12px;">
-                <img src="${imageUrl}" alt="Notizia" style="width:100%;height:auto;display:block;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.1);" />
-            </div>
-        `;
-    } else {
+    const news = DATA.getNews();
+    
+    if (!news || news.length === 0) {
         el.innerHTML = '<span class="text-muted">Nessuna notizia caricata. Clicca + per aggiungere.</span>';
+        return;
     }
+    
+    el.innerHTML = `
+        <div style="max-height:70vh;overflow-y:auto;display:flex;flex-direction:column;gap:20px;padding:4px;">
+            ${news.map((img, idx) => `
+                <div style="width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                    <img src="${img}" alt="Notizia ${idx+1}" style="width:100%;height:auto;display:block;object-fit:fill;" />
+                </div>
+            `).join('')}
+        </div>
+    `;
 }
 
         function openNotizieUpload() {
     closeModal();
-    const hasNews = !!DATA.getNews();
+    const news = DATA.getNews();
+    
+    let listHtml = '';
+    if (news && news.length > 0) {
+        listHtml = `
+            <div style="margin:12px 0;max-height:300px;overflow-y:auto;">
+                ${news.map((img, idx) => `
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f8f6f3;border-radius:8px;margin-bottom:6px;border-left:4px solid #f4c542;">
+                        <div style="width:80px;height:50px;overflow:hidden;border-radius:4px;flex-shrink:0;">
+                            <img src="${img}" style="width:100%;height:100%;object-fit:cover;" />
+                        </div>
+                        <div style="flex:1;margin-left:12px;font-size:0.85rem;color:#6a7a8a;">Notizia ${idx+1}</div>
+                        <button onclick="eliminaNotizia(${idx})" style="padding:4px 12px;background:#dc3545;color:#fff;border-radius:6px;font-weight:600;font-size:0.8rem;border:none;cursor:pointer;">🗑️</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
     
     let html = `
         <div style="text-align:center;margin-bottom:20px;">
-            <h2 style="color:#1a2634;">📰 Gestisci Notizia</h2>
-            <p style="color:#6a7a8a;">Carica una nuova notizia o elimina quella attuale</p>
+            <h2 style="color:#1a2634;">📰 Gestisci Notizie</h2>
+            <p style="color:#6a7a8a;">Carica nuove notizie o elimina quelle esistenti</p>
         </div>
-        <div class="form-group">
-            <div class="image-upload-box" id="notiziaBox" style="border:3px dashed #ccc;border-radius:16px;padding:32px 20px;text-align:center;color:#888;cursor:pointer;background:#faf8f6;">
-                ${hasNews ? `<img src="${DATA.getNews()}" class="preview" style="max-width:100%;max-height:200px;border-radius:12px;" />` : `<div class="hint">📷 Clicca per caricare un'immagine</div>`}
-                <input type="file" id="notiziaInput" accept="image/*" />
+        ${listHtml}
+        <div style="border-top:1px solid #eee;padding-top:16px;margin-top:8px;">
+            <div class="form-group">
+                <label style="font-weight:600;color:#333;display:block;margin-bottom:6px;">➕ Aggiungi nuova notizia</label>
+                <div class="image-upload-box" id="notiziaBox" style="border:3px dashed #ccc;border-radius:16px;padding:24px 20px;text-align:center;color:#888;cursor:pointer;background:#faf8f6;">
+                    <div class="hint">📷 Clicca per caricare un'immagine (Canva)</div>
+                    <input type="file" id="notiziaInput" accept="image/*" />
+                    <div id="notiziaPreview" style="margin-top:10px;display:none;">
+                        <img id="notiziaPreviewImg" style="max-width:100%;max-height:150px;border-radius:8px;" />
+                    </div>
+                </div>
             </div>
         </div>
-        <div style="margin-top:12px;padding:12px;background:#f8f6f3;border-radius:10px;font-size:0.85rem;color:#6a7a8a;">
-            💡 La notizia verrà visualizzata come immagine a tutta larghezza.
-        </div>
-        ${hasNews ? `
-        <div style="margin-top:12px;text-align:center;">
-            <button onclick="eliminaNotizia()" style="padding:10px 24px;background:#dc3545;color:#fff;border-radius:10px;font-weight:600;font-size:0.95rem;transition:0.2s;border:none;cursor:pointer;">
-                🗑️ Elimina notizia attuale
-            </button>
-        </div>
-        ` : ''}
     `;
 
     openModal(
-        '📰 Gestisci Notizia',
+        '📰 Gestisci Notizie',
         html,
-        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
-         <button class="btn-primary" id="modalConfirmInner" onclick="salvaNotizia()">💾 Salva</button>`,
+        `<button class="btn-secondary" id="modalCancelInner">Chiudi</button>
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaNotizia()">💾 Aggiungi</button>`,
         () => {},
         () => { closeModal(); }
     );
@@ -1705,6 +1741,9 @@ const BANDIERE_ANNI = {
     setTimeout(() => {
         const box = document.getElementById('notiziaBox');
         const input = document.getElementById('notiziaInput');
+        const preview = document.getElementById('notiziaPreview');
+        const previewImg = document.getElementById('notiziaPreviewImg');
+        
         if (box && input) {
             box.addEventListener('click', (e) => {
                 if (e.target.tagName !== 'BUTTON' && e.target.id !== 'modalConfirmInner') {
@@ -1715,31 +1754,15 @@ const BANDIERE_ANNI = {
                 if (this.files && this.files[0]) {
                     const reader = new FileReader();
                     reader.onload = function(e) {
-                        const box = document.getElementById('notiziaBox');
-                        const prev = box.querySelector('.preview');
-                        const hint = box.querySelector('.hint');
-                        if (prev) {
-                            prev.src = e.target.result;
-                        } else if (hint) {
-                            const img = document.createElement('img');
-                            img.className = 'preview';
-                            img.src = e.target.result;
-                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
-                            hint.replaceWith(img);
-                        } else {
-                            const img = document.createElement('img');
-                            img.className = 'preview';
-                            img.src = e.target.result;
-                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
-                            box.appendChild(img);
-                        }
+                        previewImg.src = e.target.result;
+                        preview.style.display = 'block';
                     };
                     reader.readAsDataURL(this.files[0]);
                 }
             });
         }
     }, 100);
-}       
+}
         
         // ===== ELIMINA NOTIZIA =====
 function eliminaNotizia() {
@@ -2981,105 +3004,52 @@ function salvaBandieraAnno() {
     // ======================================================================
 //  CARICA NOTIZIA (SOLO IMMAGINE)
 // ======================================================================
-function openNotizieUpload() {
-    closeModal();
-    
-    let html = `
-        <div style="text-align:center;margin-bottom:20px;">
-            <h2 style="color:#1a2634;">📰 Carica Notizia</h2>
-            <p style="color:#6a7a8a;">Seleziona un'immagine per la notizia (creata con Canva)</p>
-        </div>
-        <div class="form-group">
-            <div class="image-upload-box" id="notiziaBox" style="border:3px dashed #ccc;border-radius:16px;padding:32px 20px;text-align:center;color:#888;cursor:pointer;background:#faf8f6;">
-                ${DATA.getNews() ? `<img src="${DATA.getNews()}" class="preview" style="max-width:100%;max-height:200px;border-radius:12px;" />` : `<div class="hint">📷 Clicca per caricare un'immagine</div>`}
-                <input type="file" id="notiziaInput" accept="image/*" />
-            </div>
-        </div>
-        <div style="margin-top:12px;padding:12px;background:#f8f6f3;border-radius:10px;font-size:0.85rem;color:#6a7a8a;">
-            💡 La notizia verrà visualizzata come immagine a tutta larghezza.
-        </div>
-    `;
 
-    openModal(
-        '📰 Carica Notizia',
-        html,
-        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
-         <button class="btn-primary" id="modalConfirmInner" onclick="salvaNotizia()">💾 Salva</button>`,
-        () => {},
-        () => { closeModal(); openSettings(); }
-    );
-
-    // Upload immagine
-    setTimeout(() => {
-        const box = document.getElementById('notiziaBox');
-        const input = document.getElementById('notiziaInput');
-        if (box && input) {
-            box.addEventListener('click', (e) => {
-                if (e.target.tagName !== 'BUTTON' && e.target.id !== 'modalConfirmInner') {
-                    input.click();
-                }
-            });
-            input.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const box = document.getElementById('notiziaBox');
-                        const prev = box.querySelector('.preview');
-                        const hint = box.querySelector('.hint');
-                        if (prev) {
-                            prev.src = e.target.result;
-                        } else if (hint) {
-                            const img = document.createElement('img');
-                            img.className = 'preview';
-                            img.src = e.target.result;
-                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
-                            hint.replaceWith(img);
-                        } else {
-                            const img = document.createElement('img');
-                            img.className = 'preview';
-                            img.src = e.target.result;
-                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
-                            box.appendChild(img);
-                        }
-                    };
-                    reader.readAsDataURL(this.files[0]);
-                }
-            });
-        }
-    }, 100);
-}
 
 // ===== SALVA NOTIZIA =====
 function salvaNotizia() {
-    const box = document.getElementById('notiziaBox');
-    const preview = box ? box.querySelector('.preview') : null;
-    let imageData = null;
-
-    if (preview && preview.src && !preview.src.includes('undefined')) {
-        imageData = preview.src;
-    }
-
-    if (!imageData) {
+    const previewImg = document.getElementById('notiziaPreviewImg');
+    if (!previewImg || !previewImg.src || previewImg.src.includes('undefined')) {
         alert('❌ Seleziona un\'immagine prima di salvare.');
         return;
     }
 
-    // Salva su Firebase
-    DATA.setNews(imageData);
-    db.ref('nuovaMongolia/news').set(imageData)
+    const imageData = previewImg.src;
+    
+    // Aggiungi alla galleria
+    DATA.addNews(imageData);
+    db.ref('nuovaMongolia/news').set(DATA.getNews())
         .then(() => {
-            console.log('✅ Notizia salvata su Firebase');
+            console.log('✅ Notizia aggiunta su Firebase');
             closeModal();
             renderNotizie();
-            alert('✅ Notizia caricata con successo!');
+            alert('✅ Notizia aggiunta con successo!');
         })
         .catch(err => {
             console.error('❌ Errore salvataggio notizia:', err);
             alert('Errore durante il salvataggio su Firebase.');
         });
-} 
+}
 
 
+// ===== ELIMINA NOTIZIA =====
+function eliminaNotizia(index) {
+    if (confirm(`🗑️ Sei sicuro di voler eliminare la notizia ${index+1}?`)) {
+        DATA.removeNews(index);
+        db.ref('nuovaMongolia/news').set(DATA.getNews())
+            .then(() => {
+                console.log('✅ Notizia eliminata da Firebase');
+                closeModal();
+                renderNotizie();
+                openNotizieUpload(); // Riapri il modale aggiornato
+                alert('✅ Notizia eliminata con successo!');
+            })
+            .catch(err => {
+                console.error('❌ Errore eliminazione notizia:', err);
+                alert('Errore durante l\'eliminazione su Firebase.');
+            });
+    }
+}
         // ======================================================================
 //  AVVIA APP
 // ======================================================================
