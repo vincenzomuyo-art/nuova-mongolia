@@ -1361,23 +1361,7 @@
                 this.saveToCloud();
                 this._notify('projects'); },
 
-            getNews() { return this.news || []; },
-setNews(c) { 
-    this.news = Array.isArray(c) ? c : (c ? [c] : []);
-    this.saveToCloud();
-    this._notify('news');
-},
-addNews(image) {
-    const news = this.getNews();
-    news.push(image);
-    this.setNews(news);
-    return news;
-},
-removeNews(index) {
-    const news = this.getNews();
-    news.splice(index, 1);
-    this.setNews(news);
-},
+            getNews() { return this.news; },
             setNews(c) { this.news = c;
                 this.saveToCloud();
                 this._notify('news'); },
@@ -1667,120 +1651,11 @@ const BANDIERE_ANNI = {
             el.innerHTML = content || '<span class="text-muted">Nessun progetto inserito. Clicca + per aggiungere.</span>';
         }
 
-       function renderNotizie() {
-    const el = $('notizieContent');
-    const news = DATA.getNews();
-    
-    if (!news || news.length === 0) {
-        el.innerHTML = '<span class="text-muted">Nessuna notizia caricata. Clicca + per aggiungere.</span>';
-        return;
-    }
-    
-    el.innerHTML = `
-        <div style="max-height:70vh;overflow-y:auto;display:flex;flex-direction:column;gap:20px;padding:4px;">
-            ${news.map((img, idx) => `
-                <div style="width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-                    <img src="${img}" alt="Notizia ${idx+1}" style="width:100%;height:auto;display:block;object-fit:fill;" />
-                </div>
-            `).join('')}
-        </div>
-    `;
-}
-
-        function openNotizieUpload() {
-    closeModal();
-    const news = DATA.getNews();
-    
-    let listHtml = '';
-    if (news && news.length > 0) {
-        listHtml = `
-            <div style="margin:12px 0;max-height:300px;overflow-y:auto;">
-                ${news.map((img, idx) => `
-                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f8f6f3;border-radius:8px;margin-bottom:6px;border-left:4px solid #f4c542;">
-                        <div style="width:80px;height:50px;overflow:hidden;border-radius:4px;flex-shrink:0;">
-                            <img src="${img}" style="width:100%;height:100%;object-fit:cover;" />
-                        </div>
-                        <div style="flex:1;margin-left:12px;font-size:0.85rem;color:#6a7a8a;">Notizia ${idx+1}</div>
-                        <button onclick="eliminaNotizia(${idx})" style="padding:4px 12px;background:#dc3545;color:#fff;border-radius:6px;font-weight:600;font-size:0.8rem;border:none;cursor:pointer;">🗑️</button>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-    
-    let html = `
-        <div style="text-align:center;margin-bottom:20px;">
-            <h2 style="color:#1a2634;">📰 Gestisci Notizie</h2>
-            <p style="color:#6a7a8a;">Carica nuove notizie o elimina quelle esistenti</p>
-        </div>
-        ${listHtml}
-        <div style="border-top:1px solid #eee;padding-top:16px;margin-top:8px;">
-            <div class="form-group">
-                <label style="font-weight:600;color:#333;display:block;margin-bottom:6px;">➕ Aggiungi nuova notizia</label>
-                <div class="image-upload-box" id="notiziaBox" style="border:3px dashed #ccc;border-radius:16px;padding:24px 20px;text-align:center;color:#888;cursor:pointer;background:#faf8f6;">
-                    <div class="hint">📷 Clicca per caricare un'immagine (Canva)</div>
-                    <input type="file" id="notiziaInput" accept="image/*" />
-                    <div id="notiziaPreview" style="margin-top:10px;display:none;">
-                        <img id="notiziaPreviewImg" style="max-width:100%;max-height:150px;border-radius:8px;" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    openModal(
-        '📰 Gestisci Notizie',
-        html,
-        `<button class="btn-secondary" id="modalCancelInner">Chiudi</button>
-         <button class="btn-primary" id="modalConfirmInner" onclick="salvaNotizia()">💾 Aggiungi</button>`,
-        () => {},
-        () => { closeModal(); }
-    );
-
-    // Upload immagine
-    setTimeout(() => {
-        const box = document.getElementById('notiziaBox');
-        const input = document.getElementById('notiziaInput');
-        const preview = document.getElementById('notiziaPreview');
-        const previewImg = document.getElementById('notiziaPreviewImg');
-        
-        if (box && input) {
-            box.addEventListener('click', (e) => {
-                if (e.target.tagName !== 'BUTTON' && e.target.id !== 'modalConfirmInner') {
-                    input.click();
-                }
-            });
-            input.addEventListener('change', function() {
-                if (this.files && this.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        previewImg.src = e.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(this.files[0]);
-                }
-            });
+        function renderNotizie() {
+            const el = $('notizieContent');
+            const content = DATA.getNews();
+            el.innerHTML = content || '<span class="text-muted">Nessuna notizia. Clicca + per aggiungere.</span>';
         }
-    }, 100);
-}
-        
-        // ===== ELIMINA NOTIZIA =====
-function eliminaNotizia() {
-    if (confirm('🗑️ Sei sicuro di voler eliminare la notizia attuale?')) {
-        DATA.setNews('');
-        db.ref('nuovaMongolia/news').set('')
-            .then(() => {
-                console.log('✅ Notizia eliminata da Firebase');
-                closeModal();
-                renderNotizie();
-                alert('✅ Notizia eliminata con successo!');
-            })
-            .catch(err => {
-                console.error('❌ Errore eliminazione notizia:', err);
-                alert('Errore durante l\'eliminazione su Firebase.');
-            });
-    }
-}
 
         // ======================================================================
         //  SETUP LISTENERS
@@ -1805,9 +1680,9 @@ function eliminaNotizia() {
                 case 'progetti':
                     askPassword('non,SOCHEPASSWORDINVENTARMI', () => openContentEditor('progetti'));
                     break;
-                        case 'notizie':
-            askPassword('AREA-RISERVATA-A-MANUEL-BELLO', () => openNotizieUpload());
-            break;
+                case 'notizie':
+                    askPassword('AREA-RISERVATA-A-MANUEL-BELLO', () => openContentEditor('notizie'));
+                    break;
             }
         });
 
@@ -3001,76 +2876,36 @@ function salvaBandieraAnno() {
             });
     }
 }
-    // ======================================================================
-//  CARICA NOTIZIA (SOLO IMMAGINE)
-// ======================================================================
 
-
-// ===== SALVA NOTIZIA =====
-function salvaNotizia() {
-    const previewImg = document.getElementById('notiziaPreviewImg');
-    if (!previewImg || !previewImg.src || previewImg.src.includes('undefined')) {
-        alert('❌ Seleziona un\'immagine prima di salvare.');
-        return;
-    }
-
-    const imageData = previewImg.src;
-    
-    // Aggiungi alla galleria
-    DATA.addNews(imageData);
-    db.ref('nuovaMongolia/news').set(DATA.getNews())
-        .then(() => {
-            console.log('✅ Notizia aggiunta su Firebase');
-            closeModal();
-            renderNotizie();
-            alert('✅ Notizia aggiunta con successo!');
-        })
-        .catch(err => {
-            console.error('❌ Errore salvataggio notizia:', err);
-            alert('Errore durante il salvataggio su Firebase.');
-        });
-}
-
-
-// ===== ELIMINA NOTIZIA =====
-function eliminaNotizia(index) {
-    if (confirm(`🗑️ Sei sicuro di voler eliminare la notizia ${index+1}?`)) {
-        DATA.removeNews(index);
-        db.ref('nuovaMongolia/news').set(DATA.getNews())
-            .then(() => {
-                console.log('✅ Notizia eliminata da Firebase');
-                closeModal();
-                renderNotizie();
-                openNotizieUpload(); // Riapri il modale aggiornato
-                alert('✅ Notizia eliminata con successo!');
-            })
-            .catch(err => {
-                console.error('❌ Errore eliminazione notizia:', err);
-                alert('Errore durante l\'eliminazione su Firebase.');
-            });
-    }
-}
         // ======================================================================
 //  AVVIA APP
 // ======================================================================
 DATA.loadFromCloud().then(() => {
-// ======================================================================
+    // ======================================================================
 //  CARICA DATI SALVATI DA FIREBASE (PRESIDENTE, ANNO, BANDIERE)
 // ======================================================================
+
+// Leggi il presidente da Firebase
 db.ref('nuovaMongolia/currentPresident').once('value')
     .then(snapshot => {
         const val = snapshot.val();
-        if (val) currentPresident = val;
+        if (val) {
+            currentPresident = val;
+        }
     })
     .catch(err => console.warn('Errore lettura presidente:', err));
 
+// Leggi l'anno da Firebase
 db.ref('nuovaMongolia/currentYear').once('value')
     .then(snapshot => {
         const val = snapshot.val();
-        if (val) currentYear = val;
+        if (val) {
+            currentYear = val;
+        }
     })
     .catch(err => console.warn('Errore lettura anno:', err));
 
+// Leggi le bandiere da Firebase
 db.ref('nuovaMongolia/bandiere_anni').once('value')
     .then(snapshot => {
         const val = snapshot.val();
@@ -3084,18 +2919,23 @@ db.ref('nuovaMongolia/bandiere_anni').once('value')
         }
     })
     .catch(err => console.warn('Errore lettura bandiere:', err));
-
-// ===== CONVERTI NEWS VECCHIE (STRINGA) IN ARRAY =====
-const newsData = DATA.getNews();
-if (typeof newsData === 'string' && newsData) {
-    DATA.news = [newsData];
-    DATA.saveToCloud();
-    db.ref('nuovaMongolia/news').set(DATA.news);
-    console.log('✅ News convertita da stringa a array:', DATA.news);
-} else if (!newsData || (Array.isArray(newsData) && newsData.length === 0)) {
-    DATA.news = [];
-}
-}
+    if (DATA.getLaws().length === 0 && DATA.getPresidents().length === 0) {
+        DATA.addLaw(
+            '<b>Legge fondamentale:</b> La Nuova Mongolia è una repubblica democratica fondata sull\'amicizia.'
+            );
+        DATA.addLaw('<i>Articolo 2:</i> Ogni cittadino ha diritto al divertimento e al buon cibo.');
+        DATA.addPresident('Manuel',
+            '<b>Manuel</b> è il presidente fondatore della Nuova Mongolia. <span style="color:#e67e22;">Leader carismatico</span> e amante del mare.',
+            '');
+    }
+    
+    renderHome();
+    renderLaws();
+    renderPresidents();
+    renderProjects();
+    renderNotizie();
+    navigateTo('home');
+});
 
 // ======================================================================
 //  KEYBOARD SHORTCUT: ESC chiude modali
