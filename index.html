@@ -1008,6 +1008,41 @@
     transform: scale(1.08);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
+        /* ===== PASSWORD EYE ===== */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+.password-input-wrapper input {
+    width: 100%;
+    padding: 12px 16px;
+    padding-right: 50px;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: 0.2s;
+}
+.password-input-wrapper input:focus {
+    border-color: #f4c542;
+    box-shadow: 0 0 0 3px rgba(244, 197, 66, 0.2);
+}
+.password-eye {
+    position: absolute;
+    right: 14px;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #888;
+    padding: 4px;
+    transition: 0.2s;
+    z-index: 10;
+}
+.password-eye:hover {
+    color: #1a2634;
+}
     </style>
 </head>
 <body>
@@ -1146,10 +1181,13 @@
             </div>
             <div class="modal-body">
                 <div class="password-prompt">
-                    <label for="passwordInput">Inserisci la password per accedere:</label>
-                    <input type="password" id="passwordInput" placeholder="Password" autocomplete="off" />
-                    <div class="password-error" id="passwordError">Password errata. Riprova.</div>
-                </div>
+    <label for="passwordInput">Inserisci la password per accedere:</label>
+    <div class="password-input-wrapper">
+        <input type="password" id="passwordInput" placeholder="Password" autocomplete="off" />
+        <button class="password-eye" id="passwordEye" type="button" aria-label="Mostra/Nascondi password">👁️</button>
+    </div>
+    <div class="password-error" id="passwordError">Password errata. Riprova.</div>
+</div>
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="passwordCancel">Annulla</button>
@@ -2909,6 +2947,22 @@ console.log('👤 Biografia Presidenti password: Biografia.pRESIDENTI-1945');
 console.log('🚀 Progetti password: non,SOCHEPASSWORDINVENTARMI');
 console.log('📰 Notizie password: AREA-RISERVATA-A-MANUEL-BELLO');
 console.log('☁️ Dati salvati su Firebase Realtime Database!');
+
+        // ======================================================================
+//  MOSTRA/NASCONDI PASSWORD
+// ======================================================================
+document.addEventListener('DOMContentLoaded', function() {
+    const eyeBtn = document.getElementById('passwordEye');
+    const passInput = document.getElementById('passwordInput');
+    
+    if (eyeBtn && passInput) {
+        eyeBtn.addEventListener('click', function() {
+            const isPassword = passInput.type === 'password';
+            passInput.type = isPassword ? 'text' : 'password';
+            this.textContent = isPassword ? '🙈' : '👁️';
+        });
+    }
+});
     </script>
 
 </body>
