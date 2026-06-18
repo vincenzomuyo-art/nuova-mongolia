@@ -1098,6 +1098,9 @@
                     ma qui si <span class="highlight">rivoluzionerà</span>, quest'anno, il <span class="highlight">2026</span>, vi aspetta un'estate <span class="highlight">pazzesca</span>.</h1>
                 <p>Benvenuti nella Nuova Mongolia Fascista.</p>
                 <div class="year-badge">🏛️ Anno 2026 · Presidente in carica · Mattia Ferrazzano</div>
+                <div class="visite-counter" style="margin-top:12px;font-size:0.9rem;color:#aab;">
+    👀 Questa pagina è stata visitata <span id="visiteCount">0</span> volte
+</div>
             </div>
         </section>
 
@@ -2962,6 +2965,31 @@ document.addEventListener('DOMContentLoaded', function() {
             this.textContent = isPassword ? '🙈' : '👁️';
         });
     }
+});
+
+
+        // ======================================================================
+//  CONTATORE VISITE (FIREBASE)
+// ======================================================================
+function aggiornaVisite() {
+    const counterRef = db.ref('nuovaMongolia/visite');
+    
+    counterRef.transaction((current) => {
+        return (current || 0) + 1;
+    }, (error, committed, snapshot) => {
+        if (error) {
+            console.warn('Errore aggiornamento visite:', error);
+        } else if (committed) {
+            const visite = snapshot.val();
+            document.getElementById('visiteCount').textContent = visite || 0;
+            console.log('✅ Visite aggiornate a:', visite);
+        }
+    });
+}
+
+// Esegui quando la pagina è caricata
+document.addEventListener('DOMContentLoaded', function() {
+    aggiornaVisite();
 });
     </script>
 
