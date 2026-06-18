@@ -3054,31 +3054,23 @@ function eliminaNotizia(index) {
 //  AVVIA APP
 // ======================================================================
 DATA.loadFromCloud().then(() => {
-    // ======================================================================
+// ======================================================================
 //  CARICA DATI SALVATI DA FIREBASE (PRESIDENTE, ANNO, BANDIERE)
 // ======================================================================
-
-// Leggi il presidente da Firebase
 db.ref('nuovaMongolia/currentPresident').once('value')
     .then(snapshot => {
         const val = snapshot.val();
-        if (val) {
-            currentPresident = val;
-        }
+        if (val) currentPresident = val;
     })
     .catch(err => console.warn('Errore lettura presidente:', err));
 
-// Leggi l'anno da Firebase
 db.ref('nuovaMongolia/currentYear').once('value')
     .then(snapshot => {
         const val = snapshot.val();
-        if (val) {
-            currentYear = val;
-        }
+        if (val) currentYear = val;
     })
     .catch(err => console.warn('Errore lettura anno:', err));
 
-// Leggi le bandiere da Firebase
 db.ref('nuovaMongolia/bandiere_anni').once('value')
     .then(snapshot => {
         const val = snapshot.val();
@@ -3092,23 +3084,18 @@ db.ref('nuovaMongolia/bandiere_anni').once('value')
         }
     })
     .catch(err => console.warn('Errore lettura bandiere:', err));
-    if (DATA.getLaws().length === 0 && DATA.getPresidents().length === 0) {
-        DATA.addLaw(
-            '<b>Legge fondamentale:</b> La Nuova Mongolia è una repubblica democratica fondata sull\'amicizia.'
-            );
-        DATA.addLaw('<i>Articolo 2:</i> Ogni cittadino ha diritto al divertimento e al buon cibo.');
-        DATA.addPresident('Manuel',
-            '<b>Manuel</b> è il presidente fondatore della Nuova Mongolia. <span style="color:#e67e22;">Leader carismatico</span> e amante del mare.',
-            '');
-    }
-    
-    renderHome();
-    renderLaws();
-    renderPresidents();
-    renderProjects();
-    renderNotizie();
-    navigateTo('home');
-});
+
+// ===== CONVERTI NEWS VECCHIE (STRINGA) IN ARRAY =====
+const newsData = DATA.getNews();
+if (typeof newsData === 'string' && newsData) {
+    DATA.news = [newsData];
+    DATA.saveToCloud();
+    db.ref('nuovaMongolia/news').set(DATA.news);
+    console.log('✅ News convertita da stringa a array:', DATA.news);
+} else if (!newsData || (Array.isArray(newsData) && newsData.length === 0)) {
+    DATA.news = [];
+}
+}
 
 // ======================================================================
 //  KEYBOARD SHORTCUT: ESC chiude modali
