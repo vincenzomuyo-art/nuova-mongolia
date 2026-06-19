@@ -1273,6 +1273,18 @@
         } else if (!Array.isArray(this.conferenze)) {
             this.conferenze = [];
         }
+
+        // ===== CONVERTI CONFERENZE VECCHIE (ARRAY DI STRINGHE) IN OGGETTI =====
+if (Array.isArray(this.conferenze) && this.conferenze.length > 0 && typeof this.conferenze[0] === 'string') {
+    this.conferenze = this.conferenze.map((str, idx) => ({
+        id: 'conf_' + Date.now() + '_' + idx,
+        titolo: str || 'Conferenza ' + (idx+1),
+        video: str // se era stringa, era il video?
+        // se invece era il titolo, dovresti usare un valore fittizio per video
+    }));
+    db.ref('nuovaMongolia/conferenze').set(this.conferenze);
+    console.log('✅ Conferenze convertite da stringhe a oggetti:', this.conferenze);
+}
         
         // ===== CONVERTI NEWS IN ARRAY SE SONO STRINGA =====
         if (typeof this.news === 'string' && this.news) {
