@@ -2280,6 +2280,8 @@ function openConferenzeEditor() {
                         <option value="">Forma...</option>
                         ${shapeOptions}
                     </select>
+                    <span class="sep"></span>
+                    <button class="btn-rte" id="videoBtn_${editorId}" title="Inserisci video" style="font-size:0.8rem;min-width:40px;">🎬</button>
                 </div>
             `;
         }
@@ -2364,6 +2366,45 @@ function openConferenzeEditor() {
                     this.value = '';
                 });
             }
+
+            const videoBtn = toolbar.querySelector(`#videoBtn_${editorId}`);
+if (videoBtn) {
+    videoBtn.addEventListener('click', function() {
+        const url = prompt('Inserisci il link del video (YouTube, Vimeo, o URL diretto):');
+        if (url && url.trim()) {
+            let videoHtml = '';
+            // YouTube
+            if (url.includes('youtube.com/watch') || url.includes('youtu.be')) {
+                const videoId = url.includes('youtu.be') ? url.split('/').pop() : url.split('v=')[1]?.split('&')[0];
+                if (videoId) {
+                    videoHtml = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px;margin:8px 0;"></iframe>`;
+                }
+            }
+            // Vimeo
+            else if (url.includes('vimeo.com')) {
+                const videoId = url.split('/').pop();
+                if (videoId) {
+                    videoHtml = `<iframe width="100%" height="315" src="https://player.vimeo.com/video/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px;margin:8px 0;"></iframe>`;
+                }
+            }
+            // URL diretto (MP4, WebM, ecc.)
+            else if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                videoHtml = `<video controls style="width:100%;border-radius:8px;margin:8px 0;"><source src="${url}" type="video/mp4"></video>`;
+            }
+            // Embed generico
+            else {
+                videoHtml = `<div style="background:#f0f0f0;padding:20px;border-radius:8px;text-align:center;margin:8px 0;">
+                    <p style="color:#6a7a8a;">📹 Video non supportato<br><a href="${url}" target="_blank" style="color:#f4c542;">Clicca per aprire il link</a></p>
+                </div>`;
+            }
+            
+            if (videoHtml) {
+                document.execCommand('insertHTML', false, videoHtml);
+                editor.focus();
+            }
+        }
+    });
+}
 
             editor.addEventListener('mouseup', updateRteButtons);
             editor.addEventListener('keyup', updateRteButtons);
