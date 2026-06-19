@@ -1734,7 +1734,12 @@ const BANDIERE_ANNI = {
         // ===== RENDER CONFERENZE =====
 function renderConferenze() {
     const el = $('conferenzeContent');
-    const conferenze = DATA.getConferenze();
+    let conferenze = DATA.getConferenze();
+    
+    // Se è una stringa, converti in array di oggetti
+    if (typeof conferenze === 'string' && conferenze) {
+        conferenze = [{ id: 'temp_' + Date.now(), titolo: 'Conferenza', video: conferenze }];
+    }
     
     if (!conferenze || conferenze.length === 0) {
         el.innerHTML = '<span class="text-muted">Nessuna conferenza pubblicata. Clicca + per aggiungere.</span>';
@@ -3128,42 +3133,8 @@ function openConferenzaEditor(conferenza) {
         isEdit ? '✎ Modifica Conferenza' : '🎙️ Nuova Conferenza',
         html,
         `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
-         <button class="btn-primary" id="modalConfirmInner">${isEdit ? 'Salva' : 'Aggiungi'}</button>`,
-        () => {
-            const titolo = document.getElementById('conferenzaTitoloInput').value.trim();
-            const videoBox = document.getElementById('conferenzaVideoBox');
-            const videoPreview = videoBox ? videoBox.querySelector('video') : null;
-            const fileInput = document.getElementById('conferenzaVideoInput');
-            
-            let videoData = c.video || '';
-            
-            if (fileInput && fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    videoData = e.target.result;
-                    salvaConferenza();
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-                return;
-            } else if (videoPreview && videoPreview.src && !videoPreview.src.includes('undefined')) {
-                videoData = videoPreview.src;
-            }
-            
-            salvaConferenza();
-            
-            function salvaConferenza() {
-                if (!titolo) { alert('Inserisci un titolo.'); return; }
-                if (!videoData) { alert('Seleziona un video.'); return; }
-                
-                if (isEdit) {
-                    DATA.updateConferenza(c.id, titolo, videoData);
-                } else {
-                    DATA.addConferenza(titolo, videoData);
-                }
-                closeModal();
-                renderConferenze();
-            }
-        },
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaConferenzaHandler('${isEdit ? c.id : ''}')">${isEdit ? 'Salva' : 'Aggiungi'}</button>`,
+        () => {},
         () => { closeModal(); }
     );
     
@@ -3212,6 +3183,28 @@ function openConferenzaEditor(conferenza) {
             });
         }
     }, 100);
+}
+
+function salvaConferenzaHandler(id) {
+    const titolo = document.getElementById('conferenzaTitoloInput').value.trim();
+    const videoBox = document.getElementById('conferenzaVideoBox');
+    const videoPreview = videoBox ? videoBox.querySelector('video') : null;
+    let videoData = '';
+    
+    if (videoPreview && videoPreview.src && !videoPreview.src.includes('undefined')) {
+        videoData = videoPreview.src;
+    }
+    
+    if (!titolo) { alert('Inserisci un titolo.'); return; }
+    if (!videoData) { alert('Seleziona un video.'); return; }
+    
+    if (id) {
+        DATA.updateConferenza(id, titolo, videoData);
+    } else {
+        DATA.addConferenza(titolo, videoData);
+    }
+    closeModal();
+    renderConferenze();
 }
         // ======================================================================
 //  AVVIA APP
