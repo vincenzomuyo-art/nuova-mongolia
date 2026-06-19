@@ -1252,30 +1252,49 @@
             _listeners: {},
 
             loadFromCloud() {
-                this._loading = true;
-                updateStatus('loading', '🔄 Caricamento...');
-                return db.ref('nuovaMongolia').once('value').then(snapshot => {
-                    const data = snapshot.val() || {};
-                    this.laws = data.laws || [];
-                    this.presidents = data.presidents || [];
-                    this.projects = data.projects || '';
-                    this.news = data.news || '';
-                    this.conferenze = data.conferenze || [];
-                    this.flag = data.flag || null;
-                    this.nextLawId = data.nextLawId || 0;
-                    this.nextPresidentId = data.nextPresidentId || 0;
-                    this._loading = false;
-                    updateStatus('online', '☁️ Cloud');
-                    this._notifyAll();
-                    return data;
-                }).catch(err => {
-                    console.warn('Errore caricamento da cloud:', err);
-                    this._loading = false;
-                    updateStatus('offline', '⚠️ Offline');
-                    this._loadSampleData();
-                    return null;
-                });
-            },
+    this._loading = true;
+    updateStatus('loading', '🔄 Caricamento...');
+    return db.ref('nuovaMongolia').once('value').then(snapshot => {
+        const data = snapshot.val() || {};
+        this.laws = data.laws || [];
+        this.presidents = data.presidents || [];
+        this.projects = data.projects || '';
+        this.news = data.news || '';
+        this.conferenze = data.conferenze || [];
+        this.flag = data.flag || null;
+        this.nextLawId = data.nextLawId || 0;
+        this.nextPresidentId = data.nextPresidentId || 0;
+        
+        // ===== CONVERTI CONFERENZE IN ARRAY SE SONO STRINGA =====
+        if (typeof this.conferenze === 'string' && this.conferenze) {
+            this.conferenze = [this.conferenze];
+            db.ref('nuovaMongolia/conferenze').set(this.conferenze);
+            console.log('✅ Conferenze convertite da stringa a array:', this.conferenze);
+        } else if (!Array.isArray(this.conferenze)) {
+            this.conferenze = [];
+        }
+        
+        // ===== CONVERTI NEWS IN ARRAY SE SONO STRINGA =====
+        if (typeof this.news === 'string' && this.news) {
+            this.news = [this.news];
+            db.ref('nuovaMongolia/news').set(this.news);
+            console.log('✅ News convertite da stringa a array:', this.news);
+        } else if (!Array.isArray(this.news)) {
+            this.news = [];
+        }
+        
+        this._loading = false;
+        updateStatus('online', '☁️ Cloud');
+        this._notifyAll();
+        return data;
+    }).catch(err => {
+        console.warn('Errore caricamento da cloud:', err);
+        this._loading = false;
+        updateStatus('offline', '⚠️ Offline');
+        this._loadSampleData();
+        return null;
+    });
+},
 
             saveToCloud() {
                 if (this._loading) return;
