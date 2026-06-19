@@ -1260,7 +1260,7 @@
                     this.presidents = data.presidents || [];
                     this.projects = data.projects || '';
                     this.news = data.news || '';
-                    this.conferenze = data.conferenze || '';
+                    this.conferenze = data.conferenze || [];
                     this.flag = data.flag || null;
                     this.nextLawId = data.nextLawId || 0;
                     this.nextPresidentId = data.nextPresidentId || 0;
@@ -1383,8 +1383,30 @@
                 this._notify('news'); },
 
             // ===== CONFERENZE STAMPA =====
-            getConferenze() { return this.conferenze || ''; },
-            setConferenze(c) { this.conferenze = c || ''; this.saveToCloud(); this._notify('conferenze'); },    
+            getConferenze() { return this.conferenze || []; },
+setConferenze(c) { this.conferenze = Array.isArray(c) ? c : (c ? [c] : []); this.saveToCloud(); this._notify('conferenze'); },
+addConferenza(titolo, video) {
+    const list = this.getConferenze();
+    const id = Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    list.push({ id, titolo, video });
+    this.setConferenze(list);
+    return list;
+},
+updateConferenza(id, titolo, video) {
+    const list = this.getConferenze();
+    const idx = list.findIndex(c => c.id === id);
+    if (idx !== -1) {
+        list[idx].titolo = titolo;
+        if (video) list[idx].video = video;
+        this.setConferenze(list);
+        return true;
+    }
+    return false;
+},
+deleteConferenza(id) {
+    const list = this.getConferenze().filter(c => c.id !== id);
+    this.setConferenze(list);
+},  
 
             getFlag() { return this.flag; },
             setFlag(f) { this.flag = f;
@@ -1681,8 +1703,35 @@ const BANDIERE_ANNI = {
         // ===== RENDER CONFERENZE =====
 function renderConferenze() {
     const el = $('conferenzeContent');
-    const content = DATA.getConferenze();
-    el.innerHTML = content || '<span class="text-muted">Nessuna conferenza pubblicata. Clicca + per aggiungere.</span>';
+    const conferenze = DATA.getConferenze();
+    
+    if (!conferenze || conferenze.length === 0) {
+        el.innerHTML = '<span class="text-muted">Nessuna conferenza pubblicata. Clicca + per aggiungere.</span>';
+        return;
+    }
+    
+    el.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:30px;max-height:70vh;overflow-y:auto;padding:4px;">
+            ${conferenze.map((c, idx) => `
+                <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #f4c542;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h3 style="font-size:1.1rem;color:#1a2634;">${c.titolo || 'Conferenza ' + (idx+1)}</h3>
+                    </div>
+                    ${c.video ? `
+                        <div style="width:100%;border-radius:12px;overflow:hidden;background:#000;">
+                            <video controls style="width:100%;display:block;max-height:500px;object-fit:contain;" 
+                                   playsinline 
+                                   controlsList="nodownload"
+                                   oncontextmenu="return false;">
+                                <source src="${c.video}" type="video/mp4">
+                                Il tuo browser non supporta i video.
+                            </video>
+                        </div>
+                    ` : '<p style="color:#8a9aa8;">Nessun video caricato.</p>'}
+                </div>
+            `).join('')}
+        </div>
+    `;
 }
 
         // ======================================================================
@@ -1713,8 +1762,8 @@ function renderConferenze() {
                     askPassword('AREA-RISERVATA-A-MANUEL-BELLO', () => openContentEditor('notizie'));
                     break;
                 case 'conferenze':
-    askPassword('benito;MUSSOliNI-AmOrE,.,.', () => openConferenzeEditor());
-    break;
+                    askPassword('benito;MUSSOliNI-AmOrE,.,.', () => openConferenzeManager());
+                    break;
                 
                     
             }
@@ -2194,39 +2243,73 @@ document.getElementById('settingsBtn').addEventListener('click', function() {
         }
 
         // ===== EDITOR CONFERENZE =====
-function openConferenzeEditor() {
-    const current = DATA.getConferenze();
-
-    let html = `
-        <div class="form-group">
-            <label>🎙️ Conferenza Stampa</label>
-            <p style="font-size:0.85rem;color:#6a7a8a;margin-bottom:8px;">Inserisci il contenuto della conferenza (testo, link video, ecc.)</p>
-            <div class="rte-wrapper" id="conferenzeRteWrapper">
-                ${buildRteToolbar('conferenzeRte')}
-                <div class="rte-editor" id="conferenzeRte" contenteditable="true">${current}</div>
-            </div>
-        </div>
+function openConferenzeManager() {
+    const conferenze = DATA.getConferenze();
+    let listHtml = '';
+    
+    if (conferenze.length === 0) {
+        listHtml = `<div class="text-muted" style="padding:12px 0;">Nessuna conferenza presente.</div>`;
+    } else {
+        listHtml = `<div class="manager-list">`;
+        conferenze.forEach(c => {
+            listHtml += `
+                <div class="item-row">
+                    <span class="item-preview" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${c.titolo || 'Conferenza senza titolo'}</span>
+                    <span class="item-actions">
+                        <button class="edit" data-id="${c.id}">✎ Modifica</button>
+                        <button class="del" data-id="${c.id}">✕ Elimina</button>
+                    </span>
+                </div>
+            `;
+        });
+        listHtml += `</div>`;
+    }
+    
+    const html = `
+        <p style="margin-bottom:8px;font-weight:500;">Gestisci le conferenze stampa</p>
+        ${listHtml}
+        <button class="add-conferenza-btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:#1a2634;color:#fff;font-weight:600;transition:0.2s;margin-top:8px;">+ Aggiungi nuova conferenza</button>
     `;
-
+    
     openModal(
-        '🎙️ Modifica Conferenza Stampa',
+        '🎙️ Gestione Conferenze',
         html,
-        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
-         <button class="btn-primary" id="modalConfirmInner">💾 Salva</button>`,
-        () => {
-            const content = document.getElementById('conferenzeRte').innerHTML;
-            if (!content || content.trim() === '') {
-                alert('Inserisci il contenuto della conferenza.');
-                return;
-            }
-            DATA.setConferenze(content);
-            closeModal();
-            renderConferenze();
-        },
+        `<button class="btn-secondary" id="modalCancelInner">Chiudi</button>`,
+        () => { closeModal(); },
         () => { closeModal(); }
     );
-
-    initRte('conferenzeRte');
+    
+    const container = document.getElementById('modalBody');
+    container.querySelectorAll('.del').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            if (confirm('Eliminare questa conferenza?')) {
+                DATA.deleteConferenza(id);
+                closeModal();
+                openConferenzeManager();
+                renderConferenze();
+            }
+        });
+    });
+    container.querySelectorAll('.edit').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const conf = DATA.getConferenze().find(c => c.id === id);
+            if (conf) {
+                closeModal();
+                openConferenzaEditor(conf);
+            }
+        });
+    });
+    const addBtn = container.querySelector('.add-conferenza-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            closeModal();
+            openConferenzaEditor(null);
+        });
+    }
 }
 
         // ======================================================================
@@ -2988,6 +3071,117 @@ function salvaBandieraAnno() {
     }
 }
 
+
+function openConferenzaEditor(conferenza) {
+    const isEdit = !!conferenza;
+    const c = conferenza || { id: null, titolo: '', video: '' };
+    
+    let html = `
+        <div class="form-group">
+            <label>Titolo conferenza</label>
+            <input type="text" id="conferenzaTitoloInput" value="${c.titolo || ''}" placeholder="Titolo della conferenza" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
+        </div>
+        <div class="form-group">
+            <label>Video (dal dispositivo)</label>
+            <div class="image-upload-box" id="conferenzaVideoBox" style="border:3px dashed #ccc;border-radius:16px;padding:32px 20px;text-align:center;color:#888;cursor:pointer;background:#faf8f6;">
+                ${c.video ? `<video controls style="max-width:100%;max-height:200px;border-radius:12px;"><source src="${c.video}" type="video/mp4"></video>` : `<div class="hint">🎬 Clicca per caricare un video (MP4)</div>`}
+                <input type="file" id="conferenzaVideoInput" accept="video/*" />
+            </div>
+        </div>
+        <div style="margin-top:12px;padding:12px;background:#f8f6f3;border-radius:10px;font-size:0.85rem;color:#6a7a8a;">
+            💡 I video saranno visibili con tutti i controlli: pausa, velocità, qualità, timer, ecc.
+        </div>
+    `;
+
+    openModal(
+        isEdit ? '✎ Modifica Conferenza' : '🎙️ Nuova Conferenza',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-primary" id="modalConfirmInner">${isEdit ? 'Salva' : 'Aggiungi'}</button>`,
+        () => {
+            const titolo = document.getElementById('conferenzaTitoloInput').value.trim();
+            const videoBox = document.getElementById('conferenzaVideoBox');
+            const videoPreview = videoBox ? videoBox.querySelector('video') : null;
+            const fileInput = document.getElementById('conferenzaVideoInput');
+            
+            let videoData = c.video || '';
+            
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    videoData = e.target.result;
+                    salvaConferenza();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+                return;
+            } else if (videoPreview && videoPreview.src && !videoPreview.src.includes('undefined')) {
+                videoData = videoPreview.src;
+            }
+            
+            salvaConferenza();
+            
+            function salvaConferenza() {
+                if (!titolo) { alert('Inserisci un titolo.'); return; }
+                if (!videoData) { alert('Seleziona un video.'); return; }
+                
+                if (isEdit) {
+                    DATA.updateConferenza(c.id, titolo, videoData);
+                } else {
+                    DATA.addConferenza(titolo, videoData);
+                }
+                closeModal();
+                renderConferenze();
+            }
+        },
+        () => { closeModal(); }
+    );
+    
+    // Upload video
+    setTimeout(() => {
+        const box = document.getElementById('conferenzaVideoBox');
+        const input = document.getElementById('conferenzaVideoInput');
+        if (box && input) {
+            box.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON' && e.target.id !== 'modalConfirmInner') {
+                    input.click();
+                }
+            });
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const box = document.getElementById('conferenzaVideoBox');
+                        const prev = box.querySelector('video');
+                        const hint = box.querySelector('.hint');
+                        if (prev) {
+                            prev.src = e.target.result;
+                            prev.load();
+                        } else if (hint) {
+                            const vid = document.createElement('video');
+                            vid.controls = true;
+                            vid.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
+                            const src = document.createElement('source');
+                            src.src = e.target.result;
+                            src.type = 'video/mp4';
+                            vid.appendChild(src);
+                            hint.replaceWith(vid);
+                        } else {
+                            const vid = document.createElement('video');
+                            vid.controls = true;
+                            vid.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
+                            const src = document.createElement('source');
+                            src.src = e.target.result;
+                            src.type = 'video/mp4';
+                            vid.appendChild(src);
+                            box.appendChild(vid);
+                        }
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+    }, 100);
+}
         // ======================================================================
 //  AVVIA APP
 // ======================================================================
