@@ -1408,10 +1408,33 @@ if (Array.isArray(this.conferenze) && this.conferenze.length > 0 && typeof this.
                 this.saveToCloud();
                 this._notify('projects'); },
 
-            getNews() { return this.news; },
-            setNews(c) { this.news = c;
-                this.saveToCloud();
-                this._notify('news'); },
+            getNews() { return this.news || []; },
+setNews(c) { 
+    this.news = Array.isArray(c) ? c : (c ? [c] : []); 
+    this.saveToCloud(); 
+    this._notify('news'); 
+},
+addNews(content) {
+    const list = this.getNews();
+    const id = Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    list.push({ id, content });
+    this.setNews(list);
+    return list;
+},
+updateNews(id, content) {
+    const list = this.getNews();
+    const idx = list.findIndex(n => n.id === id);
+    if (idx !== -1) {
+        list[idx].content = content;
+        this.setNews(list);
+        return true;
+    }
+    return false;
+},
+deleteNews(id) {
+    const list = this.getNews().filter(n => n.id !== id);
+    this.setNews(list);
+},
 
             // ===== CONFERENZE STAMPA =====
             getConferenze() { return this.conferenze || []; },
@@ -1726,10 +1749,27 @@ const BANDIERE_ANNI = {
         }
 
         function renderNotizie() {
-            const el = $('notizieContent');
-            const content = DATA.getNews();
-            el.innerHTML = content || '<span class="text-muted">Nessuna notizia. Clicca + per aggiungere.</span>';
-        }
+    const el = $('notizieContent');
+    const news = DATA.getNews();
+    
+    if (!news || news.length === 0) {
+        el.innerHTML = '<span class="text-muted">Nessuna notizia pubblicata. Clicca + per aggiungere.</span>';
+        return;
+    }
+    
+    el.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:20px;max-height:70vh;overflow-y:auto;padding:4px;">
+            ${news.map((n, idx) => `
+                <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #f4c542;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <span style="font-size:0.8rem;color:#8a9aa8;font-weight:600;">Notizia ${idx + 1}</span>
+                    </div>
+                    <div style="font-size:1rem;line-height:1.7;">${n.content || ''}</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
 
         // ===== RENDER CONFERENZE =====
 function renderConferenze() {
@@ -1795,7 +1835,7 @@ function renderConferenze() {
                     askPassword('non,SOCHEPASSWORDINVENTARMI', () => openContentEditor('progetti'));
                     break;
                 case 'notizie':
-                    askPassword('AREA-RISERVATA-A-MANUEL-BELLO', () => openContentEditor('notizie'));
+                    askPassword('AREA-RISERVATA-A-MANUEL-BELLO', () => openNewsManager());
                     break;
                 case 'conferenze':
                     askPassword('benito;MUSSOliNI-AmOrE,.,.', () => openConferenzeManager());
@@ -3224,6 +3264,117 @@ function salvaConferenzaHandler(id) {
     closeModal();
     renderConferenze();
 }
+
+function openNewsManager() {
+    const news = DATA.getNews();
+    let listHtml = '';
+    
+    if (news.length === 0) {
+        listHtml = `<div class="text-muted" style="padding:12px 0;">Nessuna notizia presente.</div>`;
+    } else {
+        listHtml = `<div class="manager-list">`;
+        news.forEach(n => {
+            listHtml += `
+                <div class="item-row">
+                    <span class="item-preview" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${n.content || 'Notizia senza contenuto'}</span>
+                    <span class="item-actions">
+                        <button class="edit" data-id="${n.id}">✎ Modifica</button>
+                        <button class="del" data-id="${n.id}">✕ Elimina</button>
+                    </span>
+                </div>
+            `;
+        });
+        listHtml += `</div>`;
+    }
+    
+    const html = `
+        <p style="margin-bottom:8px;font-weight:500;">Gestisci le notizie</p>
+        ${listHtml}
+        <button class="add-news-btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:#1a2634;color:#fff;font-weight:600;transition:0.2s;margin-top:8px;">+ Aggiungi nuova notizia</button>
+    `;
+    
+    openModal(
+        '📰 Gestione Notizie',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Chiudi</button>`,
+        () => { closeModal(); },
+        () => { closeModal(); }
+    );
+    
+    const container = document.getElementById('modalBody');
+    container.querySelectorAll('.del').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            if (confirm('Eliminare questa notizia?')) {
+                DATA.deleteNews(id);
+                closeModal();
+                openNewsManager();
+                renderNotizie();
+            }
+        });
+    });
+    container.querySelectorAll('.edit').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const n = DATA.getNews().find(item => item.id === id);
+            if (n) {
+                closeModal();
+                openNewsEditor(n);
+            }
+        });
+    });
+    const addBtn = container.querySelector('.add-news-btn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            closeModal();
+            openNewsEditor(null);
+        });
+    }
+}
+
+function openNewsEditor(notizia) {
+    const isEdit = !!notizia;
+    const n = notizia || { id: null, content: '' };
+    
+    let html = `
+        <div class="form-group">
+            <label>${isEdit ? 'Modifica' : 'Nuova'} notizia</label>
+            <div class="rte-wrapper" id="newsRteWrapper">
+                ${buildRteToolbar('newsRte')}
+                <div class="rte-editor" id="newsRte" contenteditable="true">${n.content || ''}</div>
+            </div>
+        </div>
+    `;
+    
+    openModal(
+        isEdit ? '✎ Modifica Notizia' : '📰 Nuova Notizia',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaNotiziaHandler('${isEdit ? n.id : ''}')">${isEdit ? 'Salva' : 'Aggiungi'}</button>`,
+        () => {},
+        () => { closeModal(); }
+    );
+    
+    initRte('newsRte');
+}
+
+function salvaNotiziaHandler(id) {
+    const content = document.getElementById('newsRte').innerHTML;
+    if (!content || content.trim() === '') {
+        alert('Il contenuto della notizia non può essere vuoto.');
+        return;
+    }
+    
+    if (id) {
+        DATA.updateNews(id, content);
+    } else {
+        DATA.addNews(content);
+    }
+    closeModal();
+    renderNotizie();
+}
         // ======================================================================
 //  AVVIA APP
 // ======================================================================
@@ -3296,7 +3447,7 @@ document.addEventListener('keydown', (e) => {
 
 console.log('🏛️ Nuova Mongolia — Cloud Edition!');
 console.log('📜 Editto di Barletta password: nuova-MONGOLIA_2021');
-console.log('👤 Biografia Presidenti password: Biografia.pRESIDENTI-1945');
+console.log('👤 Biografia Presidenti password: Biografia2026%');
 console.log('🚀 Progetti password: non,SOCHEPASSWORDINVENTARMI');
 console.log('📰 Notizie password: AREA-RISERVATA-A-MANUEL-BELLO');
 console.log('☁️ Dati salvati su Firebase Realtime Database!');
