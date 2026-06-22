@@ -1077,6 +1077,7 @@
             <button data-page="editto"><span class="icon">📜</span> Editto di Barletta</button>
             <button data-page="presidenti"><span class="icon">👤</span> Biografia Partecipanti della Nuova Mongolia</button>
             <button data-page="progetti"><span class="icon">🚀</span> Progetti dell'anno attuale</button>
+            <button data-page="costruzioni"><span class="icon">🏗️</span> Costruzioni previste per quest'anno</button>
             <button data-page="notizie"><span class="icon">📰</span> Notizie</button>
             <button data-page="conferenze"><span class="icon">🎙️</span> Conferenze Stampa</button>
         </nav>
@@ -1173,6 +1174,19 @@
     </div>
 </section>
 
+<!-- COSTRUZIONI PREVISTE PER QUEST'ANNO -->
+<section class="page" id="page-costruzioni">
+    <div class="flex-between">
+        <div>
+            <div class="page-title">🏗️ Costruzioni previste per quest'anno</div>
+            <div class="page-sub">I progetti di costruzione della Nuova Mongolia</div>
+        </div>
+    </div>
+    <div id="costruzioniContent" class="rte-display" style="background:#fff;border-radius:16px;padding:24px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.06);min-height:120px;line-height:1.7;">
+        <div class="loading"><div class="spinner"></div> Caricamento...</div>
+    </div>
+</section>
+
     </main>
 
     <!-- ===== MODALE GENERICO ===== -->
@@ -1259,6 +1273,7 @@
         this.laws = data.laws || [];
         this.presidents = data.presidents || [];
         this.projects = data.projects || '';
+        this.costruzioni = data.costruzioni || [];
         this.news = data.news || '';
         this.conferenze = data.conferenze || [];
         this.flag = data.flag || null;
@@ -1314,6 +1329,7 @@ if (Array.isArray(this.conferenze) && this.conferenze.length > 0 && typeof this.
                     laws: this.laws,
                     presidents: this.presidents,
                     projects: this.projects,
+                    costruzioni: this.costruzioni,
                     news: this.news,
                     conferenze: this.conferenze,
                     flag: this.flag,
@@ -1462,6 +1478,33 @@ deleteConferenza(id) {
     this.setConferenze(list);
 },  
 
+// ===== COSTRUZIONI =====
+getCostruzioni() { return this.costruzioni || []; },
+setCostruzioni(c) { this.costruzioni = Array.isArray(c) ? c : (c ? [c] : []); this.saveToCloud(); this._notify('costruzioni'); },
+addCostruzione(titolo, file3D, descrizione) {
+    const list = this.getCostruzioni();
+    const id = Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    list.push({ id, titolo, file3D, descrizione });
+    this.setCostruzioni(list);
+    return list;
+},
+updateCostruzione(id, titolo, file3D, descrizione) {
+    const list = this.getCostruzioni();
+    const idx = list.findIndex(c => c.id === id);
+    if (idx !== -1) {
+        list[idx].titolo = titolo;
+        if (file3D !== undefined) list[idx].file3D = file3D;
+        list[idx].descrizione = descrizione;
+        this.setCostruzioni(list);
+        return true;
+    }
+    return false;
+},
+deleteCostruzione(id) {
+    const list = this.getCostruzioni().filter(c => c.id !== id);
+    this.setCostruzioni(list);
+},
+
             getFlag() { return this.flag; },
             setFlag(f) { this.flag = f;
                 this.saveToCloud();
@@ -1564,6 +1607,7 @@ const BANDIERE_ANNI = {
             editto: { title: 'Editto di Barletta', plus: true },
             presidenti: { title: 'Biografia Partecipanti', plus: true },
             progetti: { title: 'Progetti dell\'anno attuale', plus: true },
+            costruzioni: { title: 'Costruzioni previste per quest\'anno', plus: true },
             notizie: { title: 'Notizie', plus: true },
             conferenze: { title: 'Conferenze Stampa', plus: true },
         };
@@ -1829,6 +1873,255 @@ function renderConferenze() {
     `;
 }
 
+// ===== RENDER COSTRUZIONI =====
+function renderCostruzioni() {
+    const el = $('costruzioniContent');
+    let costruzioni = DATA.getCostruzioni();
+    
+    if (typeof costruzioni === 'string' && costruzioni) {
+        costruzioni = [{ id: 'temp_' + Date.now(), titolo: 'Costruzione', file3D: costruzioni, descrizione: '' }];
+    }
+    
+    if (!costruzioni || costruzioni.length === 0) {
+        el.innerHTML = '<span class="text-muted">Nessuna costruzione prevista. Clicca + per aggiungere.</span>';
+        return;
+    }
+    
+    el.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:30px;max-height:70vh;overflow-y:auto;padding:4px;">
+            ${costruzioni.map((c, idx) => `
+                <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #f4c542;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <h3 style="font-size:1.1rem;color:#1a2634;">${c.titolo || 'Costruzione ' + (idx+1)}</h3>
+                    </div>
+                    ${c.descrizione ? `<p style="color:#3a4a5a;font-size:0.95rem;margin-bottom:12px;">${c.descrizione}</p>` : ''}
+                    ${c.file3D ? `
+                        <div style="width:100%;border-radius:12px;overflow:hidden;background:#1a2634;padding:4px;min-height:300px;">
+                            <div id="viewer_${c.id}" style="width:100%;height:400px;border-radius:8px;background:#1a2634;"></div>
+                            <p style="color:#aab;font-size:0.8rem;text-align:center;padding:8px;">🔄 Modello 3D interattivo (trascina per ruotare, scrolla per zoom)</p>
+                        </div>
+                    ` : '<p style="color:#8a9aa8;">Nessun file 3D caricato.</p>'}
+                </div>
+            `).join('')}
+        </div>
+    `;
+    
+    // Carica i visualizzatori 3D per ogni costruzione
+    setTimeout(() => {
+        costruzioni.forEach(c => {
+            if (c.file3D && document.getElementById('viewer_' + c.id)) {
+                caricaModello3D('viewer_' + c.id, c.file3D);
+            }
+        });
+    }, 100);
+}
+
+// ===== GESTIONE COSTRUZIONI =====
+function openCostruzioniManager() {
+    let costruzioni = DATA.getCostruzioni();
+    
+    if (costruzioni.length > 0 && (!costruzioni[0].id || costruzioni[0].titolo === '')) {
+        const fixed = costruzioni.map((c, idx) => {
+            if (!c.id || c.titolo === '') {
+                return { id: 'cost_' + Date.now() + '_' + idx, titolo: c.titolo || 'Costruzione', file3D: c.file3D || '', descrizione: c.descrizione || '' };
+            }
+            return c;
+        });
+        DATA.setCostruzioni(fixed);
+        costruzioni = DATA.getCostruzioni();
+    }
+    
+    let listHtml = '';
+    
+    if (costruzioni.length === 0) {
+        listHtml = `<div class="text-muted" style="padding:12px 0;">Nessuna costruzione presente.</div>`;
+    } else {
+        listHtml = `<div class="manager-list">`;
+        costruzioni.forEach(c => {
+            listHtml += `
+                <div class="item-row">
+                    <span class="item-preview" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${c.titolo || 'Costruzione senza titolo'}</span>
+                    <span class="item-actions">
+                        <button class="edit" data-id="${c.id}" onclick="apriModificaCostruzione('${c.id}')">✎ Modifica</button>
+                        <button class="del" data-id="${c.id}" onclick="eliminaCostruzione('${c.id}')">✕ Elimina</button>
+                    </span>
+                </div>
+            `;
+        });
+        listHtml += `</div>`;
+    }
+    
+    const html = `
+        <p style="margin-bottom:8px;font-weight:500;">Gestisci le costruzioni previste</p>
+        ${listHtml}
+        <button class="add-costruzione-btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:#1a2634;color:#fff;font-weight:600;transition:0.2s;margin-top:8px;" onclick="apriNuovaCostruzione()">+ Aggiungi nuova costruzione</button>
+    `;
+    
+    openModal(
+        '🏗️ Gestione Costruzioni',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Chiudi</button>`,
+        () => { closeModal(); },
+        () => { closeModal(); }
+    );
+}
+
+// ===== APRI MODIFICA COSTRUZIONE =====
+function apriModificaCostruzione(id) {
+    let c = DATA.getCostruzioni().find(item => item.id === id);
+    if (!c) {
+        DATA.addCostruzione('', '', '');
+        c = DATA.getCostruzioni().find(item => item.id === id);
+        if (!c) { alert('Errore: impossibile creare la costruzione.'); return; }
+    }
+    closeModal();
+    openCostruzioneEditor(c);
+}
+
+// ===== ELIMINA COSTRUZIONE =====
+function eliminaCostruzione(id) {
+    if (confirm('Eliminare questa costruzione?')) {
+        DATA.deleteCostruzione(id);
+        closeModal();
+        openCostruzioniManager();
+        renderCostruzioni();
+    }
+}
+
+// ===== APRI NUOVA COSTRUZIONE =====
+function apriNuovaCostruzione() {
+    closeModal();
+    openCostruzioneEditor(null);
+}
+
+// ===== EDITOR COSTRUZIONI =====
+function openCostruzioneEditor(costruzione) {
+    const isEdit = !!costruzione;
+    const c = costruzione || { id: null, titolo: '', file3D: '', descrizione: '' };
+    
+    let html = `
+        <div class="form-group">
+            <label>Titolo costruzione</label>
+            <input type="text" id="costruzioneTitoloInput" value="${c.titolo || ''}" placeholder="Titolo della costruzione" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
+        </div>
+        <div class="form-group">
+            <label>Carica file 3D (GLB, GLTF, OBJ, STL, FBX, 3MF, PLY, ZIP)</label>
+            <div class="image-upload-box" id="costruzioneFileBox" style="border:3px dashed #ccc;border-radius:16px;padding:32px 20px;text-align:center;color:#888;cursor:pointer;background:#faf8f6;">
+                ${c.file3D && !c.file3D.startsWith('http') ? `<div style="color:#28a745;">✅ File caricato: ${c.file3D.substring(0, 30)}...</div>` : `<div class="hint">📦 Clicca per caricare un file 3D (GLB, GLTF, OBJ, STL, FBX, 3MF, PLY, ZIP)</div>`}
+                <input type="file" id="costruzioneFileInput" accept=".glb,.gltf,.obj,.stl,.fbx,.3mf,.ply,.zip" />
+            </div>
+        </div>
+        <div style="text-align:center;margin:8px 0;color:#6a7a8a;font-size:0.9rem;">— OPPURE —</div>
+        <div class="form-group">
+            <label>Link file 3D esterno</label>
+            <input type="text" id="costruzioneFileLink" value="${c.file3D && c.file3D.startsWith('http') ? c.file3D : ''}" placeholder="https://tuo-dominio.netlify.app/modello.glb" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
+            <div style="margin-top:8px;font-size:0.85rem;color:#6a7a8a;">
+                💡 Carica il file su Netlify Drop e incolla il link qui.
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Descrizione</label>
+            <div class="rte-wrapper" id="costruzioneDescWrapper">
+                ${buildRteToolbar('costruzioneDesc')}
+                <div class="rte-editor" id="costruzioneDesc" contenteditable="true">${c.descrizione || ''}</div>
+            </div>
+        </div>
+    `;
+
+    openModal(
+        isEdit ? '✎ Modifica Costruzione' : '🏗️ Nuova Costruzione',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaCostruzioneHandler('${isEdit ? c.id : ''}')">${isEdit ? 'Salva' : 'Aggiungi'}</button>`,
+        () => {},
+        () => { closeModal(); }
+    );
+
+    // Upload file 3D
+    setTimeout(() => {
+        const box = document.getElementById('costruzioneFileBox');
+        const input = document.getElementById('costruzioneFileInput');
+        if (box && input) {
+            box.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON' && e.target.id !== 'modalConfirmInner') {
+                    input.click();
+                }
+            });
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const box = document.getElementById('costruzioneFileBox');
+                        const hint = box.querySelector('.hint');
+                        const fileData = e.target.result;
+                        if (hint) {
+                            hint.innerHTML = `✅ File caricato: ${this.files[0].name}`;
+                        } else {
+                            const div = document.createElement('div');
+                            div.style.color = '#28a745';
+                            div.textContent = '✅ File caricato: ' + this.files[0].name;
+                            box.appendChild(div);
+                        }
+                        // Svuota il campo link
+                        const linkInput = document.getElementById('costruzioneFileLink');
+                        if (linkInput) linkInput.value = '';
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+    }, 100);
+    
+    initRte('costruzioneDesc');
+}
+
+// ===== SALVA COSTRUZIONE =====
+function salvaCostruzioneHandler(id) {
+    const titolo = document.getElementById('costruzioneTitoloInput').value.trim();
+    const fileBox = document.getElementById('costruzioneFileBox');
+    const fileInput = document.getElementById('costruzioneFileInput');
+    const linkInput = document.getElementById('costruzioneFileLink');
+    const linkValue = linkInput ? linkInput.value.trim() : '';
+    const descrizione = document.getElementById('costruzioneDesc').innerHTML;
+    
+    let fileData = '';
+    
+    // Priorità: se c'è un link, usalo
+    if (linkValue) {
+        fileData = linkValue;
+    } else if (fileInput && fileInput.files && fileInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            fileData = e.target.result;
+            salva();
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+        return;
+    } else {
+        // Controlla se c'è un file già caricato (da preview)
+        const hint = fileBox ? fileBox.querySelector('.hint') : null;
+        if (hint && hint.innerHTML && hint.innerHTML.includes('File caricato')) {
+            // Il file è già stato caricato in precedenza, ma non abbiamo il dato
+            // Usa quello che c'è nel campo nascosto o nel fileData già presente
+        }
+    }
+    
+    salva();
+    
+    function salva() {
+        if (!titolo) { alert('Inserisci un titolo.'); return; }
+        if (!fileData) { alert('Carica un file 3D o inserisci un link.'); return; }
+        
+        if (id) {
+            DATA.updateCostruzione(id, titolo, fileData, descrizione);
+        } else {
+            DATA.addCostruzione(titolo, fileData, descrizione);
+        }
+        closeModal();
+        renderCostruzioni();
+    }
+}
+
         // ======================================================================
         //  SETUP LISTENERS
         // ======================================================================
@@ -1837,6 +2130,7 @@ function renderConferenze() {
         DATA.onChange('projects', renderProjects);
         DATA.onChange('news', renderNotizie);
         DATA.onChange('conferenze', renderConferenze);
+        DATA.onChange('costruzioni', renderCostruzioni);
         DATA.onChange('flag', renderHome);
 
         // ======================================================================
@@ -1859,8 +2153,9 @@ function renderConferenze() {
                 case 'conferenze':
                     askPassword('benito;MUSSOliNI-AmOrE,.,.', () => openConferenzeManager());
                     break;
-                
-                    
+                case 'costruzioni':
+                    askPassword('3Dmodels%20', () => openCostruzioniManager());
+                    break;
             }
         });
 
