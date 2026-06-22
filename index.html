@@ -1748,7 +1748,7 @@ const BANDIERE_ANNI = {
             el.innerHTML = content || '<span class="text-muted">Nessun progetto inserito. Clicca + per aggiungere.</span>';
         }
 
-        function renderNotizie() {
+       function renderNotizie() {
     const el = $('notizieContent');
     const news = DATA.getNews();
     
@@ -1760,15 +1760,34 @@ const BANDIERE_ANNI = {
     el.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:20px;max-height:70vh;overflow-y:auto;padding:4px;">
             ${news.map((n, idx) => `
-                <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #f4c542;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                        <span style="font-size:0.8rem;color:#8a9aa8;font-weight:600;">Notizia ${idx + 1}</span>
+                <div style="background:#fff;border-radius:16px;padding:12px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #f4c542;text-align:center;">
+                    <div style="font-size:0.8rem;color:#8a9aa8;font-weight:600;margin-bottom:8px;">Notizia ${idx + 1}</div>
+                    <div style="width:100%;overflow:hidden;border-radius:8px;">
+                        ${n.content || '<span style="color:#8a9aa8;">Contenuto vuoto</span>'}
                     </div>
-                    <div style="font-size:1rem;line-height:1.7;">${n.content || ''}</div>
                 </div>
             `).join('')}
         </div>
     `;
+    
+    // 🔧 STILI PER IMMAGINI RESPONSIVE
+    const style = document.createElement('style');
+    style.textContent = `
+        #notizieContent img {
+            max-width: 100% !important;
+            height: auto !important;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto;
+        }
+        @media (max-width: 640px) {
+            #notizieContent img {
+                max-width: 98% !important;
+                border-radius: 6px;
+            }
+        }
+    `;
+    el.appendChild(style);
 }
 
         // ===== RENDER CONFERENZE =====
