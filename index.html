@@ -3266,7 +3266,20 @@ function salvaConferenzaHandler(id) {
 }
 
 function openNewsManager() {
-    const news = DATA.getNews();
+    let news = DATA.getNews();
+    
+    // 🔧 CONVERTI LA PRIMA NOTIZIA SE È VUOTA O SENZA ID
+    if (news.length > 0 && (!news[0].id || news[0].content === '')) {
+        const fixedNews = news.map((n, idx) => {
+            if (!n.id || n.content === '') {
+                return { id: 'news_' + Date.now() + '_' + idx, content: n.content || '' };
+            }
+            return n;
+        });
+        DATA.setNews(fixedNews);
+        news = DATA.getNews();
+    }
+    
     let listHtml = '';
     
     if (news.length === 0) {
@@ -3276,7 +3289,7 @@ function openNewsManager() {
         news.forEach(n => {
             listHtml += `
                 <div class="item-row">
-                    <span class="item-preview" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${n.content || 'Notizia senza contenuto'}</span>
+                    <span class="item-preview" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${n.content || 'Notizia vuota'}</span>
                     <span class="item-actions">
                         <button class="edit" data-id="${n.id}" onclick="apriModificaNotizia('${n.id}')">✎ Modifica</button>
                         <button class="del" data-id="${n.id}" onclick="eliminaNotizia('${n.id}')">✕ Elimina</button>
@@ -3346,13 +3359,20 @@ function salvaNotiziaHandler(id) {
 
 // ===== APRI MODIFICA NOTIZIA =====
 function apriModificaNotizia(id) {
-    const n = DATA.getNews().find(item => item.id === id);
-    if (n) {
-        closeModal();
-        openNewsEditor(n);
-    } else {
-        alert('Notizia non trovata.');
+    let n = DATA.getNews().find(item => item.id === id);
+    
+    // Se non trova la notizia, la crea con contenuto vuoto
+    if (!n) {
+        DATA.addNews('');
+        n = DATA.getNews().find(item => item.id === id);
+        if (!n) {
+            alert('Errore: impossibile creare la notizia.');
+            return;
+        }
     }
+    
+    closeModal();
+    openNewsEditor(n);
 }
 
 // ===== ELIMINA NOTIZIA =====
