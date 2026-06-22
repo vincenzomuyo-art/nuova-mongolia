@@ -3278,8 +3278,8 @@ function openNewsManager() {
                 <div class="item-row">
                     <span class="item-preview" style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">${n.content || 'Notizia senza contenuto'}</span>
                     <span class="item-actions">
-                        <button class="edit" data-id="${n.id}">✎ Modifica</button>
-                        <button class="del" data-id="${n.id}">✕ Elimina</button>
+                        <button class="edit" data-id="${n.id}" onclick="apriModificaNotizia('${n.id}')">✎ Modifica</button>
+                        <button class="del" data-id="${n.id}" onclick="eliminaNotizia('${n.id}')">✕ Elimina</button>
                     </span>
                 </div>
             `;
@@ -3290,7 +3290,7 @@ function openNewsManager() {
     const html = `
         <p style="margin-bottom:8px;font-weight:500;">Gestisci le notizie</p>
         ${listHtml}
-        <button class="add-news-btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:#1a2634;color:#fff;font-weight:600;transition:0.2s;margin-top:8px;">+ Aggiungi nuova notizia</button>
+        <button class="add-news-btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:#1a2634;color:#fff;font-weight:600;transition:0.2s;margin-top:8px;" onclick="apriNuovaNotizia()">+ Aggiungi nuova notizia</button>
     `;
     
     openModal(
@@ -3300,38 +3300,6 @@ function openNewsManager() {
         () => { closeModal(); },
         () => { closeModal(); }
     );
-    
-    const container = document.getElementById('modalBody');
-    container.querySelectorAll('.del').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = btn.dataset.id;
-            if (confirm('Eliminare questa notizia?')) {
-                DATA.deleteNews(id);
-                closeModal();
-                openNewsManager();
-                renderNotizie();
-            }
-        });
-    });
-    container.querySelectorAll('.edit').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const id = btn.dataset.id;
-            const n = DATA.getNews().find(item => item.id === id);
-            if (n) {
-                closeModal();
-                openNewsEditor(n);
-            }
-        });
-    });
-    const addBtn = container.querySelector('.add-news-btn');
-    if (addBtn) {
-        addBtn.addEventListener('click', () => {
-            closeModal();
-            openNewsEditor(null);
-        });
-    }
 }
 
 function openNewsEditor(notizia) {
@@ -3374,6 +3342,33 @@ function salvaNotiziaHandler(id) {
     }
     closeModal();
     renderNotizie();
+}
+
+// ===== APRI MODIFICA NOTIZIA =====
+function apriModificaNotizia(id) {
+    const n = DATA.getNews().find(item => item.id === id);
+    if (n) {
+        closeModal();
+        openNewsEditor(n);
+    } else {
+        alert('Notizia non trovata.');
+    }
+}
+
+// ===== ELIMINA NOTIZIA =====
+function eliminaNotizia(id) {
+    if (confirm('Eliminare questa notizia?')) {
+        DATA.deleteNews(id);
+        closeModal();
+        openNewsManager();
+        renderNotizie();
+    }
+}
+
+// ===== APRI NUOVA NOTIZIA =====
+function apriNuovaNotizia() {
+    closeModal();
+    openNewsEditor(null);
 }
         // ======================================================================
 //  AVVIA APP
