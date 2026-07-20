@@ -9,7 +9,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         /* ===== RESET & BASE ===== */
@@ -1080,6 +1081,10 @@
             <button data-page="costruzioni"><span class="icon">🏗️</span> Costruzioni previste per quest'anno</button>
             <button data-page="notizie"><span class="icon">📰</span> Notizie</button>
             <button data-page="conferenze"><span class="icon">🎙️</span> Conferenze Stampa</button>
+            <!-- Più Opzioni (solo pulsante) -->
+<button data-page="piu_opzioni" style="border-top:1px solid #2f3f4f;margin-top:8px;padding-top:12px;">
+    <span class="icon">➕</span> Più opzioni
+</button>
         </nav>
     </aside>
 
@@ -1174,6 +1179,72 @@
     </div>
 </section>
 
+<!-- PIÙ OPZIONI (pagina principale) -->
+<section class="page" id="page-piu_opzioni">
+    <div class="flex-between">
+        <div>
+            <div class="page-title">➕ Più opzioni</div>
+            <div class="page-sub">Scegli una sezione da esplorare</div>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;padding:20px 0;">
+        
+        <div onclick="toggleObiettiviSubmenu()" style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #17a2b8;cursor:pointer;transition:0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-weight:700;font-size:1.1rem;color:#1a2634;">🎯 Obiettivi di quest'anno</div>
+            <div style="font-size:0.85rem;color:#6a7a8a;">Gli obiettivi da raggiungere</div>
+        </div>
+        <span id="obiettiviArrow" style="font-size:1.2rem;color:#6a7a8a;">▶</span>
+    </div>
+    <div id="obiettiviSubmenu" style="display:none;margin-top:12px;padding-left:16px;border-left:2px solid #17a2b8;">
+        <div onclick="navigateTo('obiettivi')" style="padding:12px 16px;background:#f8f6f3;border-radius:10px;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='#f0ece8'" onmouseout="this.style.background='#f8f6f3'">
+            <div style="font-weight:600;color:#1a2634;">🎯 Visualizza Obiettivi</div>
+            <div style="font-size:0.8rem;color:#6a7a8a;">Lista e spunta obiettivi</div>
+        </div>
+    </div>
+</div>
+
+        <!-- CLASSIFICHE -->
+        <div onclick="toggleClassificheSubmenu()" style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #f4c542;cursor:pointer;transition:0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <div style="font-weight:700;font-size:1.1rem;color:#1a2634;">🏆 Classifiche</div>
+                    <div style="font-size:0.85rem;color:#6a7a8a;">Le classifiche della Nuova Mongolia</div>
+                </div>
+                <span id="classificheArrow" style="font-size:1.2rem;color:#6a7a8a;">▶</span>
+            </div>
+            <div id="classificheSubmenu" style="display:none;margin-top:12px;padding-left:16px;border-left:2px solid #f4c542;">
+                <div onclick="navigateTo('classifica_migliori')" style="padding:12px 16px;background:#f8f6f3;border-radius:10px;margin-bottom:8px;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='#f0ece8'" onmouseout="this.style.background='#f8f6f3'">
+                    <div style="font-weight:600;color:#1a2634;">📈 TOP 15 Classifica Migliori</div>
+                    <div style="font-size:0.8rem;color:#6a7a8a;">Le 15 persone migliori di quest'anno</div>
+                </div>
+                <div onclick="navigateTo('classifica_peggiori')" style="padding:12px 16px;background:#f8f6f3;border-radius:10px;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='#f0ece8'" onmouseout="this.style.background='#f8f6f3'">
+                    <div style="font-weight:600;color:#1a2634;">📉 TOP 15 Classifica Peggiori</div>
+                    <div style="font-size:0.8rem;color:#6a7a8a;">Le 15 persone peggiori di quest'anno</div>
+                </div>
+            </div>
+        </div>
+    
+        <div onclick="toggleGuadagniSubmenu()" style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #28a745;cursor:pointer;transition:0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+            <div style="font-weight:700;font-size:1.1rem;color:#1a2634;">💰 Guadagni</div>
+            <div style="font-size:0.85rem;color:#6a7a8a;">Gestisci i guadagni e le percentuali</div>
+        </div>
+        <span id="guadagniArrow" style="font-size:1.2rem;color:#6a7a8a;">▶</span>
+    </div>
+    <div id="guadagniSubmenu" style="display:none;margin-top:12px;padding-left:16px;border-left:2px solid #28a745;">
+        <div onclick="navigateTo('guadagni')" style="padding:12px 16px;background:#f8f6f3;border-radius:10px;cursor:pointer;transition:0.2s;" onmouseover="this.style.background='#f0ece8'" onmouseout="this.style.background='#f8f6f3'">
+            <div style="font-weight:600;color:#1a2634;">📊 Visualizza Guadagni</div>
+            <div style="font-size:0.8rem;color:#6a7a8a;">Dashboard, grafici e dettaglio</div>
+        </div>
+    </div>
+</div>
+        
+    </div>
+</section>
+
 <!-- COSTRUZIONI PREVISTE PER QUEST'ANNO -->
 <section class="page" id="page-costruzioni">
     <div class="flex-between">
@@ -1183,6 +1254,93 @@
         </div>
     </div>
     <div id="costruzioniContent" class="rte-display" style="background:#fff;border-radius:16px;padding:24px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.06);min-height:120px;line-height:1.7;">
+        <div class="loading"><div class="spinner"></div> Caricamento...</div>
+    </div>
+</section>
+ 
+<!-- CLASSIFICHE (pagina principale con elenco) -->
+<section class="page" id="page-classifiche">
+    <div class="flex-between">
+        <div>
+            <div class="page-title">🏆 Classifiche</div>
+            <div class="page-sub">Scegli una classifica da visualizzare</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="navigateTo('piu_opzioni')" style="padding:8px 16px;background:#6c757d;color:#fff;border-radius:8px;font-weight:600;font-size:0.9rem;border:none;cursor:pointer;">← Indietro</button>
+        </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px;padding:20px 0;">
+        <div onclick="navigateTo('classifica_migliori')" style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #28a745;cursor:pointer;transition:0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+            <div style="font-weight:700;font-size:1.1rem;color:#1a2634;">📈 TOP 15 Classifica Migliori</div>
+            <div style="font-size:0.85rem;color:#6a7a8a;">Le 15 persone migliori di quest'anno</div>
+        </div>
+        <div onclick="navigateTo('classifica_peggiori')" style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06);border-left:5px solid #dc3545;cursor:pointer;transition:0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+            <div style="font-weight:700;font-size:1.1rem;color:#1a2634;">📉 TOP 15 Classifica Peggiori</div>
+            <div style="font-size:0.85rem;color:#6a7a8a;">Le 15 persone peggiori di quest'anno</div>
+        </div>
+    </div>
+</section>
+
+<!-- CLASSIFICA MIGLIORI -->
+<section class="page" id="page-classifica_migliori">
+    <div class="flex-between">
+        <div>
+            <div class="page-title">📈 TOP 15 Classifica Migliori</div>
+            <div class="page-sub">Le 15 persone migliori di quest'anno</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="navigateTo('classifiche')" style="padding:8px 16px;background:#6c757d;color:#fff;border-radius:8px;font-weight:600;font-size:0.9rem;">← Indietro</button>
+        </div>
+    </div>
+    <div id="classificaMiglioriContent" style="background:#fff;border-radius:16px;padding:24px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.06);min-height:120px;line-height:1.7;">
+        <div class="loading"><div class="spinner"></div> Caricamento...</div>
+    </div>
+</section>
+
+<!-- CLASSIFICA PEGGIORI -->
+<section class="page" id="page-classifica_peggiori">
+    <div class="flex-between">
+        <div>
+            <div class="page-title">📉 TOP 15 Classifica Peggiori</div>
+            <div class="page-sub">Le 15 persone peggiori di quest'anno</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="navigateTo('classifiche')" style="padding:8px 16px;background:#6c757d;color:#fff;border-radius:8px;font-weight:600;font-size:0.9rem;">← Indietro</button>
+        </div>
+    </div>
+    <div id="classificaPeggioriContent" style="background:#fff;border-radius:16px;padding:24px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.06);min-height:120px;line-height:1.7;">
+        <div class="loading"><div class="spinner"></div> Caricamento...</div>
+    </div>
+</section>
+
+<!-- GUADAGNI -->
+<section class="page" id="page-guadagni">
+    <div class="flex-between">
+        <div>
+            <div class="page-title">💰 Guadagni</div>
+            <div class="page-sub">Gestisci i guadagni e le percentuali (25% per socio)</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="navigateTo('piu_opzioni')" style="padding:8px 16px;background:#6c757d;color:#fff;border-radius:8px;font-weight:600;font-size:0.9rem;border:none;cursor:pointer;">← Indietro</button>
+        </div>
+    </div>
+    <div id="guadagniContent" style="background:#fff;border-radius:16px;padding:24px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.06);min-height:120px;line-height:1.7;">
+        <div class="loading"><div class="spinner"></div> Caricamento...</div>
+    </div>
+</section>
+
+<!-- OBIETTIVI DI QUEST'ANNO -->
+<section class="page" id="page-obiettivi">
+    <div class="flex-between">
+        <div>
+            <div class="page-title">🎯 Obiettivi di quest'anno</div>
+            <div class="page-sub">Gli obiettivi da raggiungere nella Nuova Mongolia</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+            <button onclick="navigateTo('piu_opzioni')" style="padding:8px 16px;background:#6c757d;color:#fff;border-radius:8px;font-weight:600;font-size:0.9rem;border:none;cursor:pointer;">← Indietro</button>
+        </div>
+    </div>
+    <div id="obiettiviContent" style="background:#fff;border-radius:16px;padding:24px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.06);min-height:120px;line-height:1.7;">
         <div class="loading"><div class="spinner"></div> Caricamento...</div>
     </div>
 </section>
@@ -1264,6 +1422,64 @@
             nextPresidentId: 0,
             _loading: false,
             _listeners: {},
+           
+           
+           // ===== OBIETTIVI =====
+getObiettivi() { return this.obiettivi || []; },
+setObiettivi(o) { this.obiettivi = Array.isArray(o) ? o : []; this.saveToCloud(); this._notify('obiettivi'); },
+addObiettivo(testo) {
+    const list = this.getObiettivi();
+    const id = Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    list.push({ id, testo, completato: false });
+    this.setObiettivi(list);
+    return list;
+},
+deleteObiettivo(id) {
+    const list = this.getObiettivi().filter(o => o.id !== id);
+    this.setObiettivi(list);
+},
+toggleObiettivo(id) {
+    const list = this.getObiettivi();
+    const idx = list.findIndex(o => o.id === id);
+    if (idx !== -1 && list[idx].completato === false) {
+        list[idx].completato = true;
+        this.setObiettivi(list);
+        return true;
+    }
+    return false;
+},
+           
+            // ===== GUADAGNI =====
+getGuadagni() { return this.guadagni || []; },
+setGuadagni(g) { this.guadagni = Array.isArray(g) ? g : []; this.saveToCloud(); this._notify('guadagni'); },
+addGuadagno(data) {
+    const list = this.getGuadagni();
+    const id = Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    list.push({ id, ...data });
+    this.setGuadagni(list);
+    return list;
+},
+updateGuadagno(id, data) {
+    const list = this.getGuadagni();
+    const idx = list.findIndex(g => g.id === id);
+    if (idx !== -1) {
+        list[idx] = { ...list[idx], ...data };
+        this.setGuadagni(list);
+        return true;
+    }
+    return false;
+},
+deleteGuadagno(id) {
+    const list = this.getGuadagni().filter(g => g.id !== id);
+    this.setGuadagni(list);
+},
+           
+           
+            // ===== CLASSIFICHE =====
+getClassificaMigliori() { return this.classificaMigliori || { nomi: [], messaggioNullo: '' }; },
+setClassificaMigliori(data) { this.classificaMigliori = data; this.saveToCloud(); this._notify('classificaMigliori'); },
+getClassificaPeggiori() { return this.classificaPeggiori || { nomi: [], messaggioNullo: '' }; },
+setClassificaPeggiori(data) { this.classificaPeggiori = data; this.saveToCloud(); this._notify('classificaPeggiori'); },
 
             loadFromCloud() {
     this._loading = true;
@@ -1274,8 +1490,12 @@
         this.presidents = data.presidents || [];
         this.projects = data.projects || '';
         this.costruzioni = data.costruzioni || [];
+        this.classificaMigliori = data.classificaMigliori || { nomi: [], messaggioNullo: '' };
+        this.classificaPeggiori = data.classificaPeggiori || { nomi: [], messaggioNullo: '' };
         this.news = data.news || '';
+        this.obiettivi = data.obiettivi || [];
         this.conferenze = data.conferenze || [];
+        this.guadagni = data.guadagni || [];
         this.flag = data.flag || null;
         this.nextLawId = data.nextLawId || 0;
         this.nextPresidentId = data.nextPresidentId || 0;
@@ -1330,8 +1550,12 @@ if (Array.isArray(this.conferenze) && this.conferenze.length > 0 && typeof this.
                     presidents: this.presidents,
                     projects: this.projects,
                     costruzioni: this.costruzioni,
+                    classificaMigliori: this.classificaMigliori,
+                    classificaPeggiori: this.classificaPeggiori,      
                     news: this.news,
+                    obiettivi: this.obiettivi,
                     conferenze: this.conferenze,
+                    guadagni: this.guadagni,
                     flag: this.flag,
                     nextLawId: this.nextLawId,
                     nextPresidentId: this.nextPresidentId
@@ -1608,8 +1832,14 @@ const BANDIERE_ANNI = {
             presidenti: { title: 'Biografia Partecipanti', plus: true },
             progetti: { title: 'Progetti dell\'anno attuale', plus: true },
             costruzioni: { title: 'Costruzioni previste per quest\'anno', plus: true },
-            notizie: { title: 'Notizie', plus: true },
-            conferenze: { title: 'Conferenze Stampa', plus: true },
+            notizie: { title: 'Notizie', plus: true },   
+            conferenze: { title: 'Conferenze Stampa', plus: true },   
+            classifiche: { title: 'Classifiche', plus: false },   
+            classifica_migliori: { title: 'TOP 15 Classifica Migliori', plus: true },   
+            classifica_peggiori: { title: 'TOP 15 Classifica Peggiori', plus: true },  
+            piu_opzioni: { title: 'Più opzioni', plus: false }, 
+            guadagni: { title: 'Guadagni', plus: true },
+            obiettivi: { title: 'Obiettivi di quest\'anno', plus: true },
         };
 
         let currentPage = 'home';
@@ -1923,6 +2153,174 @@ function renderCostruzioni() {
 }, 100);
 }
 
+// ===== RENDER CLASSIFICA MIGLIORI =====
+function renderClassificaMigliori() {
+    const el = $('classificaMiglioriContent');
+    const data = DATA.getClassificaMigliori();
+    const nomi = data.nomi || [];
+    const messaggioNullo = data.messaggioNullo || '';
+    
+    if (nomi.length === 0 && !messaggioNullo) {
+        el.innerHTML = '<span class="text-muted">Nessuna classifica disponibile. Clicca + per aggiungere.</span>';
+        return;
+    }
+    
+    let html = `<div style="display:flex;flex-direction:column;gap:12px;">`;
+    
+    if (messaggioNullo) {
+        html += `
+            <div style="background:#f8f6f3;border-radius:12px;padding:16px;border-left:4px solid #ffc107;margin-bottom:12px;">
+                <div style="font-weight:600;color:#1a2634;">📢 Messaggio</div>
+                <div style="font-size:0.95rem;color:#3a4a5a;">${messaggioNullo}</div>
+            </div>
+        `;
+    }
+    
+    if (nomi.length > 0) {
+        html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+        nomi.forEach((nome, idx) => {
+            if (nome && nome.trim() !== '') {
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx+1}.`;
+                html += `
+                    <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:#f8f6f3;border-radius:8px;">
+                        <span style="font-weight:700;color:#1a2634;min-width:40px;">${medal}</span>
+                        <span style="font-size:1rem;color:#1a2634;">${nome}</span>
+                    </div>
+                `;
+            }
+        });
+        html += `</div>`;
+    }
+    
+    html += `</div>`;
+    el.innerHTML = html;
+}
+
+// ===== RENDER CLASSIFICA PEGGIORI =====
+function renderClassificaPeggiori() {
+    const el = $('classificaPeggioriContent');
+    const data = DATA.getClassificaPeggiori();
+    const nomi = data.nomi || [];
+    const messaggioNullo = data.messaggioNullo || '';
+    
+    if (nomi.length === 0 && !messaggioNullo) {
+        el.innerHTML = '<span class="text-muted">Nessuna classifica disponibile. Clicca + per aggiungere.</span>';
+        return;
+    }
+    
+    let html = `<div style="display:flex;flex-direction:column;gap:12px;">`;
+    
+    if (messaggioNullo) {
+        html += `
+            <div style="background:#f8f6f3;border-radius:12px;padding:16px;border-left:4px solid #ffc107;margin-bottom:12px;">
+                <div style="font-weight:600;color:#1a2634;">📢 Messaggio</div>
+                <div style="font-size:0.95rem;color:#3a4a5a;">${messaggioNullo}</div>
+            </div>
+        `;
+    }
+    
+    if (nomi.length > 0) {
+        html += `<div style="display:flex;flex-direction:column;gap:6px;">`;
+        nomi.forEach((nome, idx) => {
+            if (nome && nome.trim() !== '') {
+                const medal = idx === 0 ? '💀' : idx === 1 ? '💀' : idx === 2 ? '💀' : `${idx+1}.`;
+                html += `
+                    <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;background:#f8f6f3;border-radius:8px;border-left:3px solid #dc3545;">
+                        <span style="font-weight:700;color:#1a2634;min-width:40px;">${medal}</span>
+                        <span style="font-size:1rem;color:#1a2634;">${nome}</span>
+                    </div>
+                `;
+            }
+        });
+        html += `</div>`;
+    }
+    
+    html += `</div>`;
+    el.innerHTML = html;
+}
+
+// ===== GESTIONE CLASSIFICHE =====
+function openClassificaManager(tipo) {
+    const isMigliori = tipo === 'migliori';
+    const data = isMigliori ? DATA.getClassificaMigliori() : DATA.getClassificaPeggiori();
+    const nomi = data.nomi || [];
+    const messaggioNullo = data.messaggioNullo || '';
+    
+    let html = `
+        <div style="text-align:center;margin-bottom:16px;">
+            <h2 style="color:#1a2634;">✏️ Modifica Classifica ${isMigliori ? 'Migliori' : 'Peggiori'}</h2>
+            <p style="color:#6a7a8a;font-size:0.9rem;">Inserisci i nomi da 1 a 15</p>
+        </div>
+        <div style="max-height:400px;overflow-y:auto;padding-right:8px;">
+    `;
+    
+    for (let i = 0; i < 15; i++) {
+        const value = nomi[i] || '';
+        html += `
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                <span style="font-weight:600;color:#1a2634;min-width:30px;">${i+1}.</span>
+                <input type="text" class="classifica-nome" data-index="${i}" value="${value}" placeholder="Nome ${i+1}" style="flex:1;padding:8px 12px;border:2px solid #ddd;border-radius:8px;font-size:0.95rem;" />
+            </div>
+        `;
+    }
+    
+    html += `
+        </div>
+        <div style="margin-top:12px;border-top:1px solid #eee;padding-top:12px;">
+            <button onclick="aggiungiMessaggioNullo()" style="padding:8px 20px;background:#ffc107;color:#1a2634;border-radius:8px;font-weight:600;font-size:0.9rem;border:none;cursor:pointer;">📢 Inserisci un messaggio nullo</button>
+            <div id="messaggioNulloContainer" style="margin-top:8px;display:${messaggioNullo ? 'block' : 'none'};">
+                <textarea id="messaggioNulloInput" rows="2" placeholder="Inserisci il messaggio nullo..." style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:8px;font-size:0.95rem;">${messaggioNullo}</textarea>
+            </div>
+        </div>
+    `;
+
+    openModal(
+        `✏️ Classifica ${isMigliori ? 'Migliori' : 'Peggiori'}`,
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaClassifica('${tipo}')">💾 Salva</button>`,
+        () => {},
+        () => { closeModal(); }
+    );
+}
+
+// ===== TOGGLE MESSAGGIO NULLO =====
+function aggiungiMessaggioNullo() {
+    const container = document.getElementById('messaggioNulloContainer');
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+// ===== SALVA CLASSIFICA =====
+function salvaClassifica(tipo) {
+    const isMigliori = tipo === 'migliori';
+    const inputs = document.querySelectorAll('.classifica-nome');
+    const nomi = [];
+    inputs.forEach(input => {
+        const val = input.value.trim();
+        nomi.push(val);
+    });
+    
+    const messaggioInput = document.getElementById('messaggioNulloInput');
+    const messaggioNullo = messaggioInput ? messaggioInput.value.trim() : '';
+    
+    const data = { nomi, messaggioNullo };
+    
+    if (isMigliori) {
+        DATA.setClassificaMigliori(data);
+    } else {
+        DATA.setClassificaPeggiori(data);
+    }
+    
+    closeModal();
+    renderClassificaMigliori();
+    renderClassificaPeggiori();
+    alert('✅ Classifica salvata con successo!');
+}
+
 // ===== GESTIONE COSTRUZIONI =====
 function openCostruzioniManager() {
     let costruzioni = DATA.getCostruzioni();
@@ -2137,9 +2535,14 @@ function salvaCostruzioneHandler(id) {
         DATA.onChange('presidents', renderPresidents);
         DATA.onChange('projects', renderProjects);
         DATA.onChange('news', renderNotizie);
+        DATA.onChange('guadagni', renderGuadagni);
         DATA.onChange('conferenze', renderConferenze);
         DATA.onChange('costruzioni', renderCostruzioni);
+        DATA.onChange('classificaMigliori', renderClassificaMigliori);
+        DATA.onChange('classificaPeggiori', renderClassificaPeggiori);
         DATA.onChange('flag', renderHome);
+        DATA.onChange('obiettivi', renderObiettivi);
+
 
         // ======================================================================
         //  PLUS BUTTON
@@ -2163,6 +2566,18 @@ function salvaCostruzioneHandler(id) {
                     break;
                 case 'costruzioni':
                     askPassword('3Dmodels%20', () => openCostruzioniManager());
+                    break;
+                case 'classifica_migliori':
+                    askPassword('CLASSIFICHE123', () => openClassificaManager('migliori'));
+                    break;
+                case 'classifica_peggiori':
+                    askPassword('CLASSIFICHE123', () => openClassificaManager('peggiori'));
+                    break;    
+                case 'guadagni':
+                    askPassword('GUADAGNI2025', () => openGuadagniManager());
+                    break;
+                case 'obiettivi':
+                    askPassword('OBB22', () => openObiettiviManager());
                     break;
             }
         });
@@ -3559,6 +3974,298 @@ function openConferenzaEditor(conferenza) {
     }, 100);
 }
 
+function renderGuadagni() {
+    const el = $('guadagniContent');
+    const guadagni = DATA.getGuadagni();
+    const partecipanti = DATA.getPresidents();
+    
+    if (!guadagni || guadagni.length === 0) {
+        el.innerHTML = '<span class="text-muted">Nessun guadagno registrato. Clicca + per aggiungere.</span>';
+        return;
+    }
+    
+    // Calcola totali
+    const totale = guadagni.reduce((sum, g) => sum + (parseFloat(g.prezzo) || 0), 0);
+    const perSocio = totale * 0.25;
+    
+    // Raggruppa per concedente
+    const perConcedente = {};
+    guadagni.forEach(g => {
+        const nome = g.concedente || 'Sconosciuto';
+        perConcedente[nome] = (perConcedente[nome] || 0) + (parseFloat(g.prezzo) || 0);
+    });
+    
+    // Raggruppa per materiale
+    const perMateriale = {};
+    guadagni.forEach(g => {
+        const mat = g.materiale || 'Senza nome';
+        perMateriale[mat] = (perMateriale[mat] || 0) + (parseFloat(g.prezzo) || 0);
+    });
+    
+    // Build HTML
+    let html = `
+        <!-- RIEPILOGO CARD -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px;">
+            <div style="background:linear-gradient(135deg,#1a2634,#2a3a4a);border-radius:16px;padding:20px;color:#fff;text-align:center;">
+                <div style="font-size:0.8rem;opacity:0.7;">💰 Totale Guadagni</div>
+                <div style="font-size:2rem;font-weight:700;color:#f4c542;">€${totale.toFixed(2)}</div>
+            </div>
+            <div style="background:linear-gradient(135deg,#1a2634,#2a3a4a);border-radius:16px;padding:20px;color:#fff;text-align:center;">
+                <div style="font-size:0.8rem;opacity:0.7;">👤 Per Socio (25%)</div>
+                <div style="font-size:2rem;font-weight:700;color:#28a745;">€${perSocio.toFixed(2)}</div>
+            </div>
+            <div style="background:linear-gradient(135deg,#1a2634,#2a3a4a);border-radius:16px;padding:20px;color:#fff;text-align:center;">
+                <div style="font-size:0.8rem;opacity:0.7;">📦 Transazioni</div>
+                <div style="font-size:2rem;font-weight:700;color:#17a2b8;">${guadagni.length}</div>
+            </div>
+        </div>
+        
+        <!-- GRAFICI -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
+            <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                <h4 style="color:#1a2634;margin-bottom:12px;">📊 Guadagni per Materiale</h4>
+                <canvas id="guadagniBarChart" style="max-height:200px;"></canvas>
+            </div>
+            <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+                <h4 style="color:#1a2634;margin-bottom:12px;">🧩 Guadagni per Concedente</h4>
+                <canvas id="guadagniPieChart" style="max-height:200px;"></canvas>
+            </div>
+        </div>
+        
+        <!-- TABELLA -->
+        <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
+            <h4 style="color:#1a2634;margin-bottom:12px;">📋 Dettaglio Guadagni</h4>
+            <div style="overflow-x:auto;">
+                <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+                    <thead>
+                        <tr style="border-bottom:2px solid #f4c542;">
+                            <th style="text-align:left;padding:8px;color:#1a2634;">Materiale</th>
+                            <th style="text-align:left;padding:8px;color:#1a2634;">Concedente</th>
+                            <th style="text-align:right;padding:8px;color:#1a2634;">Prezzo (€)</th>
+                            <th style="text-align:right;padding:8px;color:#1a2634;">25% Socio</th>
+                            <th style="text-align:center;padding:8px;color:#1a2634;">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${guadagni.map(g => `
+                            <tr style="border-bottom:1px solid #eee;">
+                                <td style="padding:8px;">${g.materiale || '-'}</td>
+                                <td style="padding:8px;">${g.concedente || '-'}</td>
+                                <td style="text-align:right;padding:8px;font-weight:600;">€${(parseFloat(g.prezzo)||0).toFixed(2)}</td>
+                                <td style="text-align:right;padding:8px;color:#28a745;">€${((parseFloat(g.prezzo)||0)*0.25).toFixed(2)}</td>
+                                <td style="text-align:center;padding:8px;font-size:0.8rem;color:#6a7a8a;">${g.data || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    `;
+    
+    el.innerHTML = html;
+    
+    // Inizializza i grafici
+    setTimeout(() => {
+        const ctxBar = document.getElementById('guadagniBarChart');
+        const ctxPie = document.getElementById('guadagniPieChart');
+        
+        const materiali = Object.keys(perMateriale);
+        const valoriMat = Object.values(perMateriale);
+        
+        const concedenti = Object.keys(perConcedente);
+        const valoriConc = Object.values(perConcedente);
+        
+        if (ctxBar && materiali.length > 0) {
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: materiali,
+                    datasets: [{
+                        label: 'Guadagni (€)',
+                        data: valoriMat,
+                        backgroundColor: '#f4c542',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+        
+        if (ctxPie && concedenti.length > 0) {
+            new Chart(ctxPie, {
+                type: 'pie',
+                data: {
+                    labels: concedenti,
+                    datasets: [{
+                        data: valoriConc,
+                        backgroundColor: ['#f4c542', '#28a745', '#17a2b8', '#dc3545', '#ffc107', '#6c757d']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
+        }
+    }, 200);
+}
+
+function toggleGuadagniSubmenu() {
+    const submenu = document.getElementById('guadagniSubmenu');
+    const arrow = document.getElementById('guadagniArrow');
+    if (submenu) {
+        submenu.style.display = submenu.style.display === 'none' ? 'block' : 'none';
+        arrow.textContent = submenu.style.display === 'block' ? '▼' : '▶';
+    }
+}
+
+function openGuadagniManager() {
+    const guadagni = DATA.getGuadagni();
+    let listHtml = '';
+    
+    if (guadagni.length === 0) {
+        listHtml = `<div class="text-muted" style="padding:12px 0;">Nessun guadagno registrato.</div>`;
+    } else {
+        listHtml = `<div class="manager-list">`;
+        guadagni.forEach(g => {
+            listHtml += `
+                <div class="item-row">
+                    <span class="item-preview">${g.materiale || 'Senza nome'} - €${(parseFloat(g.prezzo)||0).toFixed(2)} (${g.concedente || '?'})</span>
+                    <span class="item-actions">
+                        <button class="edit" data-id="${g.id}">✎ Modifica</button>
+                        <button class="del" data-id="${g.id}">✕ Elimina</button>
+                    </span>
+                </div>
+            `;
+        });
+        listHtml += `</div>`;
+    }
+    
+    const html = `
+        <p style="margin-bottom:8px;font-weight:500;">Gestisci i guadagni</p>
+        ${listHtml}
+        <button class="add-guadagno-btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:#1a2634;color:#fff;font-weight:600;transition:0.2s;margin-top:8px;" onclick="apriNuovoGuadagno()">+ Aggiungi guadagno</button>
+    `;
+    
+    openModal(
+        '💰 Gestione Guadagni',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Chiudi</button>`,
+        () => { closeModal(); },
+        () => { closeModal(); }
+    );
+    
+    const container = document.getElementById('modalBody');
+    container.querySelectorAll('.del').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            if (confirm('Eliminare questo guadagno?')) {
+                DATA.deleteGuadagno(id);
+                closeModal();
+                openGuadagniManager();
+                renderGuadagni();
+            }
+        });
+    });
+    container.querySelectorAll('.edit').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const id = btn.dataset.id;
+            const g = DATA.getGuadagni().find(item => item.id === id);
+            if (g) {
+                closeModal();
+                openGuadagnoEditor(g);
+            }
+        });
+    });
+}
+
+function apriNuovoGuadagno() {
+    closeModal();
+    openGuadagnoEditor(null);
+}
+
+function toggleObiettiviSubmenu() {
+    const submenu = document.getElementById('obiettiviSubmenu');
+    const arrow = document.getElementById('obiettiviArrow');
+    if (submenu) {
+        submenu.style.display = submenu.style.display === 'none' ? 'block' : 'none';
+        arrow.textContent = submenu.style.display === 'block' ? '▼' : '▶';
+    }
+}
+
+function openGuadagnoEditor(guadagno) {
+    const isEdit = !!guadagno;
+    const g = guadagno || { id: null, materiale: '', concedente: '', prezzo: '', data: '' };
+    const partecipanti = DATA.getPresidents();
+    
+    let optionsHtml = `<option value="">Seleziona...</option>`;
+    partecipanti.forEach(p => {
+        optionsHtml += `<option value="${p.name}" ${p.name === g.concedente ? 'selected' : ''}>${p.name}</option>`;
+    });
+    
+    let html = `
+        <div class="form-group">
+            <label>Materiale venduto</label>
+            <input type="text" id="guadagnoMateriale" value="${g.materiale || ''}" placeholder="Nome del materiale" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
+        </div>
+        <div class="form-group">
+            <label>Concedente (chi possedeva il materiale)</label>
+            <select id="guadagnoConcedente" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;">
+                ${optionsHtml}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Prezzo di vendita (€)</label>
+            <input type="number" id="guadagnoPrezzo" value="${g.prezzo || ''}" placeholder="0.00" step="0.01" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
+        </div>
+        <div class="form-group">
+            <label>Data</label>
+            <input type="date" id="guadagnoData" value="${g.data || ''}" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
+        </div>
+        <div style="background:#f8f6f3;border-radius:12px;padding:16px;border-left:4px solid #f4c542;">
+            <div style="font-weight:600;color:#1a2634;">💡 Calcolo automatico</div>
+            <div style="font-size:0.85rem;color:#6a7a8a;">25% per socio su ogni vendita. Il totale verrà calcolato automaticamente.</div>
+        </div>
+    `;
+
+    openModal(
+        isEdit ? '✎ Modifica Guadagno' : '💰 Nuovo Guadagno',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaGuadagnoHandler('${isEdit ? g.id : ''}')">${isEdit ? 'Salva' : 'Aggiungi'}</button>`,
+        () => {},
+        () => { closeModal(); }
+    );
+}
+
+function salvaGuadagnoHandler(id) {
+    const materiale = document.getElementById('guadagnoMateriale').value.trim();
+    const concedente = document.getElementById('guadagnoConcedente').value;
+    const prezzo = parseFloat(document.getElementById('guadagnoPrezzo').value);
+    const data = document.getElementById('guadagnoData').value;
+    
+    if (!materiale) { alert('Inserisci il nome del materiale.'); return; }
+    if (!concedente) { alert('Seleziona il concedente.'); return; }
+    if (!prezzo || prezzo <= 0) { alert('Inserisci un prezzo valido.'); return; }
+    if (!data) { alert('Seleziona la data.'); return; }
+    
+    const guadagno = { materiale, concedente, prezzo, data };
+    
+    if (id) {
+        DATA.updateGuadagno(id, guadagno);
+    } else {
+        DATA.addGuadagno(guadagno);
+    }
+    closeModal();
+    renderGuadagni();
+}
+
 function salvaConferenzaHandler(id) {
     const titolo = document.getElementById('conferenzaTitoloInput').value.trim();
     const videoBox = document.getElementById('conferenzaVideoBox');
@@ -3585,6 +4292,176 @@ function salvaConferenzaHandler(id) {
     }
     closeModal();
     renderConferenze();
+}
+
+function renderObiettivi() {
+    const el = $('obiettiviContent');
+    const obiettivi = DATA.getObiettivi();
+    
+    if (!obiettivi || obiettivi.length === 0) {
+        el.innerHTML = '<span class="text-muted">Nessun obiettivo inserito. Clicca + per aggiungere.</span>';
+        return;
+    }
+    
+    let html = `
+        <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="font-size:0.9rem;color:#6a7a8a;margin-bottom:4px;">✅ ${obiettivi.filter(o => o.completato).length} / ${obiettivi.length} completati</div>
+    `;
+    
+    obiettivi.forEach(o => {
+        const completato = o.completato;
+        html += `
+            <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:${completato ? '#e8f5e9' : '#f8f6f3'};border-radius:12px;border-left:4px solid ${completato ? '#28a745' : '#f4c542'};">
+                <button onclick="confermaSpunta('${o.id}')" style="width:28px;height:28px;border-radius:50%;border:2px solid ${completato ? '#28a745' : '#ccc'};background:${completato ? '#28a745' : 'transparent'};color:#fff;font-size:16px;cursor:${completato ? 'default' : 'pointer'};display:flex;align-items:center;justify-content:center;flex-shrink:0;" ${completato ? 'disabled' : ''}>
+                    ${completato ? '✓' : ''}
+                </button>
+                <span style="font-size:1rem;color:#1a2634;${completato ? 'text-decoration:line-through;opacity:0.6;' : ''}">${o.testo || 'Obiettivo senza testo'}</span>
+                ${completato ? '<span style="margin-left:auto;font-size:0.8rem;color:#28a745;font-weight:600;">✅ Completato!</span>' : ''}
+            </div>
+        `;
+    });
+    
+    html += `</div>`;
+    el.innerHTML = html;
+}
+
+function confermaSpunta(id) {
+    const obiettivi = DATA.getObiettivi();
+    const obiettivo = obiettivi.find(o => o.id === id);
+    
+    if (!obiettivo || obiettivo.completato) return;
+    
+    const modalHtml = `
+        <div style="text-align:center;padding:10px 0;">
+            <div style="font-size:3rem;margin-bottom:12px;">⚠️</div>
+            <h3 style="color:#1a2634;margin-bottom:8px;">Sei sicuro?</h3>
+            <p style="color:#6a7a8a;font-size:0.95rem;">Vuoi spuntare l'obiettivo:<br><strong style="color:#1a2634;">"${obiettivo.testo}"</strong></p>
+            <p style="color:#dc3545;font-size:0.85rem;margin-top:8px;">⚠️ Una volta fatto, non si torna indietro!</p>
+        </div>
+    `;
+    
+    openModal(
+        '⚠️ Conferma Spunta',
+        modalHtml,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-danger" id="modalConfirmInner" onclick="confermaSpuntaFinale('${id}')">✅ Sì, spunta</button>`,
+        () => {},
+        () => { closeModal(); }
+    );
+}
+
+function confermaSpuntaFinale(id) {
+    const success = DATA.toggleObiettivo(id);
+    if (success) {
+        closeModal();
+        renderObiettivi();
+        // Ricarica anche la pagina più opzioni per aggiornare il contatore
+        renderPiuOpzioni();
+    } else {
+        alert('❌ Obiettivo già completato o non trovato.');
+        closeModal();
+    }
+}
+
+function openObiettiviManager() {
+    const obiettivi = DATA.getObiettivi();
+    let listHtml = '';
+    
+    if (obiettivi.length === 0) {
+        listHtml = `<div class="text-muted" style="padding:12px 0;">Nessun obiettivo inserito.</div>`;
+    } else {
+        listHtml = `<div class="manager-list">`;
+        obiettivi.forEach(o => {
+            listHtml += `
+                <div class="item-row" style="border-left:4px solid ${o.completato ? '#28a745' : '#f4c542'};">
+                    <span class="item-preview" style="${o.completato ? 'text-decoration:line-through;opacity:0.6;' : ''}">${o.testo || 'Senza testo'} ${o.completato ? '✅' : ''}</span>
+                    <span class="item-actions">
+                        <button class="edit" data-id="${o.id}" onclick="apriModificaObiettivo('${o.id}')">✎ Modifica</button>
+                        <button class="del" data-id="${o.id}" onclick="eliminaObiettivo('${o.id}')">✕ Elimina</button>
+                    </span>
+                </div>
+            `;
+        });
+        listHtml += `</div>`;
+    }
+    
+    const html = `
+        <p style="margin-bottom:8px;font-weight:500;">Gestisci gli obiettivi</p>
+        ${listHtml}
+        <button class="add-obiettivo-btn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:#1a2634;color:#fff;font-weight:600;transition:0.2s;margin-top:8px;" onclick="apriNuovoObiettivo()">+ Aggiungi obiettivo</button>
+    `;
+    
+    openModal(
+        '🎯 Gestione Obiettivi',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Chiudi</button>`,
+        () => { closeModal(); },
+        () => { closeModal(); }
+    );
+}
+
+function apriNuovoObiettivo() {
+    closeModal();
+    openObiettivoEditor(null);
+}
+
+function apriModificaObiettivo(id) {
+    const o = DATA.getObiettivi().find(item => item.id === id);
+    if (o) {
+        closeModal();
+        openObiettivoEditor(o);
+    }
+}
+
+function eliminaObiettivo(id) {
+    if (confirm('Eliminare questo obiettivo?')) {
+        DATA.deleteObiettivo(id);
+        closeModal();
+        openObiettiviManager();
+        renderObiettivi();
+    }
+}
+
+function openObiettivoEditor(obiettivo) {
+    const isEdit = !!obiettivo;
+    const o = obiettivo || { id: null, testo: '' };
+    
+    let html = `
+        <div class="form-group">
+            <label>${isEdit ? 'Modifica' : 'Nuovo'} obiettivo</label>
+            <input type="text" id="obiettivoTestoInput" value="${o.testo || ''}" placeholder="Inserisci l'obiettivo" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
+        </div>
+        <div style="background:#f8f6f3;border-radius:12px;padding:12px;border-left:4px solid #f4c542;font-size:0.85rem;color:#6a7a8a;">
+            💡 Gli obiettivi possono essere spuntati da chiunque, senza password. Ma richiedono conferma.
+        </div>
+    `;
+
+    openModal(
+        isEdit ? '✎ Modifica Obiettivo' : '🎯 Nuovo Obiettivo',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Annulla</button>
+         <button class="btn-primary" id="modalConfirmInner" onclick="salvaObiettivoHandler('${isEdit ? o.id : ''}')">${isEdit ? 'Salva' : 'Aggiungi'}</button>`,
+        () => {},
+        () => { closeModal(); }
+    );
+}
+
+function salvaObiettivoHandler(id) {
+    const testo = document.getElementById('obiettivoTestoInput').value.trim();
+    if (!testo) { alert('Inserisci il testo dell\'obiettivo.'); return; }
+    
+    if (id) {
+        const obiettivi = DATA.getObiettivi();
+        const idx = obiettivi.findIndex(o => o.id === id);
+        if (idx !== -1) {
+            obiettivi[idx].testo = testo;
+            DATA.setObiettivi(obiettivi);
+        }
+    } else {
+        DATA.addObiettivo(testo);
+    }
+    closeModal();
+    renderObiettivi();
 }
 
 function openNewsManager() {
@@ -3635,6 +4512,21 @@ function openNewsManager() {
         () => { closeModal(); },
         () => { closeModal(); }
     );
+}
+
+// ===== TOGGLE CLASSIFICHE SUBMENU =====
+function toggleClassificheSubmenu() {
+    const submenu = document.getElementById('classificheSubmenu');
+    const arrow = document.getElementById('classificheArrow');
+    if (submenu) {
+        if (submenu.style.display === 'none') {
+            submenu.style.display = 'block';
+            arrow.textContent = '▼';
+        } else {
+            submenu.style.display = 'none';
+            arrow.textContent = '▶';
+        }
+    }
 }
 
 function openNewsEditor(notizia) {
