@@ -1473,6 +1473,23 @@ deleteGuadagno(id) {
     const list = this.getGuadagni().filter(g => g.id !== id);
     this.setGuadagni(list);
 },
+
+// ===== CATEGORIE (per i guadagni) =====
+getCategorie() { return this.categorie || ['Arte', 'Tecnologia', 'Abbigliamento', 'Mobile', 'Altro']; },
+setCategorie(c) { this.categorie = Array.isArray(c) ? c : []; this.saveToCloud(); this._notify('categorie'); },
+addCategoria(nome) {
+    const list = this.getCategorie();
+    if (!list.includes(nome)) {
+        list.push(nome);
+        this.setCategorie(list);
+        return true;
+    }
+    return false;
+},
+deleteCategoria(nome) {
+    const list = this.getCategorie().filter(c => c !== nome);
+    this.setCategorie(list);
+},
            
            
             // ===== CLASSIFICHE =====
@@ -1481,7 +1498,7 @@ setClassificaMigliori(data) { this.classificaMigliori = data; this.saveToCloud()
 getClassificaPeggiori() { return this.classificaPeggiori || { nomi: [], messaggioNullo: '' }; },
 setClassificaPeggiori(data) { this.classificaPeggiori = data; this.saveToCloud(); this._notify('classificaPeggiori'); },
 
-            loadFromCloud() {
+             loadFromCloud() {
     this._loading = true;
     updateStatus('loading', '🔄 Caricamento...');
     return db.ref('nuovaMongolia').once('value').then(snapshot => {
@@ -1494,6 +1511,7 @@ setClassificaPeggiori(data) { this.classificaPeggiori = data; this.saveToCloud()
         this.classificaPeggiori = data.classificaPeggiori || { nomi: [], messaggioNullo: '' };
         this.news = data.news || '';
         this.obiettivi = data.obiettivi || [];
+        this.categorie = data.categorie || ['Arte', 'Tecnologia', 'Abbigliamento', 'Mobile', 'Altro'];
         this.conferenze = data.conferenze || [];
         this.guadagni = data.guadagni || [];
         this.flag = data.flag || null;
@@ -1543,10 +1561,10 @@ if (Array.isArray(this.conferenze) && this.conferenze.length > 0 && typeof this.
     });
 },
 
-            saveToCloud() {
-                if (this._loading) return;
-                const data = {
-                    laws: this.laws,
+            saveToCloud() { 
+if (this._loading) return; 
+const data = {                    
+laws: this.laws,
                     presidents: this.presidents,
                     projects: this.projects,
                     costruzioni: this.costruzioni,
@@ -1556,6 +1574,7 @@ if (Array.isArray(this.conferenze) && this.conferenze.length > 0 && typeof this.
                     obiettivi: this.obiettivi,
                     conferenze: this.conferenze,
                     guadagni: this.guadagni,
+                    categorie: this.categorie,
                     flag: this.flag,
                     nextLawId: this.nextLawId,
                     nextPresidentId: this.nextPresidentId
@@ -4032,34 +4051,39 @@ function renderGuadagni() {
             </div>
         </div>
         
-        <!-- TABELLA -->
-        <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">
-            <h4 style="color:#1a2634;margin-bottom:12px;">📋 Dettaglio Guadagni</h4>
-            <div style="overflow-x:auto;">
-                <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
-                    <thead>
-                        <tr style="border-bottom:2px solid #f4c542;">
-                            <th style="text-align:left;padding:8px;color:#1a2634;">Materiale</th>
-                            <th style="text-align:left;padding:8px;color:#1a2634;">Concedente</th>
-                            <th style="text-align:right;padding:8px;color:#1a2634;">Prezzo (€)</th>
-                            <th style="text-align:right;padding:8px;color:#1a2634;">25% Socio</th>
-                            <th style="text-align:center;padding:8px;color:#1a2634;">Data</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${guadagni.map(g => `
-                            <tr style="border-bottom:1px solid #eee;">
-                                <td style="padding:8px;">${g.materiale || '-'}</td>
-                                <td style="padding:8px;">${g.concedente || '-'}</td>
-                                <td style="text-align:right;padding:8px;font-weight:600;">€${(parseFloat(g.prezzo)||0).toFixed(2)}</td>
-                                <td style="text-align:right;padding:8px;color:#28a745;">€${((parseFloat(g.prezzo)||0)*0.25).toFixed(2)}</td>
-                                <td style="text-align:center;padding:8px;font-size:0.8rem;color:#6a7a8a;">${g.data || '-'}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <!-- TABELLA con foto e categoria -->
+<div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.06);">    <h4 style="color:#1a2634;margin-bottom:12px;">📋 Dettaglio Guadagni</h4>
+    <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+            <thead>
+                <tr style="border-bottom:2px solid #f4c542;">
+                    <th style="text-align:left;padding:8px;color:#1a2634;">Foto</th>
+                    <th style="text-align:left;padding:8px;color:#1a2634;">Materiale</th>
+                    <th style="text-align:left;padding:8px;color:#1a2634;">Categoria</th>
+                    <th style="text-align:left;padding:8px;color:#1a2634;">Concedente</th>
+                    <th style="text-align:right;padding:8px;color:#1a2634;">Prezzo (€)</th>
+                    <th style="text-align:right;padding:8px;color:#1a2634;">25% Socio</th>
+                    <th style="text-align:center;padding:8px;color:#1a2634;">Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${guadagni.map(g => `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:8px;">
+                            ${g.foto ? `<img src="${g.foto}" style="width:50px;height:50px;object-fit:cover;border-radius:8px;" />` : '<span style="color:#aaa;">📷</span>'}
+                        </td>
+                        <td style="padding:8px;font-weight:600;">${g.materiale || '-'}</td>
+                        <td style="padding:8px;"><span style="background:#f8f6f3;padding:2px 10px;border-radius:12px;font-size:0.8rem;">${g.categoria || '-'}</span></td>
+                        <td style="padding:8px;">${g.concedente || '-'}</td>
+                        <td style="text-align:right;padding:8px;font-weight:600;">€${(parseFloat(g.prezzo)||0).toFixed(2)}</td>
+                        <td style="text-align:right;padding:8px;color:#28a745;">€${((parseFloat(g.prezzo)||0)*0.25).toFixed(2)}</td>
+                        <td style="text-align:center;padding:8px;font-size:0.8rem;color:#6a7a8a;">${g.data || '-'}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    </div>
+</div>
     `;
     
     el.innerHTML = html;
@@ -4122,6 +4146,65 @@ function toggleGuadagniSubmenu() {
         arrow.textContent = submenu.style.display === 'block' ? '▼' : '▶';
     }
 }
+
+
+function openCategorieManager() {
+    const categorie = DATA.getCategorie();
+    let listHtml = '';
+    
+    if (!categorie || categorie.length === 0) {
+        listHtml = `<div class="text-muted" style="padding:12px 0;">Nessuna categoria presente.</div>`;
+    } else {
+        listHtml = `<div class="manager-list">`;
+        categorie.forEach(c => {
+            listHtml += `
+                <div class="item-row">
+                    <span class="item-preview">${c}</span>
+                    <span class="item-actions">
+                        <button class="del" onclick="eliminaCategoria('${c}')">✕ Elimina</button>
+                    </span>
+                </div>
+            `;
+        });
+        listHtml += `</div>`;
+    }
+    
+    const html = `
+        <p style="margin-bottom:8px;font-weight:500;">Gestisci le categorie</p>
+        ${listHtml}
+        <div style="display:flex;gap:8px;margin-top:8px;">
+            <input type="text" id="nuovaCategoriaManager" placeholder="Nuova categoria" style="flex:1;padding:8px 12px;border:2px solid #ddd;border-radius:8px;font-size:0.95rem;" />
+            <button onclick="aggiungiCategoriaManager()" style="padding:8px 20px;background:#f4c542;color:#1a2634;border-radius:8px;font-weight:600;border:none;cursor:pointer;">+ Aggiungi</button>
+        </div>
+    `;
+    
+    openModal(
+        '🏷️ Gestione Categorie',
+        html,
+        `<button class="btn-secondary" id="modalCancelInner">Chiudi</button>`,
+        () => { closeModal(); },
+        () => { closeModal(); }
+    );
+}
+
+function aggiungiCategoriaManager() {
+    const input = document.getElementById('nuovaCategoriaManager');
+    const nome = input.value.trim();
+    if (!nome) { alert('Inserisci il nome della categoria.'); return; }
+    DATA.addCategoria(nome);
+    input.value = '';
+    closeModal();
+    openCategorieManager();
+}
+
+function eliminaCategoria(nome) {
+    if (confirm(`Eliminare la categoria "${nome}"?`)) {
+        DATA.deleteCategoria(nome);
+        closeModal();
+        openCategorieManager();
+    }
+}
+
 
 function openGuadagniManager() {
     const guadagni = DATA.getGuadagni();
@@ -4201,31 +4284,54 @@ function toggleObiettiviSubmenu() {
 
 function openGuadagnoEditor(guadagno) {
     const isEdit = !!guadagno;
-    const g = guadagno || { id: null, materiale: '', concedente: '', prezzo: '', data: '' };
+    const g = guadagno || { id: null, materiale: '', concedente: '', prezzo: '', data: '', categoria: '', foto: '' };
     const partecipanti = DATA.getPresidents();
+    const categorie = DATA.getCategorie();
     
     let optionsHtml = `<option value="">Seleziona...</option>`;
     partecipanti.forEach(p => {
         optionsHtml += `<option value="${p.name}" ${p.name === g.concedente ? 'selected' : ''}>${p.name}</option>`;
     });
     
+    let catOptionsHtml = `<option value="">Seleziona...</option>`;
+    categorie.forEach(c => {
+        catOptionsHtml += `<option value="${c}" ${c === g.categoria ? 'selected' : ''}>${c}</option>`;
+    });
+    catOptionsHtml += `<option value="__nuova__">➕ Aggiungi nuova categoria</option>`;
+    
     let html = `
         <div class="form-group">
-            <label>Materiale venduto</label>
+            <label>📸 Foto dell'oggetto</label>
+            <div class="image-upload-box" id="guadagnoFotoBox" style="border:3px dashed #ccc;border-radius:16px;padding:32px 20px;text-align:center;color:#888;cursor:pointer;background:#faf8f6;">
+                ${g.foto ? `<img src="${g.foto}" class="preview" style="max-width:100%;max-height:200px;border-radius:12px;" />` : `<div class="hint">📷 Clicca per caricare una foto</div>`}
+                <input type="file" id="guadagnoFotoInput" accept="image/*" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label>📦 Materiale venduto</label>
             <input type="text" id="guadagnoMateriale" value="${g.materiale || ''}" placeholder="Nome del materiale" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
         </div>
         <div class="form-group">
-            <label>Concedente (chi possedeva il materiale)</label>
+            <label>🏷️ Categoria</label>
+            <select id="guadagnoCategoria" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" onchange="mostraNuovaCategoria()">
+                ${catOptionsHtml}
+            </select>
+            <div id="nuovaCategoriaContainer" style="display:none;margin-top:8px;">
+                <input type="text" id="nuovaCategoriaInput" placeholder="Nome nuova categoria" style="width:100%;padding:8px 12px;border:2px solid #ddd;border-radius:8px;font-size:0.95rem;" />
+            </div>
+        </div>
+        <div class="form-group">
+            <label>👤 Concedente (chi possedeva il materiale)</label>
             <select id="guadagnoConcedente" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;">
                 ${optionsHtml}
             </select>
         </div>
         <div class="form-group">
-            <label>Prezzo di vendita (€)</label>
+            <label>💰 Prezzo di vendita (€)</label>
             <input type="number" id="guadagnoPrezzo" value="${g.prezzo || ''}" placeholder="0.00" step="0.01" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
         </div>
         <div class="form-group">
-            <label>Data</label>
+            <label>📅 Data</label>
             <input type="date" id="guadagnoData" value="${g.data || ''}" style="width:100%;padding:12px 16px;border:2px solid #ddd;border-radius:10px;font-size:1rem;" />
         </div>
         <div style="background:#f8f6f3;border-radius:12px;padding:16px;border-left:4px solid #f4c542;">
@@ -4242,6 +4348,54 @@ function openGuadagnoEditor(guadagno) {
         () => {},
         () => { closeModal(); }
     );
+
+    // Upload foto
+    setTimeout(() => {
+        const box = document.getElementById('guadagnoFotoBox');
+        const input = document.getElementById('guadagnoFotoInput');
+        if (box && input) {
+            box.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'BUTTON' && e.target.id !== 'modalConfirmInner') {
+                    input.click();
+                }
+            });
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const box = document.getElementById('guadagnoFotoBox');
+                        const prev = box.querySelector('.preview');
+                        const hint = box.querySelector('.hint');
+                        if (prev) {
+                            prev.src = e.target.result;
+                        } else if (hint) {
+                            const img = document.createElement('img');
+                            img.className = 'preview';
+                            img.src = e.target.result;
+                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
+                            hint.replaceWith(img);
+                        } else {
+                            const img = document.createElement('img');
+                            img.className = 'preview';
+                            img.src = e.target.result;
+                            img.style.cssText = 'max-width:100%;max-height:200px;border-radius:12px;';
+                            box.appendChild(img);
+                        }
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+    }, 100);
+}
+
+// ===== MOSTRA/NASCONDI CAMPO NUOVA CATEGORIA =====
+function mostraNuovaCategoria() {
+    const select = document.getElementById('guadagnoCategoria');
+    const container = document.getElementById('nuovaCategoriaContainer');
+    if (select && container) {
+        container.style.display = select.value === '__nuova__' ? 'block' : 'none';
+    }
 }
 
 function salvaGuadagnoHandler(id) {
@@ -4249,13 +4403,35 @@ function salvaGuadagnoHandler(id) {
     const concedente = document.getElementById('guadagnoConcedente').value;
     const prezzo = parseFloat(document.getElementById('guadagnoPrezzo').value);
     const data = document.getElementById('guadagnoData').value;
+    const categoriaSelect = document.getElementById('guadagnoCategoria');
+    let categoria = categoriaSelect.value;
+    const fotoBox = document.getElementById('guadagnoFotoBox');
+    const fotoPreview = fotoBox ? fotoBox.querySelector('.preview') : null;
+    let foto = '';
+    
+    if (fotoPreview && fotoPreview.src && !fotoPreview.src.includes('undefined')) {
+        foto = fotoPreview.src;
+    }
+    
+    // Se è stata selezionata "nuova categoria"
+    if (categoria === '__nuova__') {
+        const nuovaCat = document.getElementById('nuovaCategoriaInput').value.trim();
+        if (nuovaCat) {
+            categoria = nuovaCat;
+            DATA.addCategoria(nuovaCat);
+        } else {
+            alert('Inserisci il nome della nuova categoria.');
+            return;
+        }
+    }
     
     if (!materiale) { alert('Inserisci il nome del materiale.'); return; }
     if (!concedente) { alert('Seleziona il concedente.'); return; }
     if (!prezzo || prezzo <= 0) { alert('Inserisci un prezzo valido.'); return; }
     if (!data) { alert('Seleziona la data.'); return; }
+    if (!categoria) { alert('Seleziona o aggiungi una categoria.'); return; }
     
-    const guadagno = { materiale, concedente, prezzo, data };
+    const guadagno = { materiale, concedente, prezzo, data, categoria, foto };
     
     if (id) {
         DATA.updateGuadagno(id, guadagno);
