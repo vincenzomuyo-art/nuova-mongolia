@@ -3148,191 +3148,214 @@ function openConferenzeManager() {
         //  RICH TEXT EDITOR – TOOLBAR
         // ======================================================================
         function buildRteToolbar(editorId) {
-            const shapes = [
-                'linea', 'freccia', 'quadrato', 'cerchio', 'triangolo',
-                'dodecagono', 'endecagono', 'decagono', 'nonagono',
-                'ottagono', 'ettagono', 'esagono', 'pentagono'
-            ];
-            const shapeOptions = shapes.map(s =>
-                `<option value="${s}">${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
-            ).join('');
+    const shapes = [
+        'linea', 'freccia', 'quadrato', 'cerchio', 'triangolo',
+        'dodecagono', 'endecagono', 'decagono', 'nonagono',
+        'ottagono', 'ettagono', 'esagono', 'pentagono'
+    ];
+    const shapeOptions = shapes.map(s =>
+        `<option value="${s}">${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+    ).join('');
 
-            return `
-                <div class="rte-toolbar" data-editor="${editorId}">
-                    <select class="rte-font" title="Font">
-                        <option value="Arial">Arial</option>
-                        <option value="Georgia">Georgia</option>
-                        <option value="Times New Roman">Times New Roman</option>
-                        <option value="Courier New">Courier New</option>
-                        <option value="Verdana">Verdana</option>
-                        <option value="Trebuchet MS">Trebuchet</option>
-                        <option value="Impact">Impact</option>
-                        <option value="Comic Sans MS">Comic Sans</option>
-                    </select>
-                    <select class="rte-size" title="Dimensione">
-                        <option value="1">8</option>
-                        <option value="2">10</option>
-                        <option value="3" selected>12</option>
-                        <option value="4">14</option>
-                        <option value="5">18</option>
-                        <option value="6">24</option>
-                        <option value="7">36</option>
-                    </select>
-                    <span class="sep"></span>
-                    <button class="btn-rte" data-cmd="bold" title="Grassetto"><b>B</b></button>
-                    <button class="btn-rte" data-cmd="italic" title="Corsivo"><i>I</i></button>
-                    <button class="btn-rte" data-cmd="underline" title="Sottolineato"><u>U</u></button>
-                    <span class="sep"></span>
-                    <input type="color" class="rte-color" value="#000000" title="Colore testo" />
-                    <input type="color" class="rte-bgcolor" value="#ffffff" title="Colore sfondo" />
-                    <span class="sep"></span>
-                    <span class="file-input-wrap">
-                        <button class="btn-rte" title="Inserisci immagine">🖼️</button>
-                        <input type="file" accept="image/*" class="rte-image-input" />
-                    </span>
-                    <span class="sep"></span>
-                    <select class="rte-shape" title="Inserisci forma geometrica">
-                        <option value="">Forma...</option>
-                        ${shapeOptions}
-                    </select>
-                    <span class="sep"></span>
-                    <button class="btn-rte" id="videoBtn_${editorId}" title="Inserisci video" style="font-size:0.8rem;min-width:40px;">🎬</button>
-                </div>
-            `;
-        }
+    return `
+        <div class="rte-toolbar" data-editor="${editorId}">
+            <select class="rte-font" title="Font">
+                <option value="Arial">Arial</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Trebuchet MS">Trebuchet</option>
+                <option value="Impact">Impact</option>
+                <option value="Comic Sans MS">Comic Sans</option>
+            </select>
+            <select class="rte-size" title="Dimensione">
+                <option value="1">8</option>
+                <option value="2">10</option>
+                <option value="3" selected>12</option>
+                <option value="4">14</option>
+                <option value="5">18</option>
+                <option value="6">24</option>
+                <option value="7">36</option>
+            </select>
+            <span class="sep"></span>
+            <button class="btn-rte" data-cmd="bold" title="Grassetto"><b>B</b></button>
+            <button class="btn-rte" data-cmd="italic" title="Corsivo"><i>I</i></button>
+            <button class="btn-rte" data-cmd="underline" title="Sottolineato"><u>U</u></button>
+            <span class="sep"></span>
+            <input type="color" class="rte-color" value="#000000" title="Colore testo" />
+            <input type="color" class="rte-bgcolor" value="#ffffff" title="Colore sfondo" />
+            <span class="sep"></span>
+            <button class="btn-rte" id="linkBtn_${editorId}" title="Inserisci link">🔗</button>
+            <button class="btn-rte" id="unlinkBtn_${editorId}" title="Rimuovi link">🔗✖️</button>
+            <span class="sep"></span>
+            <span class="file-input-wrap">
+                <button class="btn-rte" title="Inserisci immagine">🖼️</button>
+                <input type="file" accept="image/*" class="rte-image-input" />
+            </span>
+            <span class="sep"></span>
+            <select class="rte-shape" title="Inserisci forma geometrica">
+                <option value="">Forma...</option>
+                ${shapeOptions}
+            </select>
+            <span class="sep"></span>
+            <button class="btn-rte" id="videoBtn_${editorId}" title="Inserisci video" style="font-size:0.8rem;min-width:40px;">🎬</button>
+        </div>
+    `;
+}
 
         // ======================================================================
         //  RICH TEXT EDITOR – INIT
         // ======================================================================
         function initRte(editorId) {
-            const editor = document.getElementById(editorId);
-            if (!editor) return;
-            const wrapper = editor.closest('.rte-wrapper');
-            if (!wrapper) return;
-            const toolbar = wrapper.querySelector('.rte-toolbar');
-            if (!toolbar) return;
+    const editor = document.getElementById(editorId);
+    if (!editor) return;
+    const wrapper = editor.closest('.rte-wrapper');
+    if (!wrapper) return;
+    const toolbar = wrapper.querySelector('.rte-toolbar');
+    if (!toolbar) return;
 
-            toolbar.querySelectorAll('[data-cmd]').forEach(btn => {
-                btn.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    document.execCommand(btn.dataset.cmd, false, null);
+    toolbar.querySelectorAll('[data-cmd]').forEach(btn => {
+        btn.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            document.execCommand(btn.dataset.cmd, false, null);
+            editor.focus();
+        });
+    });
+
+    const fontSelect = toolbar.querySelector('.rte-font');
+    if (fontSelect) {
+        fontSelect.addEventListener('change', () => {
+            document.execCommand('fontName', false, fontSelect.value);
+            editor.focus();
+        });
+    }
+
+    const sizeSelect = toolbar.querySelector('.rte-size');
+    if (sizeSelect) {
+        sizeSelect.addEventListener('change', () => {
+            document.execCommand('fontSize', false, sizeSelect.value);
+            editor.focus();
+        });
+    }
+
+    const colorPicker = toolbar.querySelector('.rte-color');
+    if (colorPicker) {
+        colorPicker.addEventListener('input', () => {
+            document.execCommand('foreColor', false, colorPicker.value);
+            editor.focus();
+        });
+    }
+
+    const bgPicker = toolbar.querySelector('.rte-bgcolor');
+    if (bgPicker) {
+        bgPicker.addEventListener('input', () => {
+            document.execCommand('hiliteColor', false, bgPicker.value);
+            editor.focus();
+        });
+    }
+
+    const imgInput = toolbar.querySelector('.rte-image-input');
+    if (imgInput) {
+        imgInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = `<img src="${e.target.result}" style="max-width:100%;border-radius:8px;" />`;
+                    document.execCommand('insertHTML', false, img);
                     editor.focus();
-                });
-            });
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+            this.value = '';
+        });
+    }
 
-            const fontSelect = toolbar.querySelector('.rte-font');
-            if (fontSelect) {
-                fontSelect.addEventListener('change', () => {
-                    document.execCommand('fontName', false, fontSelect.value);
-                    editor.focus();
-                });
-            }
-
-            const sizeSelect = toolbar.querySelector('.rte-size');
-            if (sizeSelect) {
-                sizeSelect.addEventListener('change', () => {
-                    document.execCommand('fontSize', false, sizeSelect.value);
-                    editor.focus();
-                });
-            }
-
-            const colorPicker = toolbar.querySelector('.rte-color');
-            if (colorPicker) {
-                colorPicker.addEventListener('input', () => {
-                    document.execCommand('foreColor', false, colorPicker.value);
-                    editor.focus();
-                });
-            }
-
-            const bgPicker = toolbar.querySelector('.rte-bgcolor');
-            if (bgPicker) {
-                bgPicker.addEventListener('input', () => {
-                    document.execCommand('hiliteColor', false, bgPicker.value);
-                    editor.focus();
-                });
-            }
-
-            const imgInput = toolbar.querySelector('.rte-image-input');
-            if (imgInput) {
-                imgInput.addEventListener('change', function() {
-                    if (this.files && this.files[0]) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const img = `<img src="${e.target.result}" style="max-width:100%;border-radius:8px;" />`;
-                            document.execCommand('insertHTML', false, img);
-                            editor.focus();
-                        };
-                        reader.readAsDataURL(this.files[0]);
-                    }
-                    this.value = '';
-                });
-            }
-
-            const shapeSelect = toolbar.querySelector('.rte-shape');
-            if (shapeSelect) {
-                shapeSelect.addEventListener('change', function() {
-                    const val = this.value;
-                    if (!val) return;
-                    const svg = getShapeSVG(val);
-                    if (svg) {
-                        document.execCommand('insertHTML', false, svg);
-                        editor.focus();
-                    }
-                    this.value = '';
-                });
-            }
-
-            const videoBtn = toolbar.querySelector(`#videoBtn_${editorId}`);
-if (videoBtn) {
-    videoBtn.addEventListener('click', function() {
-        const url = prompt('Inserisci il link del video (YouTube, Vimeo, o URL diretto):');
-        if (url && url.trim()) {
-            let videoHtml = '';
-            // YouTube
-            if (url.includes('youtube.com/watch') || url.includes('youtu.be')) {
-                const videoId = url.includes('youtu.be') ? url.split('/').pop() : url.split('v=')[1]?.split('&')[0];
-                if (videoId) {
-                    videoHtml = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px;margin:8px 0;"></iframe>`;
-                }
-            }
-            // Vimeo
-            else if (url.includes('vimeo.com')) {
-                const videoId = url.split('/').pop();
-                if (videoId) {
-                    videoHtml = `<iframe width="100%" height="315" src="https://player.vimeo.com/video/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px;margin:8px 0;"></iframe>`;
-                }
-            }
-            // URL diretto (MP4, WebM, ecc.)
-            else if (url.match(/\.(mp4|webm|ogg)$/i)) {
-                videoHtml = `<video controls style="width:100%;border-radius:8px;margin:8px 0;"><source src="${url}" type="video/mp4"></video>`;
-            }
-            // Embed generico
-            else {
-                videoHtml = `<div style="background:#f0f0f0;padding:20px;border-radius:8px;text-align:center;margin:8px 0;">
-                    <p style="color:#6a7a8a;">📹 Video non supportato<br><a href="${url}" target="_blank" style="color:#f4c542;">Clicca per aprire il link</a></p>
-                </div>`;
-            }
-            
-            if (videoHtml) {
-                document.execCommand('insertHTML', false, videoHtml);
+    const shapeSelect = toolbar.querySelector('.rte-shape');
+    if (shapeSelect) {
+        shapeSelect.addEventListener('change', function() {
+            const val = this.value;
+            if (!val) return;
+            const svg = getShapeSVG(val);
+            if (svg) {
+                document.execCommand('insertHTML', false, svg);
                 editor.focus();
             }
-        }
-    });
-}
+            this.value = '';
+        });
+    }
 
-            editor.addEventListener('mouseup', updateRteButtons);
-            editor.addEventListener('keyup', updateRteButtons);
-
-            function updateRteButtons() {
-                const boldBtn = toolbar.querySelector('[data-cmd="bold"]');
-                if (boldBtn) boldBtn.classList.toggle('active', document.queryCommandState('bold'));
-                const italicBtn = toolbar.querySelector('[data-cmd="italic"]');
-                if (italicBtn) italicBtn.classList.toggle('active', document.queryCommandState('italic'));
-                const underBtn = toolbar.querySelector('[data-cmd="underline"]');
-                if (underBtn) underBtn.classList.toggle('active', document.queryCommandState('underline'));
+    const videoBtn = toolbar.querySelector(`#videoBtn_${editorId}`);
+    if (videoBtn) {
+        videoBtn.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            const url = prompt('Inserisci il link del video (YouTube, Vimeo, o URL diretto):');
+            if (url && url.trim()) {
+                let videoHtml = '';
+                if (url.includes('youtube.com/watch') || url.includes('youtu.be')) {
+                    const videoId = url.includes('youtu.be') ? url.split('/').pop() : url.split('v=')[1]?.split('&')[0];
+                    if (videoId) {
+                        videoHtml = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px;margin:8px 0;"></iframe>`;
+                    }
+                } else if (url.includes('vimeo.com')) {
+                    const videoId = url.split('/').pop();
+                    if (videoId) {
+                        videoHtml = `<iframe width="100%" height="315" src="https://player.vimeo.com/video/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px;margin:8px 0;"></iframe>`;
+                    }
+                } else if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                    videoHtml = `<video controls style="width:100%;border-radius:8px;margin:8px 0;"><source src="${url}" type="video/mp4"></video>`;
+                } else {
+                    videoHtml = `<div style="background:#f0f0f0;padding:20px;border-radius:8px;text-align:center;margin:8px 0;">
+                        <p style="color:#6a7a8a;">📹 Video non supportato<br><a href="${url}" target="_blank" style="color:#f4c542;">Clicca per aprire il link</a></p>
+                    </div>`;
+                }
+                if (videoHtml) {
+                    document.execCommand('insertHTML', false, videoHtml);
+                    editor.focus();
+                }
             }
-        }
+        });
+    }
+
+    // ===== PULSANTE LINK =====
+    const linkBtn = toolbar.querySelector(`#linkBtn_${editorId}`);
+    if (linkBtn) {
+        linkBtn.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            const selectedText = window.getSelection().toString();
+            let url = prompt('Inserisci l\'URL del link (es. https://...):', 'https://');
+            if (url && url.trim()) {
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                document.execCommand('createLink', false, url);
+                editor.focus();
+            }
+        });
+    }
+
+    // ===== PULSANTE UNLINK =====
+    const unlinkBtn = toolbar.querySelector(`#unlinkBtn_${editorId}`);
+    if (unlinkBtn) {
+        unlinkBtn.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            document.execCommand('unlink', false, null);
+            editor.focus();
+        });
+    }
+
+    editor.addEventListener('mouseup', updateRteButtons);
+    editor.addEventListener('keyup', updateRteButtons);
+
+    function updateRteButtons() {
+        const boldBtn = toolbar.querySelector('[data-cmd="bold"]');
+        if (boldBtn) boldBtn.classList.toggle('active', document.queryCommandState('bold'));
+        const italicBtn = toolbar.querySelector('[data-cmd="italic"]');
+        if (italicBtn) italicBtn.classList.toggle('active', document.queryCommandState('italic'));
+        const underBtn = toolbar.querySelector('[data-cmd="underline"]');
+        if (underBtn) underBtn.classList.toggle('active', document.queryCommandState('underline'));
+    }
+}
 
         // ======================================================================
         //  SHAPE GENERATOR (SVG)
