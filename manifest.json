@@ -8,12 +8,12 @@
   "theme_color": "#f4c542",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "https://vincenzomuyo-art.github.io/nuova-mongolia/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "https://vincenzomuyo-art.github.io/nuova-mongolia/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
