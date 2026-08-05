@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🏴 Sfida Bandiere - Nuova Mongolia</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f3f0;
+            color: #1e1e1e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: #fff;
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: #1a2634;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6a7a8a;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #1a2634;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #f4c542;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(244, 197, 66, 0.2);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn:hover {
+            transform: scale(1.02);
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-primary {
+            background: #f4c542;
+            color: #1a2634;
+        }
+        .btn-primary:hover {
+            background: #ffd966;
+        }
+        .btn-secondary {
+            background: #1a2634;
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: #2a3a4a;
+        }
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #1a2634;
+            border: 2px solid #ddd;
+        }
+        .btn-outline:hover {
+            border-color: #f4c542;
+            background: #f8f6f3;
+        }
+        .btn-block {
+            width: 100%;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f6f3;
+            border-radius: 10px;
+            border-left: 4px solid #f4c542;
+        }
+        .player-item .name {
+            font-weight: 600;
+            color: #1a2634;
+        }
+        .player-item .status {
+            font-size: 0.8rem;
+            color: #6a7a8a;
+        }
+        .player-item .status.online {
+            color: #28a745;
+        }
+        .player-item .status.in-game {
+            color: #dc3545;
+        }
+
+        .invite-notification {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+        }
+        .invite-notification .invite-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .game-header .timer {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f4c542;
+        }
+        .game-header .timer.warning {
+            color: #dc3545;
+            animation: pulse 1s infinite;
+        }
+        .game-header .scores {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .game-header .scores .score-item {
+            background: #f8f6f3;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .game-header .scores .score-item .pts {
+            color: #f4c542;
+        }
+
+        .flag-container {
+            background: #1a2634;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin: 16px 0;
+        }
+        .flag-container img {
+            width: 100%;
+            max-width: 280px;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .options-grid button {
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid #ddd;
+            background: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1a2634;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .options-grid button:hover:not(:disabled) {
+            border-color: #f4c542;
+            transform: scale(1.02);
+        }
+        .options-grid button:disabled {
+            cursor: default;
+            opacity: 0.6;
+        }
+        .options-grid button.correct {
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+        .options-grid button.wrong {
+            border-color: #dc3545;
+            background: #fde0e0;
+        }
+
+        .feedback-bar {
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            margin: 8px 0;
+        }
+        .feedback-bar.correct {
+            background: #e8f5e9;
+            color: #28a745;
+        }
+        .feedback-bar.wrong {
+            background: #fde0e0;
+            color: #dc3545;
+        }
+
+        .ranking {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .ranking .rank-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f6f3;
+            border-radius: 10px;
+            border-left: 4px solid #f4c542;
+        }
+        .ranking .rank-item .pos {
+            font-weight: 700;
+            color: #1a2634;
+            min-width: 40px;
+        }
+        .ranking .rank-item .pos.gold {
+            color: #ffd700;
+        }
+        .ranking .rank-item .pos.silver {
+            color: #c0c0c0;
+        }
+        .ranking .rank-item .pos.bronze {
+            color: #cd7f32;
+        }
+
+        .lobby-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .lobby-actions .row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .lobby-actions .row .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .invite-badge {
+            background: #dc3545;
+            color: #fff;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 16px;
+            color: #6a7a8a;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover {
+            color: #1a2634;
+            text-decoration: underline;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .status-badge.online {
+            background: #e8f5e9;
+            color: #28a745;
+        }
+        .status-badge.in-game {
+            background: #fde0e0;
+            color: #dc3545;
+        }
+        .status-badge.waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            .game-header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            .lobby-actions .row {
+                flex-direction: column;
+            }
+            .lobby-actions .row .btn {
+                flex: 1;
+            }
+            .player-item {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <h1>🏴 Sfida Bandiere</h1>
+        <div class="subtitle">Sfida i tuoi amici in tempo reale!</div>
+
+        <!-- ===== SEZIONE 1: LOGIN ===== -->
+        <div class="section active" id="section-login">
+            <div class="form-group">
+                <label>👤 Inserisci il tuo nome</label>
+                <input type="text" id="nicknameInput" placeholder="Il tuo nome" maxlength="20" />
+            </div>
+            <button class="btn btn-primary btn-block" onclick="login()">🚀 Entra nella lobby</button>
+            <div id="loginError" style="color:#dc3545;margin-top:8px;display:none;"></div>
+        </div>
+
+        <!-- ===== SEZIONE 2: LOBBY ===== -->
+        <div class="section" id="section-lobby">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                <span style="font-weight:700;color:#1a2634;">👥 Giocatori online</span>
+                <span id="onlineCount" style="font-size:0.85rem;color:#6a7a8a;">0 connessi</span>
+            </div>
+            <div class="player-list" id="playerList">
+                <div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun giocatore online</div>
+            </div>
+
+            <!-- Inviti ricevuti -->
+            <div id="inviteContainer"></div>
+
+            <div class="lobby-actions">
+                <div class="row">
+                    <button class="btn btn-secondary" onclick="creaPartita()">🎮 Crea partita</button>
+                    <button class="btn btn-outline" onclick="logout()">🚪 Esci</button>
+                </div>
+            </div>
+            <a href="https://vincenzomuyo-art.github.io/nuova-mongolia/index.html" class="back-link">← Torna al sito principale</a>
+        </div>
+
+        <!-- ===== SEZIONE 3: CREAZIONE PARTITA ===== -->
+        <div class="section" id="section-create">
+            <h2 style="color:#1a2634;font-size:1.4rem;margin-bottom:12px;">🎮 Crea partita</h2>
+            <div class="form-group">
+                <label>🏷️ Livello di difficoltà</label>
+                <select id="livelloSelect">
+                    <option value="facile">Facile (30 paesi noti)</option>
+                    <option value="medio" selected>Medio (50 paesi)</option>
+                    <option value="difficile">Difficile (70 paesi)</option>
+                    <option value="impossibile">Impossibile (tutti i paesi)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>⏱️ Tempo partita (secondi)</label>
+                <select id="tempoSelect">
+                    <option value="30">30 secondi</option>
+                    <option value="60" selected>60 secondi</option>
+                    <option value="90">90 secondi</option>
+                    <option value="120">120 secondi</option>
+                    <option value="180">180 secondi</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>👥 Scegli gli avversari (clicca su "Invita" nella lobby)</label>
+                <div id="invitedPlayers" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;padding:8px;background:#f8f6f3;border-radius:10px;">
+                    <span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>
+                </div>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+                <button class="btn btn-success" onclick="avviaPartita()" id="btnAvviaPartita" disabled>🚀 Avvia partita</button>
+                <button class="btn btn-outline" onclick="annullaCreazione()">↩️ Annulla</button>
+            </div>
+            <div id="createError" style="color:#dc3545;margin-top:8px;display:none;"></div>
+        </div>
+
+        <!-- ===== SEZIONE 4: GIOCO ===== -->
+        <div class="section" id="section-game">
+            <div class="game-header">
+                <div class="timer" id="timerDisplay">⏱️ 60</div>
+                <div class="scores" id="scoreDisplay"></div>
+            </div>
+            <div id="gameContent">
+                <div class="flag-container">
+                    <img id="flagImage" src="" alt="Bandiera" style="width:100%;max-width:280px;border-radius:8px;" />
+                </div>
+                <div class="options-grid" id="optionsGrid"></div>
+                <div id="feedbackArea"></div>
+                <div id="gameStatus" style="text-align:center;color:#6a7a8a;font-weight:600;margin-top:12px;"></div>
+            </div>
+        </div>
+
+        <!-- ===== SEZIONE 5: CLASSIFICA FINALE ===== -->
+        <div class="section" id="section-final">
+            <h2 style="color:#1a2634;font-size:1.6rem;text-align:center;margin-bottom:8px;">🏆 Classifica finale</h2>
+            <div class="ranking" id="rankingContainer"></div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+                <button class="btn btn-primary btn-block" onclick="tornaLobby()">🔄 Nuova partita</button>
+                <a href="https://vincenzomuyo-art.github.io/nuova-mongolia/index.html" class="btn btn-secondary btn-block" style="text-decoration:none;text-align:center;">🏠 Torna al sito principale</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======================================================================
+        //  FIREBASE CONFIG
+        // ======================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgEPx8OSxCHEl6-liRB1irwFEGqxrrGgs",
+            authDomain: "database-nuova-mongolia.firebaseapp.com",
+            databaseURL: "https://database-nuova-mongolia-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "database-nuova-mongolia",
+            storageBucket: "database-nuova-mongolia.firebasestorage.app",
+            messagingSenderId: "192624624351",
+            appId: "1:192624624351:web:4e6cc660a9461d3cda9f6a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // ======================================================================
+        //  VARIABILI GLOBALI
+        // ======================================================================
+        let currentUser = null;
+        let currentUserId = null;
+        let currentGameId = null;
+        let gameState = null; // Partita corrente
+        let isGameCreator = false;
+        let invitedPlayers = []; // { userId, nickname, accepted }
+        let timerInterval = null;
+        let gameActive = false;
+        let currentQuestionIndex = 0;
+        let questions = [];
+        let answered = false;
+        let punteggi = {}; // { userId: { nickname, punteggio, corrette, totali } }
+
+        const MAX_PLAYERS = 3;
+
+        // ======================================================================
+        //  LISTA PAESI (195+)
+        // ======================================================================
+        const PAESI = [
+            { nome: "Afghanistan", codice: "af" },
+            { nome: "Albania", codice: "al" },
+            { nome: "Algeria", codice: "dz" },
+            { nome: "Andorra", codice: "ad" },
+            { nome: "Angola", codice: "ao" },
+            { nome: "Antigua e Barbuda", codice: "ag" },
+            { nome: "Arabia Saudita", codice: "sa" },
+            { nome: "Argentina", codice: "ar" },
+            { nome: "Armenia", codice: "am" },
+            { nome: "Australia", codice: "au" },
+            { nome: "Austria", codice: "at" },
+            { nome: "Azerbaigian", codice: "az" },
+            { nome: "Bahamas", codice: "bs" },
+            { nome: "Bahrein", codice: "bh" },
+            { nome: "Bangladesh", codice: "bd" },
+            { nome: "Barbados", codice: "bb" },
+            { nome: "Belgio", codice: "be" },
+            { nome: "Belize", codice: "bz" },
+            { nome: "Benin", codice: "bj" },
+            { nome: "Bielorussia", codice: "by" },
+            { nome: "Birmania", codice: "mm" },
+            { nome: "Bolivia", codice: "bo" },
+            { nome: "Bosnia ed Erzegovina", codice: "ba" },
+            { nome: "Botswana", codice: "bw" },
+            { nome: "Brasile", codice: "br" },
+            { nome: "Brunei", codice: "bn" },
+            { nome: "Bulgaria", codice: "bg" },
+            { nome: "Burkina Faso", codice: "bf" },
+            { nome: "Burundi", codice: "bi" },
+            { nome: "Cambogia", codice: "kh" },
+            { nome: "Camerun", codice: "cm" },
+            { nome: "Canada", codice: "ca" },
+            { nome: "Capo Verde", codice: "cv" },
+            { nome: "Ciad", codice: "td" },
+            { nome: "Cile", codice: "cl" },
+            { nome: "Cina", codice: "cn" },
+            { nome: "Cipro", codice: "cy" },
+            { nome: "Colombia", codice: "co" },
+            { nome: "Comore", codice: "km" },
+            { nome: "Corea del Nord", codice: "kp" },
+            { nome: "Corea del Sud", codice: "kr" },
+            { nome: "Costa d'Avorio", codice: "ci" },
+            { nome: "Costa Rica", codice: "cr" },
+            { nome: "Croazia", codice: "hr" },
+            { nome: "Cuba", codice: "cu" },
+            { nome: "Danimarca", codice: "dk" },
+            { nome: "Dominica", codice: "dm" },
+            { nome: "Ecuador", codice: "ec" },
+            { nome: "Egitto", codice: "eg" },
+            { nome: "El Salvador", codice: "sv" },
+            { nome: "Emirati Arabi Uniti", codice: "ae" },
+            { nome: "Eritrea", codice: "er" },
+            { nome: "Estonia", codice: "ee" },
+            { nome: "Eswatini", codice: "sz" },
+            { nome: "Etiopia", codice: "et" },
+            { nome: "Fiji", codice: "fj" },
+            { nome: "Filippine", codice: "ph" },
+            { nome: "Finlandia", codice: "fi" },
+            { nome: "Francia", codice: "fr" },
+            { nome: "Gabon", codice: "ga" },
+            { nome: "Gambia", codice: "gm" },
+            { nome: "Georgia", codice: "ge" },
+            { nome: "Germania", codice: "de" },
+            { nome: "Ghana", codice: "gh" },
+            { nome: "Giamaica", codice: "jm" },
+            { nome: "Giappone", codice: "jp" },
+            { nome: "Gibuti", codice: "dj" },
+            { nome: "Giordania", codice: "jo" },
+            { nome: "Grecia", codice: "gr" },
+            { nome: "Grenada", codice: "gd" },
+            { nome: "Guatemala", codice: "gt" },
+            { nome: "Guinea", codice: "gn" },
+            { nome: "Guinea Equatoriale", codice: "gq" },
+            { nome: "Guinea-Bissau", codice: "gw" },
+            { nome: "Guyana", codice: "gy" },
+            { nome: "Haiti", codice: "ht" },
+            { nome: "Honduras", codice: "hn" },
+            { nome: "India", codice: "in" },
+            { nome: "Indonesia", codice: "id" },
+            { nome: "Iran", codice: "ir" },
+            { nome: "Iraq", codice: "iq" },
+            { nome: "Irlanda", codice: "ie" },
+            { nome: "Islanda", codice: "is" },
+            { nome: "Isole Marshall", codice: "mh" },
+            { nome: "Isole Salomone", codice: "sb" },
+            { nome: "Israele", codice: "il" },
+            { nome: "Italia", codice: "it" },
+            { nome: "Kazakistan", codice: "kz" },
+            { nome: "Kenya", codice: "ke" },
+            { nome: "Kirghizistan", codice: "kg" },
+            { nome: "Kiribati", codice: "ki" },
+            { nome: "Kuwait", codice: "kw" },
+            { nome: "Laos", codice: "la" },
+            { nome: "Lesotho", codice: "ls" },
+            { nome: "Lettonia", codice: "lv" },
+            { nome: "Libano", codice: "lb" },
+            { nome: "Liberia", codice: "lr" },
+            { nome: "Libia", codice: "ly" },
+            { nome: "Liechtenstein", codice: "li" },
+            { nome: "Lituania", codice: "lt" },
+            { nome: "Lussemburgo", codice: "lu" },
+            { nome: "Macedonia del Nord", codice: "mk" },
+            { nome: "Madagascar", codice: "mg" },
+            { nome: "Malawi", codice: "mw" },
+            { nome: "Maldive", codice: "mv" },
+            { nome: "Malaysia", codice: "my" },
+            { nome: "Mali", codice: "ml" },
+            { nome: "Malta", codice: "mt" },
+            { nome: "Marocco", codice: "ma" },
+            { nome: "Mauritania", codice: "mr" },
+            { nome: "Mauritius", codice: "mu" },
+            { nome: "Messico", codice: "mx" },
+            { nome: "Micronesia", codice: "fm" },
+            { nome: "Moldavia", codice: "md" },
+            { nome: "Monaco", codice: "mc" },
+            { nome: "Mongolia", codice: "mn" },
+            { nome: "Montenegro", codice: "me" },
+            { nome: "Mozambico", codice: "mz" },
+            { nome: "Namibia", codice: "na" },
+            { nome: "Nauru", codice: "nr" },
+            { nome: "Nepal", codice: "np" },
+            { nome: "Nicaragua", codice: "ni" },
+            { nome: "Niger", codice: "ne" },
+            { nome: "Nigeria", codice: "ng" },
+            { nome: "Norvegia", codice: "no" },
+            { nome: "Nuova Zelanda", codice: "nz" },
+            { nome: "Oman", codice: "om" },
+            { nome: "Paesi Bassi", codice: "nl" },
+            { nome: "Pakistan", codice: "pk" },
+            { nome: "Palau", codice: "pw" },
+            { nome: "Panama", codice: "pa" },
+            { nome: "Papua Nuova Guinea", codice: "pg" },
+            { nome: "Paraguay", codice: "py" },
+            { nome: "Perù", codice: "pe" },
+            { nome: "Polonia", codice: "pl" },
+            { nome: "Portogallo", codice: "pt" },
+            { nome: "Qatar", codice: "qa" },
+            { nome: "Regno Unito", codice: "gb" },
+            { nome: "Repubblica Centrafricana", codice: "cf" },
+            { nome: "Repubblica Ceca", codice: "cz" },
+            { nome: "Repubblica Democratica del Congo", codice: "cd" },
+            { nome: "Repubblica del Congo", codice: "cg" },
+            { nome: "Repubblica Dominicana", codice: "do" },
+            { nome: "Romania", codice: "ro" },
+            { nome: "Ruanda", codice: "rw" },
+            { nome: "Russia", codice: "ru" },
+            { nome: "Saint Kitts e Nevis", codice: "kn" },
+            { nome: "Saint Lucia", codice: "lc" },
+            { nome: "Saint Vincent e Grenadine", codice: "vc" },
+            { nome: "Samoa", codice: "ws" },
+            { nome: "San Marino", codice: "sm" },
+            { nome: "São Tomé e Príncipe", codice: "st" },
+            { nome: "Senegal", codice: "sn" },
+            { nome: "Serbia", codice: "rs" },
+            { nome: "Seychelles", codice: "sc" },
+            { nome: "Sierra Leone", codice: "sl" },
+            { nome: "Singapore", codice: "sg" },
+            { nome: "Siria", codice: "sy" },
+            { nome: "Slovacchia", codice: "sk" },
+            { nome: "Slovenia", codice: "si" },
+            { nome: "Somalia", codice: "so" },
+            { nome: "Spagna", codice: "es" },
+            { nome: "Sri Lanka", codice: "lk" },
+            { nome: "Stati Uniti", codice: "us" },
+            { nome: "Sudafrica", codice: "za" },
+            { nome: "Sudan", codice: "sd" },
+            { nome: "Sudan del Sud", codice: "ss" },
+            { nome: "Suriname", codice: "sr" },
+            { nome: "Svezia", codice: "se" },
+            { nome: "Svizzera", codice: "ch" },
+            { nome: "Tagikistan", codice: "tj" },
+            { nome: "Tanzania", codice: "tz" },
+            { nome: "Thailandia", codice: "th" },
+            { nome: "Timor Est", codice: "tl" },
+            { nome: "Togo", codice: "tg" },
+            { nome: "Tonga", codice: "to" },
+            { nome: "Trinidad e Tobago", codice: "tt" },
+            { nome: "Tunisia", codice: "tn" },
+            { nome: "Turchia", codice: "tr" },
+            { nome: "Turkmenistan", codice: "tm" },
+            { nome: "Tuvalu", codice: "tv" },
+            { nome: "Ucraina", codice: "ua" },
+            { nome: "Uganda", codice: "ug" },
+            { nome: "Ungheria", codice: "hu" },
+            { nome: "Uruguay", codice: "uy" },
+            { nome: "Uzbekistan", codice: "uz" },
+            { nome: "Vanuatu", codice: "vu" },
+            { nome: "Vaticano", codice: "va" },
+            { nome: "Venezuela", codice: "ve" },
+            { nome: "Vietnam", codice: "vn" },
+            { nome: "Yemen", codice: "ye" },
+            { nome: "Zambia", codice: "zm" },
+            { nome: "Zimbabwe", codice: "zw" },
+            { nome: "Kosovo", codice: "xk" },
+            { nome: "Palestina", codice: "ps" },
+            { nome: "Sahara Occidentale", codice: "eh" },
+            { nome: "Taiwan", codice: "tw" },
+            { nome: "Abcasia", codice: "ab" },
+            { nome: "Ossezia del Sud", codice: "ge" },
+            { nome: "Transnistria", codice: "md" },
+            { nome: "Cipro del Nord", codice: "cy" },
+            { nome: "Artsakh", codice: "am" },
+        ];
+
+        const FLAG_BASE_URL = 'https://flagcdn.com/w320/';
+
+        // ===== BANDIERE PER LIVELLO =====
+        function getBandierePerLivello(livello) {
+            const tutte = PAESI;
+            switch (livello) {
+                case 'facile':
+                    return tutte.filter(p =>
+                        ['it', 'fr', 'de', 'gb', 'es', 'pt', 'us', 'ca', 'br', 'ar', 'mx', 'au', 'nz', 'in', 'cn', 'jp',
+                            'kr', 'ru', 'za', 'eg', 'ma', 'tr', 'gr', 'nl', 'be', 'ch', 'at', 'se', 'no'
+                        ].includes(p.codice)
+                    );
+                case 'medio':
+                    return tutte.filter(p =>
+                        !['af', 'ad', 'ag', 'am', 'az', 'bs', 'bb', 'bz', 'bj', 'bt', 'bw', 'bf', 'bi', 'cv', 'td', 'km',
+                            'cg', 'cd', 'dm', 'dj', 'er', 'sz', 'fj', 'ga', 'gm', 'gd', 'gn', 'gw', 'gy', 'ht', 'ki',
+                            'ls', 'li', 'mg', 'mw', 'mv', 'ml', 'mr', 'mu', 'fm', 'mc', 'me', 'mz', 'na', 'nr', 'ni',
+                            'ne', 'pw', 'pg', 'py', 'kn', 'lc', 'vc', 'ws', 'sm', 'st', 'sc', 'sl', 'sb', 'sr', 'tg',
+                            'to', 'tt', 'tv', 'vu', 'zm', 'zw', 'xk', 'ps', 'eh', 'tw', 'ab', 'ge', 'md', 'am'
+                        ].includes(p.codice)
+                    );
+                case 'difficile':
+                    return tutte.filter(p =>
+                        ['af', 'al', 'dz', 'ao', 'ag', 'am', 'az', 'bs', 'bb', 'bz', 'bj', 'bt', 'bw', 'bf', 'bi', 'kh',
+                            'cm', 'cv', 'cf', 'td', 'km', 'cg', 'cd', 'dm', 'dj', 'er', 'sz', 'fj', 'ga', 'gm', 'gd',
+                            'gn', 'gw', 'gy', 'ht', 'ki', 'ls', 'li', 'mg', 'mw', 'mv', 'ml', 'mr', 'mu', 'fm', 'mc',
+                            'me', 'mz', 'na', 'nr', 'ni', 'ne', 'pw', 'pg', 'py', 'kn', 'lc', 'vc', 'ws', 'sm', 'st',
+                            'sc', 'sl', 'sb', 'sr', 'tg', 'to', 'tt', 'tv', 'vu', 'zm', 'zw', 'xk', 'ps', 'eh', 'tw',
+                            'ab', 'ge', 'md', 'am'
+                        ].includes(p.codice)
+                    );
+                case 'impossibile':
+                default:
+                    return tutte;
+            }
+        }
+
+        // ======================================================================
+        //  FUNZIONI UI
+        // ======================================================================
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = msg;
+                el.style.display = 'block';
+                setTimeout(() => { el.style.display = 'none'; }, 4000);
+            }
+        }
+
+        // ======================================================================
+        //  LOGIN / LOGOUT
+        // ======================================================================
+        function login() {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (!nickname) {
+                showError('loginError', 'Inserisci un nome valido.');
+                return;
+            }
+            if (nickname.length > 20) {
+                showError('loginError', 'Il nome non può superare i 20 caratteri.');
+                return;
+            }
+
+            currentUser = nickname;
+            currentUserId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+            // Salva utente su Firebase
+            const userRef = db.ref('sfidaBandiere/utenti/' + currentUserId);
+            userRef.set({
+                nickname: currentUser,
+                online: true,
+                inGame: false,
+                lastSeen: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // Rimuovi quando si disconnette
+            userRef.onDisconnect().update({
+                online: false,
+                lastSeen: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            // Rimuovi completamente dopo 2 minuti di inattività (gestito da server)
+            // Ma per noi va bene così
+
+            // Ascolta inviti
+            ascoltaInviti();
+
+            // Ascolta utenti online
+            ascoltaUtentiOnline();
+
+            showSection('section-lobby');
+            document.getElementById('nicknameInput').value = '';
+        }
+
+        function logout() {
+            if (currentUserId) {
+                db.ref('sfidaBandiere/utenti/' + currentUserId).remove();
+            }
+            currentUser = null;
+            currentUserId = null;
+            showSection('section-login');
+        }
+
+        // ======================================================================
+        //  ASCOLTA UTENTI ONLINE
+        // ======================================================================
+        let onlineUsers = {};
+        let usersRef = db.ref('sfidaBandiere/utenti');
+
+        function ascoltaUtentiOnline() {
+            usersRef.on('value', snapshot => {
+                const data = snapshot.val() || {};
+                onlineUsers = {};
+                const list = [];
+                let count = 0;
+
+                Object.keys(data).forEach(id => {
+                    const user = data[id];
+                    if (user.online && user.nickname !== currentUser) {
+                        onlineUsers[id] = user;
+                        list.push({
+                            id: id,
+                            nickname: user.nickname,
+                            inGame: user.inGame || false
+                        });
+                        count++;
+                    }
+                });
+
+                document.getElementById('onlineCount').textContent = count + ' connessi';
+                renderPlayerList(list);
+                aggiornaPulsantiInvito();
+            });
+        }
+
+        function renderPlayerList(list) {
+            const container = document.getElementById('playerList');
+            if (list.length === 0) {
+                container.innerHTML = '<div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun altro giocatore online</div>';
+                return;
+            }
+
+            container.innerHTML = list.map(p => `
+                <div class="player-item" id="player-${p.id}">
+                    <div>
+                        <span class="name">${p.nickname}</span>
+                        <span class="status ${p.inGame ? 'in-game' : 'online'}">${p.inGame ? '🔴 In partita' : '🟢 Online'}</span>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-primary" onclick="invitaGiocatore('${p.id}')" 
+                                id="inviteBtn-${p.id}" ${p.inGame || currentGameId ? 'disabled' : ''}>
+                            📨 Invita
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function aggiornaPulsantiInvito() {
+            // Se sono in partita o in creazione, disabilita
+            const inGame = currentGameId !== null;
+            document.querySelectorAll('[id^="inviteBtn-"]').forEach(btn => {
+                const id = btn.id.replace('inviteBtn-', '');
+                const user = onlineUsers[id];
+                if (!user) return;
+                btn.disabled = inGame || user.inGame || invitedPlayers.some(p => p.userId === id && p.accepted);
+            });
+        }
+
+        // ======================================================================
+        //  INVITI
+        // ======================================================================
+        let currentInvites = [];
+
+        function invitaGiocatore(userId) {
+            const user = onlineUsers[userId];
+            if (!user) return;
+            if (user.inGame) {
+                alert('Questo giocatore è già in partita.');
+                return;
+            }
+            if (currentGameId) {
+                alert('Sei già in una partita.');
+                return;
+            }
+
+            // Se è già stato invitato e accettato
+            if (invitedPlayers.some(p => p.userId === userId && p.accepted)) {
+                alert('Questo giocatore ha già accettato il tuo invito.');
+                return;
+            }
+
+            // Crea invito
+            const inviteId = 'invite_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            const inviteRef = db.ref('sfidaBandiere/inviti/' + inviteId);
+            inviteRef.set({
+                mittenteId: currentUserId,
+                mittenteNome: currentUser,
+                destinatarioId: userId,
+                destinatarioNome: user.nickname,
+                stato: 'in attesa', // 'in attesa', 'accettato', 'rifiutato'
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            alert(`✅ Invito inviato a ${user.nickname}! Attendere risposta.`);
+        }
+
+        function ascoltaInviti() {
+            db.ref('sfidaBandiere/inviti').orderByChild('destinatarioId').equalTo(currentUserId).on('value', snapshot => {
+                const data = snapshot.val() || {};
+                const invites = [];
+                Object.keys(data).forEach(id => {
+                    const inv = data[id];
+                    if (inv.stato === 'in attesa') {
+                        invites.push({ id, ...inv });
+                    }
+                });
+                currentInvites = invites;
+                renderInviti(invites);
+            });
+        }
+
+        function renderInviti(invites) {
+            const container = document.getElementById('inviteContainer');
+            if (invites.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = invites.map(inv => `
+                <div class="invite-notification">
+                    <div style="font-weight:600;color:#1a2634;font-size:1rem;">
+                        📨 ${inv.mittenteNome} ti sta sfidando!
+                    </div>
+                    <div class="invite-actions">
+                        <button class="btn btn-sm btn-success" onclick="accettaInvito('${inv.id}')">✅ Accetta</button>
+                        <button class="btn btn-sm btn-danger" onclick="rifiutaInvito('${inv.id}')">❌ Rifiuta</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function accettaInvito(inviteId) {
+            const inviteRef = db.ref('sfidaBandiere/inviti/' + inviteId);
+            inviteRef.child('stato').set('accettato');
+
+            // Leggi i dettagli dell'invito
+            inviteRef.once('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                // Aggiorna lo stato dell'utente
+                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
+
+                // Crea o entra nella partita
+                // L'utente che accetta entra nella partita dell'invitante
+                // Cerchiamo se esiste già una partita creata dall'invitante
+                db.ref('sfidaBandiere/partite').orderByChild('creatoreId').equalTo(data.mittenteId).once('value', snap => {
+                    const partite = snap.val() || {};
+                    let gameId = null;
+                    let gameData = null;
+
+                    Object.keys(partite).forEach(id => {
+                        const p = partite[id];
+                        if (p.stato === 'in attesa' || p.stato === 'in corso') {
+                            if (Object.keys(p.giocatori || {}).length < MAX_PLAYERS) {
+                                gameId = id;
+                                gameData = p;
+                            }
+                        }
+                    });
+
+                    if (gameId && gameData) {
+                        // Entra nella partita esistente
+                        entriInPartita(gameId, gameData);
+                    } else {
+                        // Crea una nuova partita come seguace
+                        creaPartitaComeSeguace(data.mittenteId);
+                    }
+                });
+            });
+        }
+
+        function rifiutaInvito(inviteId) {
+            db.ref('sfidaBandiere/inviti/' + inviteId).update({ stato: 'rifiutato' });
+            alert('❌ Invito rifiutato.');
+        }
+
+        // ======================================================================
+        //  CREAZIONE PARTITA
+        // ======================================================================
+        let invitatiAccettati = [];
+
+        function creaPartita() {
+            if (currentGameId) {
+                alert('Sei già in una partita.');
+                return;
+            }
+
+            // Reset
+            invitedPlayers = [];
+            invitatiAccettati = [];
+            document.getElementById('invitedPlayers').innerHTML =
+                '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
+            document.getElementById('btnAvviaPartita').disabled = true;
+
+            showSection('section-create');
+            isGameCreator = true;
+
+            // Ascolta gli inviti accettati
+            ascoltaInvitiAccettati();
+        }
+
+        function ascoltaInvitiAccettati() {
+            db.ref('sfidaBandiere/inviti').orderByChild('mittenteId').equalTo(currentUserId).on('value', snapshot => {
+                const data = snapshot.val() || {};
+                const accettati = [];
+                Object.keys(data).forEach(id => {
+                    const inv = data[id];
+                    if (inv.stato === 'accettato') {
+                        accettati.push({ id, ...inv });
+                    }
+                });
+
+                invitatiAccettati = accettati.map(inv => ({
+                    userId: inv.destinatarioId,
+                    nickname: inv.destinatarioNome,
+                    accepted: true
+                }));
+
+                // Aggiorna la lista
+                const container = document.getElementById('invitedPlayers');
+                if (invitatiAccettati.length === 0) {
+                    container.innerHTML =
+                    '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
+                    document.getElementById('btnAvviaPartita').disabled = true;
+                } else {
+                    container.innerHTML = invitatiAccettati.map(p =>
+                        `<span style="background:#e8f5e9;padding:4px 14px;border-radius:20px;font-weight:600;font-size:0.9rem;border:2px solid #28a745;">✅ ${p.nickname}</span>`
+                    ).join('');
+                    document.getElementById('btnAvviaPartita').disabled = false;
+                }
+            });
+        }
+
+        function annullaCreazione() {
+            // Rimuovi tutti gli inviti in attesa
+            db.ref('sfidaBandiere/inviti').orderByChild('mittenteId').equalTo(currentUserId).once('value', snap => {
+                const data = snap.val() || {};
+                Object.keys(data).forEach(id => {
+                    if (data[id].stato === 'in attesa') {
+                        db.ref('sfidaBandiere/inviti/' + id).remove();
+                    }
+                });
+            });
+
+            // Rimuovi listener
+            db.ref('sfidaBandiere/inviti').orderByChild('mittenteId').equalTo(currentUserId).off();
+
+            showSection('section-lobby');
+            isGameCreator = false;
+            invitatiAccettati = [];
+            invitedPlayers = [];
+            document.getElementById('btnAvviaPartita').disabled = true;
+        }
+
+        function avviaPartita() {
+            const livello = document.getElementById('livelloSelect').value;
+            const tempo = parseInt(document.getElementById('tempoSelect').value);
+
+            if (invitatiAccettati.length === 0) {
+                alert('Aspetta che almeno un giocatore accetti l\'invito.');
+                return;
+            }
+
+            // Crea la partita su Firebase
+            const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            const giocatori = {
+                [currentUserId]: {
+                    nickname: currentUser,
+                    punteggio: 0,
+                    corrette: 0,
+                    totali: 0,
+                    pronto: true
+                }
+            };
+
+            invitatiAccettati.forEach(p => {
+                giocatori[p.userId] = {
+                    nickname: p.nickname,
+                    punteggio: 0,
+                    corrette: 0,
+                    totali: 0,
+                    pronto: false
+                };
+            });
+
+            // Prepara le domande
+            const bandiere = getBandierePerLivello(livello);
+            const domande = bandiere.map(p => ({
+                paese: p,
+                opzioni: generaOpzioni(p, bandiere)
+            }));
+
+            const partitaRef = db.ref('sfidaBandiere/partite/' + gameId);
+            partitaRef.set({
+                creatoreId: currentUserId,
+                livello: livello,
+                tempoMax: tempo,
+                stato: 'in corso',
+                inizio: firebase.database.ServerValue.TIMESTAMP,
+                giocatori: giocatori,
+                domande: domande,
+                domandaCorrente: 0,
+                timerScaduto: false,
+                fine: null
+            }).then(() => {
+                currentGameId = gameId;
+                // Aggiorna stato utente
+                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
+                // Entra nella partita
+                entraInPartita(gameId);
+            });
+        }
+
+        function creaPartitaComeSeguace(creatoreId) {
+            // Cerca la partita dell'invitante
+            db.ref('sfidaBandiere/partite').orderByChild('creatoreId').equalTo(creatoreId).once('value', snap => {
+                const data = snap.val() || {};
+                let gameId = null;
+                let gameData = null;
+
+                Object.keys(data).forEach(id => {
+                    const p = data[id];
+                    if (p.stato === 'in attesa' || p.stato === 'in corso') {
+                        if (Object.keys(p.giocatori || {}).length < MAX_PLAYERS) {
+                            gameId = id;
+                            gameData = p;
+                        }
+                    }
+                });
+
+                if (gameId && gameData) {
+                    entriInPartita(gameId, gameData);
+                } else {
+                    alert('❌ La partita non esiste più.');
+                    showSection('section-lobby');
+                }
+            });
+        }
+
+        function entriInPartita(gameId, gameData) {
+            // Aggiungi il giocatore alla partita
+            const update = {};
+            update['giocatori/' + currentUserId] = {
+                nickname: currentUser,
+                punteggio: 0,
+                corrette: 0,
+                totali: 0,
+                pronto: true
+            };
+            db.ref('sfidaBandiere/partite/' + gameId).update(update).then(() => {
+                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
+                currentGameId = gameId;
+                entraInPartita(gameId);
+            });
+        }
+
+        // ======================================================================
+        //  ENTRARE IN PARTITA (gioco)
+        // ======================================================================
+        function entraInPartita(gameId) {
+            // Rimuovi listener inviti
+            db.ref('sfidaBandiere/inviti').orderByChild('destinatarioId').equalTo(currentUserId).off();
+
+            showSection('section-game');
+            currentGameId = gameId;
+
+            // Ascolta la partita
+            const gameRef = db.ref('sfidaBandiere/partite/' + gameId);
+            gameRef.on('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) {
+                    alert('La partita è stata cancellata.');
+                    tornaAllaLobby();
+                    return;
+                }
+
+                gameState = data;
+                aggiornaGioco(data);
+            });
+
+            // Ascolta lo stato timer
+            // Il timer è gestito dal client, ma sincronizzato via Firebase
+        }
+
+        function aggiornaGioco(data) {
+            if (!data) return;
+
+            // Se la partita è finita
+            if (data.stato === 'terminata' || data.timerScaduto) {
+                mostraClassifica(data);
+                return;
+            }
+
+            // Aggiorna punteggi
+            const scores = data.giocatori || {};
+            const scoreHtml = Object.keys(scores).map(id => {
+                const s = scores[id];
+                return `<span class="score-item">${s.nickname}: <span class="pts">${s.punteggio || 0}</span> pts</span>`;
+            }).join('');
+            document.getElementById('scoreDisplay').innerHTML = scoreHtml;
+
+            // Aggiorna timer
+            if (data.tempoMax && data.inizio) {
+                const inizio = data.inizio;
+                const now = Date.now();
+                const elapsed = (now - inizio) / 1000;
+                const remaining = Math.max(0, data.tempoMax - Math.floor(elapsed));
+                const timerEl = document.getElementById('timerDisplay');
+                timerEl.textContent = `⏱️ ${remaining}`;
+                timerEl.className = 'timer' + (remaining <= 10 ? ' warning' : '');
+
+                if (remaining <= 0 && !data.timerScaduto) {
+                    db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                        timerScaduto: true,
+                        stato: 'terminata',
+                        fine: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    return;
+                }
+            }
+
+            // Mostra la domanda corrente
+            const domande = data.domande || [];
+            const idx = data.domandaCorrente || 0;
+            if (idx >= domande.length) {
+                // Fine delle domande
+                db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                    stato: 'terminata',
+                    fine: firebase.database.ServerValue.TIMESTAMP
+                });
+                return;
+            }
+
+            const domanda = domande[idx];
+            if (!domanda) return;
+
+            // Verifica se l'utente ha già risposto
+            const giocatori = data.giocatori || {};
+            const mioStato = giocatori[currentUserId];
+            if (mioStato && mioStato.totali !== undefined && mioStato.totali > idx) {
+                // Già risposto a questa domanda
+                mostraDomanda(domanda, true);
+            } else {
+                mostraDomanda(domanda, false);
+            }
+        }
+
+        function mostraDomanda(domanda, alreadyAnswered) {
+            const flagEl = document.getElementById('flagImage');
+            flagEl.src = FLAG_BASE_URL + domanda.paese.codice + '.png';
+
+            const grid = document.getElementById('optionsGrid');
+            const feedback = document.getElementById('feedbackArea');
+            const status = document.getElementById('gameStatus');
+
+            if (alreadyAnswered) {
+                grid.innerHTML = domanda.opzioni.map((o, i) => {
+                    const isCorrect = o.codice === domanda.paese.codice;
+                    const isSelected = domanda.rispostaUtente === i;
+                    let classe = '';
+                    if (isCorrect) classe = 'correct';
+                    else if (isSelected && !isCorrect) classe = 'wrong';
+                    return `<button class="${classe}" disabled>${o.nome}</button>`;
+                }).join('');
+
+                const isCorrect = domanda.rispostaUtente !== undefined &&
+                    domanda.opzioni[domanda.rispostaUtente]?.codice === domanda.paese.codice;
+                feedback.innerHTML = `
+                    <div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
+                        ${isCorrect ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + domanda.paese.nome}
+                    </div>
+                `;
+                status.textContent = '⏳ In attesa della prossima domanda...';
+                return;
+            }
+
+            grid.innerHTML = domanda.opzioni.map((o, i) =>
+                `<button onclick="rispondiBandiera(${i})" id="opt-${i}">${o.nome}</button>`
+            ).join('');
+            feedback.innerHTML = '';
+            status.textContent = `🧠 ${domanda.opzioni.length} opzioni - scegli la bandiera giusta`;
+        }
+
+        function rispondiBandiera(indice) {
+            if (!gameState) return;
+            if (document.querySelector('#optionsGrid button:disabled')) return; // già risposto
+
+            const domande = gameState.domande || [];
+            const idx = gameState.domandaCorrente || 0;
+            if (idx >= domande.length) return;
+
+            const domanda = domande[idx];
+            const isCorrect = domanda.opzioni[indice].codice === domanda.paese.codice;
+
+            // Aggiorna il punteggio del giocatore
+            const update = {};
+            const giocatori = gameState.giocatori || {};
+            const mio = giocatori[currentUserId] || { nickname: currentUser, punteggio: 0, corrette: 0, totali: 0 };
+            const punteggio = mio.punteggio || 0;
+            const corrette = mio.corrette || 0;
+            const totali = (mio.totali || 0) + 1;
+
+            update['giocatori/' + currentUserId + '/punteggio'] = isCorrect ? punteggio + 10 : punteggio;
+            update['giocatori/' + currentUserId + '/corrette'] = isCorrect ? corrette + 1 : corrette;
+            update['giocatori/' + currentUserId + '/totali'] = totali;
+
+            // Salva la risposta nella domanda
+            const domandaPath = 'domande/' + idx + '/rispostaUtente';
+            update[domandaPath] = indice;
+
+            // Passa alla prossima domanda se tutti hanno risposto
+            // Ma per semplicità, facciamo avanzare dopo 2 secondi
+            db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
+                // Mostra il risultato
+                const grid = document.getElementById('optionsGrid');
+                const feedback = document.getElementById('feedbackArea');
+                const status = document.getElementById('gameStatus');
+
+                grid.querySelectorAll('button').forEach((btn, i) => {
+                    btn.disabled = true;
+                    const isCorr = domanda.opzioni[i].codice === domanda.paese.codice;
+                    if (isCorr) btn.classList.add('correct');
+                    else if (i === indice && !isCorr) btn.classList.add('wrong');
+                });
+
+                feedback.innerHTML = `
+                    <div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
+                        ${isCorrect ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + domanda.paese.nome}
+                    </div>
+                `;
+                status.textContent = '⏳ Prossima domanda tra 2 secondi...';
+
+                setTimeout(() => {
+                    // Passa alla prossima domanda
+                    const prossimaIdx = idx + 1;
+                    db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                        domandaCorrente: prossimaIdx
+                    });
+                }, 2000);
+            });
+        }
+
+        // ======================================================================
+        //  CLASSIFICA FINALE
+        // ======================================================================
+        function mostraClassifica(data) {
+            showSection('section-final');
+            const giocatori = data.giocatori || {};
+            const ranking = Object.keys(giocatori).map(id => ({
+                id: id,
+                nickname: giocatori[id].nickname || 'Sconosciuto',
+                punteggio: giocatori[id].punteggio || 0,
+                corrette: giocatori[id].corrette || 0,
+                totali: giocatori[id].totali || 0
+            })).sort((a, b) => b.punteggio - a.punteggio);
+
+            const container = document.getElementById('rankingContainer');
+            if (ranking.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#6a7a8a;">Nessun dato disponibile.</p>';
+                return;
+            }
+
+            container.innerHTML = ranking.map((r, idx) => {
+                let pos = `${idx + 1}.`;
+                let cls = '';
+                if (idx === 0) cls = 'gold';
+                else if (idx === 1) cls = 'silver';
+                else if (idx === 2) cls = 'bronze';
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+                return `
+                    <div class="rank-item">
+                        <span class="pos ${cls}">${medal} ${pos}</span>
+                        <span style="flex:1;font-weight:600;color:#1a2634;">${r.nickname}</span>
+                        <span style="font-weight:700;color:#f4c542;">${r.punteggio} pts</span>
+                        <span style="font-size:0.8rem;color:#6a7a8a;">✅ ${r.corrette}/${r.totali}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // Rimuovi listener e dati
+            db.ref('sfidaBandiere/partite/' + currentGameId).off();
+            currentGameId = null;
+        }
+
+        // ======================================================================
+        //  FUNZIONI DI SUPPORTO
+        // ======================================================================
+        function generaOpzioni(paeseCorretto, pool) {
+            const opzioni = [paeseCorretto];
+            const altri = pool.filter(p => p.codice !== paeseCorretto.codice);
+            let tentativi = 0;
+            while (opzioni.length < 4 && tentativi < 100) {
+                tentativi++;
+                const rand = Math.floor(Math.random() * altri.length);
+                const p = altri[rand];
+                if (!opzioni.some(o => o.codice === p.codice)) {
+                    opzioni.push(p);
+                }
+            }
+            return opzioni.sort(() => Math.random() - 0.5);
+        }
+
+        function tornaAllaLobby() {
+            if (currentGameId) {
+                db.ref('sfidaBandiere/partite/' + currentGameId).off();
+                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: false });
+                currentGameId = null;
+            }
+            showSection('section-lobby');
+            ascoltaInviti();
+        }
+
+        function tornaLobby() {
+            tornaAllaLobby();
+            showSection('section-lobby');
+        }
+
+        // ======================================================================
+        //  REINDIRIZZAMENTO DA ALTRI PAGINE
+        // ======================================================================
+        // Se la pagina viene caricata con parametro "invite=...", gestisci automaticamente
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            const invite = params.get('invite');
+            if (invite) {
+                // Mostra un messaggio
+                setTimeout(() => {
+                    alert('📨 Invito ricevuto! Accedi per vedere la sfida.');
+                }, 500);
+            }
+            // Se non loggato, mostra login
+            if (!currentUser) {
+                showSection('section-login');
+            }
+        };
+
+        // ======================================================================
+        //  PULSANTE "TORNA AL SITO PRINCIPALE"
+        // ======================================================================
+        // Già presente nei link
+    </script>
+
+</body>
+</html>
