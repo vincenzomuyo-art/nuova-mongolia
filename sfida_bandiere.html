@@ -1168,59 +1168,100 @@
         // ======================================================================
         //  GIOCO
         // ======================================================================
+
         function aggiornaGioco(data) {
-            if (!data || data.stato === 'terminata') {
-                if (data && data.stato === 'terminata') mostraClassifica(data);
-                return;
-            }
+    if (!data) return;
 
-            // Aggiorna punteggi
-            const scores = data.giocatori || {};
-            const scoreHtml = Object.keys(scores).map(id => {
-                const s = scores[id];
-                return `<span class="score-item">${s.nickname}: <span class="pts">${s.punteggio || 0}</span> pts</span>`;
-            }).join('');
-            document.getElementById('scoreDisplay').innerHTML = scoreHtml;
+    // Se la partita è in attesa e sono il creatore, mostro il pulsante Avvia
+    if (data.stato === 'in attesa' && data.creatoreId === currentUserId) {
+        document.getElementById('scoreDisplay').innerHTML = '';
+        document.getElementById('timerDisplay').textContent = '⏱️ In attesa';
+        document.getElementById('gameContent').innerHTML = `
+            <div style="text-align:center;padding:40px 20px;">
+                <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+                <h3 style="color:#1a2634;">Sei il creatore! Avvia la partita quando sei pronto.</h3>
+                <p style="color:#6a7a8a;margin-bottom:20px;">Hai ${invitatiAccettati.length} giocatori pronti.</p>
+                <button class="btn btn-success" onclick="avviaPartita()" style="padding:14px 40px;font-size:1.2rem;" ${invitatiAccettati.length === 0 ? 'disabled' : ''}>
+                    🚀 Avvia partita
+                </button>
+                <div style="margin-top:12px;">
+                    <button class="btn btn-outline" onclick="tornaAllaLobby()" style="padding:8px 20px;">↩️ Torna alla lobby</button>
+                </div>
+            </div>
+        `;
+        return;
+    }
 
-            // Aggiorna timer
-            if (data.tempoMax && data.inizio) {
-                const now = Date.now();
-                const elapsed = (now - data.inizio) / 1000;
-                const remaining = Math.max(0, data.tempoMax - Math.floor(elapsed));
-                const timerEl = document.getElementById('timerDisplay');
-                timerEl.textContent = `⏱️ ${remaining}`;
-                timerEl.className = 'timer' + (remaining <= 10 ? ' warning' : '');
+    // Se la partita è in attesa e NON sono il creatore
+    if (data.stato === 'in attesa') {
+        document.getElementById('scoreDisplay').innerHTML = '';
+        document.getElementById('timerDisplay').textContent = '⏱️ In attesa';
+        document.getElementById('gameContent').innerHTML = `
+            <div style="text-align:center;padding:40px 20px;">
+                <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+                <h3 style="color:#1a2634;">In attesa che il creatore avvii la partita...</h3>
+                <p style="color:#6a7a8a;">La partita inizierà quando ${data.creatoreNome} premerà "Avvia".</p>
+            </div>
+        `;
+        return;
+    }
 
-                if (remaining <= 0 && !data.timerScaduto) {
-                    db.ref('sfidaBandiere/partite/' + currentGameId).update({
-                        timerScaduto: true,
-                        stato: 'terminata',
-                        fine: firebase.database.ServerValue.TIMESTAMP
-                    });
-                    return;
-                }
-            }
+    // Se la partita è terminata
+    if (data.stato === 'terminata') {
+        mostraClassifica(data);
+        return;
+    }
 
-            const domande = data.domande || [];
-            const idx = data.domandaCorrente || 0;
-            if (idx >= domande.length) {
-                db.ref('sfidaBandiere/partite/' + currentGameId).update({
-                    stato: 'terminata',
-                    fine: firebase.database.ServerValue.TIMESTAMP
-                });
-                return;
-            }
+    // Se la partita è in corso (resto del codice)
+    if (data.stato !== 'in corso') return;
 
-            const domanda = domande[idx];
-            if (!domanda) return;
+    // Aggiorna punteggi
+    const scores = data.giocatori || {};
+    const scoreHtml = Object.keys(scores).map(id => {
+        const s = scores[id];
+        return `<span class="score-item">${s.nickname}: <span class="pts">${s.punteggio || 0}</span> pts</span>`;
+    }).join('');
+    document.getElementById('scoreDisplay').innerHTML = scoreHtml;
 
-            const giocatori = data.giocatori || {};
-            const mioStato = giocatori[currentUserId];
-            const alreadyAnswered = mioStato && mioStato.totali !== undefined && mioStato.totali > idx;
+    // Aggiorna timer
+    if (data.tempoMax && data.inizio) {
+        const now = Date.now();
+        const elapsed = (now - data.inizio) / 1000;
+        const remaining = Math.max(0, data.tempoMax - Math.floor(elapsed));
+        const timerEl = document.getElementById('timerDisplay');
+        timerEl.textContent = `⏱️ ${remaining}`;
+        timerEl.className = 'timer' + (remaining <= 10 ? ' warning' : '');
 
-            mostraDomanda(domanda, alreadyAnswered, data);
+        if (remaining <= 0 && !data.timerScaduto) {
+            db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                timerScaduto: true,
+                stato: 'terminata',
+                fine: firebase.database.ServerValue.TIMESTAMP
+            });
+            return;
         }
+    }
 
+    const domande = data.domande || [];
+    const idx = data.domandaCorrente || 0;
+    if (idx >= domande.length) {
+        db.ref('sfidaBandiere/partite/' + currentGameId).update({
+            stato: 'terminata',
+            fine: firebase.database.ServerValue.TIMESTAMP
+        });
+        return;
+    }
+
+    const domanda = domande[idx];
+    if (!domanda) return;
+
+    const giocatori = data.giocatori || {};
+    const mioStato = giocatori[currentUserId];
+    const alreadyAnswered = mioStato && mioStato.totali !== undefined && mioStato.totali > idx;
+
+    mostraDomanda(domanda, alreadyAnswered, data);
+}
+        
         function mostraDomanda(domanda, alreadyAnswered, data) {
             const flagEl = document.getElementById('flagImage');
             if (flagEl) flagEl.src = FLAG_BASE_URL + domanda.paese.codice + '.png';
