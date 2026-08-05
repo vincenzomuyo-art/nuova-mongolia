@@ -347,23 +347,44 @@
             text-decoration: underline;
         }
 
-        .waiting-players {
+        .game-panel {
+            background: #f8f6f3;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 12px 0;
+            border-left: 4px solid #f4c542;
+        }
+        .game-panel .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .game-panel .game-info .label {
+            font-weight: 600;
+            color: #1a2634;
+        }
+        .game-panel .game-info .value {
+            color: #6a7a8a;
+        }
+        .game-panel .players-invited {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            padding: 12px;
-            background: #f8f6f3;
-            border-radius: 10px;
-            min-height: 50px;
             margin: 8px 0;
         }
-        .waiting-players .player-tag {
+        .game-panel .players-invited .tag {
             background: #e8f5e9;
             padding: 4px 14px;
             border-radius: 20px;
             font-weight: 600;
             font-size: 0.9rem;
             border: 2px solid #28a745;
+        }
+        .game-panel .players-invited .tag.waiting {
+            background: #fff3cd;
+            border-color: #ffc107;
         }
 
         @media (max-width: 600px) {
@@ -407,7 +428,7 @@
             <div id="loginError" style="color:#dc3545;margin-top:8px;display:none;"></div>
         </div>
 
-        <!-- SEZIONE 2: LOBBY -->
+        <!-- SEZIONE 2: LOBBY (TUTTO QUI) -->
         <div class="section" id="section-lobby">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
                 <span style="font-weight:700;color:#1a2634;">👥 Giocatori online</span>
@@ -417,25 +438,42 @@
                 <div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun giocatore online</div>
             </div>
             <div id="inviteContainer"></div>
+
+            <!-- PANNELLO PARTITA (appare quando si crea una partita) -->
+            <div id="gamePanel" style="display:none;">
+                <div class="game-panel">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+                        <span style="font-weight:700;font-size:1.1rem;color:#1a2634;">🎮 La tua partita</span>
+                        <span id="gameStatusBadge" style="background:#ffc107;padding:2px 14px;border-radius:20px;font-weight:600;font-size:0.8rem;color:#1a2634;">In attesa</span>
+                    </div>
+                    <div class="game-info">
+                        <span><span class="label">👥 Invitati:</span> <span id="invitedCount">0</span></span>
+                        <span><span class="label">🏷️ Livello:</span> <span class="value" id="gameLevel">Medio</span></span>
+                        <span><span class="label">⏱️ Tempo:</span> <span class="value" id="gameTime">60s</span></span>
+                    </div>
+                    <div class="players-invited" id="invitedPlayersList">
+                        <span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>
+                    </div>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+                        <button class="btn btn-success" onclick="avviaPartita()" id="btnAvviaPartita">🚀 Avvia partita</button>
+                        <button class="btn btn-outline" onclick="annullaCreazione()">↩️ Annulla partita</button>
+                        <button class="btn btn-secondary" onclick="modificaImpostazioni()">⚙️ Modifica</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="lobby-actions">
                 <div class="row">
-                    <button class="btn btn-secondary" onclick="creaPartita()">🎮 Crea partita</button>
+                    <button class="btn btn-secondary" onclick="creaPartita()" id="btnCreaPartita">🎮 Crea partita</button>
                     <button class="btn btn-outline" onclick="logout()">🚪 Esci</button>
                 </div>
             </div>
             <a href="https://vincenzomuyo-art.github.io/nuova-mongolia/index.html" class="back-link">← Torna al sito principale</a>
         </div>
 
-        <!-- SEZIONE 3: CREAZIONE PARTITA -->
-        <div class="section" id="section-create">
-            <h2 style="color:#1a2634;font-size:1.4rem;margin-bottom:12px;">🎮 Crea partita</h2>
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-                <span style="font-weight:600;color:#1a2634;">📋 Giocatori invitati:</span>
-                <span id="invitedCount">0</span>
-            </div>
-            <div class="waiting-players" id="invitedPlayers">
-                <span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>
-            </div>
+        <!-- SEZIONE 3: MODIFICA IMPOSTAZIONI (solo per il creatore) -->
+        <div class="section" id="section-settings">
+            <h2 style="color:#1a2634;font-size:1.4rem;margin-bottom:12px;">⚙️ Impostazioni partita</h2>
             <div class="form-group">
                 <label>🏷️ Livello di difficoltà</label>
                 <select id="livelloSelect">
@@ -456,10 +494,9 @@
                 </select>
             </div>
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
-                <button class="btn btn-success" onclick="avviaPartita()" id="btnAvviaPartita" disabled>🚀 Avvia partita</button>
-                <button class="btn btn-outline" onclick="annullaCreazione()">↩️ Annulla</button>
+                <button class="btn btn-primary" onclick="salvaImpostazioni()">💾 Salva</button>
+                <button class="btn btn-outline" onclick="tornaALobby()">↩️ Indietro</button>
             </div>
-            <div id="createError" style="color:#dc3545;margin-top:8px;display:none;"></div>
         </div>
 
         <!-- SEZIONE 4: GIOCO -->
@@ -839,6 +876,10 @@
             currentUser = null;
             currentUserId = null;
             currentGameId = null;
+            isGameCreator = false;
+            invitatiAccettati = [];
+            document.getElementById('gamePanel').style.display = 'none';
+            document.getElementById('btnCreaPartita').disabled = false;
             showSection('section-login');
         }
 
@@ -869,6 +910,7 @@
 
                 document.getElementById('onlineCount').textContent = count + ' connessi';
                 renderPlayerList(list);
+                aggiornaBottoniInvito();
             });
         }
 
@@ -888,12 +930,30 @@
                     </div>
                     <div>
                         <button class="btn btn-sm btn-primary" onclick="invitaGiocatore('${p.id}')" 
-                                ${p.inGame || currentGameId ? 'disabled' : ''}>
+                                id="inviteBtn-${p.id}"
+                                ${p.inGame || (currentGameId && !isGameCreator) ? 'disabled' : ''}>
                             📨 Invita
                         </button>
                     </div>
                 </div>
             `).join('');
+        }
+
+        function aggiornaBottoniInvito() {
+            const canInvite = isGameCreator && currentGameId !== null;
+            document.querySelectorAll('[id^="inviteBtn-"]').forEach(btn => {
+                if (!canInvite) {
+                    btn.disabled = true;
+                } else {
+                    const id = btn.id.replace('inviteBtn-', '');
+                    const user = onlineUsers[id];
+                    if (user && user.inGame) {
+                        btn.disabled = true;
+                    } else {
+                        btn.disabled = false;
+                    }
+                }
+            });
         }
 
         // ======================================================================
@@ -938,7 +998,7 @@
         }
 
         // ======================================================================
-        //  CREA PARTITA
+        //  CREA PARTITA (NUOVO FLUSSO)
         // ======================================================================
         function creaPartita() {
             if (currentGameId) {
@@ -975,15 +1035,45 @@
 
                 db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
 
-                document.getElementById('invitedPlayers').innerHTML =
-                    '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
-                document.getElementById('btnAvviaPartita').disabled = true;
-                document.getElementById('invitedCount').textContent = '0';
+                // Mostra il pannello nella lobby
+                document.getElementById('gamePanel').style.display = 'block';
+                document.getElementById('btnCreaPartita').disabled = true;
+                aggiornaPannelloPartita();
 
-                showSection('section-create');
-
+                // Ascolta gli accettati
                 ascoltaInvitiAccettati(gameId);
+
+                // Ascolta la partita
+                ascoltaPartita(gameId);
             });
+        }
+
+        function aggiornaPannelloPartita() {
+            const livelloMap = { facile: 'Facile', medio: 'Medio', difficile: 'Difficile', impossibile: 'Impossibile' };
+            const livello = document.getElementById('livelloSelect')?.value || 'medio';
+            const tempo = document.getElementById('tempoSelect')?.value || 60;
+
+            const levelLabel = document.getElementById('gameLevel');
+            const timeLabel = document.getElementById('gameTime');
+            const countLabel = document.getElementById('invitedCount');
+            const container = document.getElementById('invitedPlayersList');
+            const btnAvvia = document.getElementById('btnAvviaPartita');
+
+            if (levelLabel) levelLabel.textContent = livelloMap[livello] || 'Medio';
+            if (timeLabel) timeLabel.textContent = tempo + 's';
+            if (countLabel) countLabel.textContent = invitatiAccettati.length;
+
+            if (container) {
+                if (invitatiAccettati.length === 0) {
+                    container.innerHTML = '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
+                } else {
+                    container.innerHTML = invitatiAccettati.map(p =>
+                        `<span class="tag">✅ ${p.nickname}</span>`
+                    ).join('');
+                }
+            }
+
+            if (btnAvvia) btnAvvia.disabled = false; // sempre abilitato
         }
 
         function ascoltaInvitiAccettati(gameId) {
@@ -1001,20 +1091,8 @@
                     nickname: inv.destinatarioNome
                 }));
 
-                const container = document.getElementById('invitedPlayers');
-                const countEl = document.getElementById('invitedCount');
-
-                if (invitatiAccettati.length === 0) {
-                    container.innerHTML = '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
-                    document.getElementById('btnAvviaPartita').disabled = true;
-                    countEl.textContent = '0';
-                } else {
-                    container.innerHTML = invitatiAccettati.map(p =>
-                        `<span class="player-tag">✅ ${p.nickname}</span>`
-                    ).join('');
-                    document.getElementById('btnAvviaPartita').disabled = false;
-                    countEl.textContent = invitatiAccettati.length;
-                }
+                aggiornaPannelloPartita();
+                aggiornaBottoniInvito();
             });
         }
 
@@ -1022,8 +1100,8 @@
         //  INVITA GIOCATORE
         // ======================================================================
         function invitaGiocatore(userId) {
-            if (!currentGameId) {
-                alert('Crea prima una partita.');
+            if (!currentGameId || !isGameCreator) {
+                alert('Devi creare una partita per invitare.');
                 return;
             }
 
@@ -1065,7 +1143,6 @@
                     return;
                 }
 
-                // Aggiungi il giocatore alla partita
                 const update = {};
                 update['giocatori/' + currentUserId] = {
                     nickname: currentUser,
@@ -1076,6 +1153,7 @@
                 db.ref('sfidaBandiere/partite/' + gameId).update(update).then(() => {
                     db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
                     currentGameId = gameId;
+                    isGameCreator = false;
                     showSection('section-game');
                     document.getElementById('gameContent').innerHTML = `
                         <div style="text-align:center;padding:40px 20px;">
@@ -1084,15 +1162,13 @@
                             <p style="color:#6a7a8a;">La partita inizierà quando ${data.mittenteNome} premerà "Avvia".</p>
                         </div>
                     `;
-
-                    // Ascolta la partita
                     ascoltaPartita(gameId);
                 });
             });
         }
 
         // ======================================================================
-        //  ASCOLTA PARTITA (per i giocatori non creatori)
+        //  ASCOLTA PARTITA (per tutti)
         // ======================================================================
         function ascoltaPartita(gameId) {
             db.ref('sfidaBandiere/partite/' + gameId).on('value', snapshot => {
@@ -1105,163 +1181,181 @@
 
                 if (data.stato === 'in corso') {
                     gameState = data;
+                    if (document.getElementById('section-lobby').classList.contains('active')) {
+                        showSection('section-game');
+                    }
                     aggiornaGioco(data);
                 } else if (data.stato === 'terminata') {
                     mostraClassifica(data);
+                } else if (data.stato === 'in attesa') {
+                    // Mostra il pulsante Avvia al creatore anche in game
+                    if (data.creatoreId === currentUserId) {
+                        // Se siamo in game e la partita è in attesa, mostriamo il pulsante Avvia
+                        if (document.getElementById('section-game').classList.contains('active')) {
+                            document.getElementById('gameContent').innerHTML = `
+                                <div style="text-align:center;padding:40px 20px;">
+                                    <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+                                    <h3 style="color:#1a2634;">Sei il creatore! Avvia la partita quando sei pronto.</h3>
+                                    <p style="color:#6a7a8a;margin-bottom:20px;">Hai ${invitatiAccettati.length} giocatori pronti.</p>
+                                    <button class="btn btn-success" onclick="avviaPartita()" style="padding:14px 40px;font-size:1.2rem;">
+                                        🚀 Avvia partita
+                                    </button>
+                                    <div style="margin-top:12px;">
+                                        <button class="btn btn-outline" onclick="tornaAllaLobby()" style="padding:8px 20px;">↩️ Torna alla lobby</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }
                 }
             });
+        }
+
+        // ======================================================================
+        //  MODIFICA IMPOSTAZIONI (solo creatore)
+        // ======================================================================
+        function modificaImpostazioni() {
+            if (!isGameCreator) {
+                alert('Solo il creatore può modificare le impostazioni.');
+                return;
+            }
+            showSection('section-settings');
+        }
+
+        function salvaImpostazioni() {
+            const livello = document.getElementById('livelloSelect').value;
+            const tempo = parseInt(document.getElementById('tempoSelect').value);
+            db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                livello: livello,
+                tempoMax: tempo
+            }).then(() => {
+                aggiornaPannelloPartita();
+                tornaALobby();
+                alert('✅ Impostazioni salvate!');
+            });
+        }
+
+        function tornaALobby() {
+            showSection('section-lobby');
+            aggiornaPannelloPartita();
         }
 
         // ======================================================================
         //  AVVIA PARTITA (creatore)
         // ======================================================================
         function avviaPartita() {
-            if (invitatiAccettati.length === 0) {
-                alert('Aspetta che almeno un giocatore accetti l\'invito.');
+            if (!isGameCreator) {
+                alert('Solo il creatore può avviare la partita.');
                 return;
             }
 
-            const livello = document.getElementById('livelloSelect').value;
-            const tempo = parseInt(document.getElementById('tempoSelect').value);
-            const bandiere = getBandierePerLivello(livello);
-            const domande = bandiere.map(p => ({
-                paese: p,
-                opzioni: generaOpzioni(p, bandiere)
-            }));
+            if (invitatiAccettati.length === 0) {
+                if (!confirm('⚠️ Nessun giocatore ha ancora accettato l\'invito. Vuoi avviare la partita in modalità test (da solo)?')) {
+                    return;
+                }
+            }
 
-            const update = {
-                livello: livello,
-                tempoMax: tempo,
-                stato: 'in corso',
-                inizio: firebase.database.ServerValue.TIMESTAMP,
-                domande: domande,
-                domandaCorrente: 0,
-                timerScaduto: false,
-                fine: null
-            };
+            db.ref('sfidaBandiere/partite/' + currentGameId).once('value', snap => {
+                const data = snap.val();
+                if (!data) return;
 
-            db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
-                showSection('section-game');
-                // Il creatore deve anche aggiornare la sua vista
-                db.ref('sfidaBandiere/partite/' + currentGameId).once('value', snap => {
-                    gameState = snap.val();
-                    aggiornaGioco(gameState);
+                const livello = data.livello || 'medio';
+                const tempo = data.tempoMax || 60;
+                const bandiere = getBandierePerLivello(livello);
+                const domande = bandiere.map(p => ({
+                    paese: p,
+                    opzioni: generaOpzioni(p, bandiere)
+                }));
+
+                const update = {
+                    stato: 'in corso',
+                    inizio: firebase.database.ServerValue.TIMESTAMP,
+                    domande: domande,
+                    domandaCorrente: 0,
+                    timerScaduto: false,
+                    fine: null
+                };
+
+                db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
+                    showSection('section-game');
+                    db.ref('sfidaBandiere/partite/' + currentGameId).once('value', snap2 => {
+                        gameState = snap2.val();
+                        aggiornaGioco(gameState);
+                    });
                 });
-                // Ascolta la partita anche per il creatore
-                ascoltaPartita(currentGameId);
             });
         }
 
         function annullaCreazione() {
-            if (currentGameId) {
+            if (currentGameId && isGameCreator) {
                 db.ref('sfidaBandiere/partite/' + currentGameId).remove();
                 db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: false });
-                // Rimuovi listener
                 db.ref('sfidaBandiere/inviti').orderByChild('partitaId').equalTo(currentGameId).off();
                 currentGameId = null;
             }
             isGameCreator = false;
             invitatiAccettati = [];
+            document.getElementById('gamePanel').style.display = 'none';
+            document.getElementById('btnCreaPartita').disabled = false;
             showSection('section-lobby');
         }
 
         // ======================================================================
         //  GIOCO
         // ======================================================================
-
         function aggiornaGioco(data) {
-    if (!data) return;
+            if (!data || data.stato === 'terminata') {
+                if (data && data.stato === 'terminata') mostraClassifica(data);
+                return;
+            }
 
-    // Se la partita è in attesa e sono il creatore, mostro il pulsante Avvia
-    if (data.stato === 'in attesa' && data.creatoreId === currentUserId) {
-        document.getElementById('scoreDisplay').innerHTML = '';
-        document.getElementById('timerDisplay').textContent = '⏱️ In attesa';
-        document.getElementById('gameContent').innerHTML = `
-            <div style="text-align:center;padding:40px 20px;">
-                <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
-                <h3 style="color:#1a2634;">Sei il creatore! Avvia la partita quando sei pronto.</h3>
-                <p style="color:#6a7a8a;margin-bottom:20px;">Hai ${invitatiAccettati.length} giocatori pronti.</p>
-                <button class="btn btn-success" onclick="avviaPartita()" style="padding:14px 40px;font-size:1.2rem;" ${invitatiAccettati.length === 0 ? 'disabled' : ''}>
-                    🚀 Avvia partita
-                </button>
-                <div style="margin-top:12px;">
-                    <button class="btn btn-outline" onclick="tornaAllaLobby()" style="padding:8px 20px;">↩️ Torna alla lobby</button>
-                </div>
-            </div>
-        `;
-        return;
-    }
+            // Aggiorna punteggi
+            const scores = data.giocatori || {};
+            const scoreHtml = Object.keys(scores).map(id => {
+                const s = scores[id];
+                return `<span class="score-item">${s.nickname}: <span class="pts">${s.punteggio || 0}</span> pts</span>`;
+            }).join('');
+            document.getElementById('scoreDisplay').innerHTML = scoreHtml;
 
-    // Se la partita è in attesa e NON sono il creatore
-    if (data.stato === 'in attesa') {
-        document.getElementById('scoreDisplay').innerHTML = '';
-        document.getElementById('timerDisplay').textContent = '⏱️ In attesa';
-        document.getElementById('gameContent').innerHTML = `
-            <div style="text-align:center;padding:40px 20px;">
-                <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
-                <h3 style="color:#1a2634;">In attesa che il creatore avvii la partita...</h3>
-                <p style="color:#6a7a8a;">La partita inizierà quando ${data.creatoreNome} premerà "Avvia".</p>
-            </div>
-        `;
-        return;
-    }
+            // Aggiorna timer
+            if (data.tempoMax && data.inizio) {
+                const now = Date.now();
+                const elapsed = (now - data.inizio) / 1000;
+                const remaining = Math.max(0, data.tempoMax - Math.floor(elapsed));
+                const timerEl = document.getElementById('timerDisplay');
+                timerEl.textContent = `⏱️ ${remaining}`;
+                timerEl.className = 'timer' + (remaining <= 10 ? ' warning' : '');
 
-    // Se la partita è terminata
-    if (data.stato === 'terminata') {
-        mostraClassifica(data);
-        return;
-    }
+                if (remaining <= 0 && !data.timerScaduto) {
+                    db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                        timerScaduto: true,
+                        stato: 'terminata',
+                        fine: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    return;
+                }
+            }
 
-    // Se la partita è in corso (resto del codice)
-    if (data.stato !== 'in corso') return;
+            const domande = data.domande || [];
+            const idx = data.domandaCorrente || 0;
+            if (idx >= domande.length) {
+                db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                    stato: 'terminata',
+                    fine: firebase.database.ServerValue.TIMESTAMP
+                });
+                return;
+            }
 
-    // Aggiorna punteggi
-    const scores = data.giocatori || {};
-    const scoreHtml = Object.keys(scores).map(id => {
-        const s = scores[id];
-        return `<span class="score-item">${s.nickname}: <span class="pts">${s.punteggio || 0}</span> pts</span>`;
-    }).join('');
-    document.getElementById('scoreDisplay').innerHTML = scoreHtml;
+            const domanda = domande[idx];
+            if (!domanda) return;
 
-    // Aggiorna timer
-    if (data.tempoMax && data.inizio) {
-        const now = Date.now();
-        const elapsed = (now - data.inizio) / 1000;
-        const remaining = Math.max(0, data.tempoMax - Math.floor(elapsed));
-        const timerEl = document.getElementById('timerDisplay');
-        timerEl.textContent = `⏱️ ${remaining}`;
-        timerEl.className = 'timer' + (remaining <= 10 ? ' warning' : '');
+            const giocatori = data.giocatori || {};
+            const mioStato = giocatori[currentUserId];
+            const alreadyAnswered = mioStato && mioStato.totali !== undefined && mioStato.totali > idx;
 
-        if (remaining <= 0 && !data.timerScaduto) {
-            db.ref('sfidaBandiere/partite/' + currentGameId).update({
-                timerScaduto: true,
-                stato: 'terminata',
-                fine: firebase.database.ServerValue.TIMESTAMP
-            });
-            return;
+            mostraDomanda(domanda, alreadyAnswered, data);
         }
-    }
 
-    const domande = data.domande || [];
-    const idx = data.domandaCorrente || 0;
-    if (idx >= domande.length) {
-        db.ref('sfidaBandiere/partite/' + currentGameId).update({
-            stato: 'terminata',
-            fine: firebase.database.ServerValue.TIMESTAMP
-        });
-        return;
-    }
-
-    const domanda = domande[idx];
-    if (!domanda) return;
-
-    const giocatori = data.giocatori || {};
-    const mioStato = giocatori[currentUserId];
-    const alreadyAnswered = mioStato && mioStato.totali !== undefined && mioStato.totali > idx;
-
-    mostraDomanda(domanda, alreadyAnswered, data);
-}
-        
         function mostraDomanda(domanda, alreadyAnswered, data) {
             const flagEl = document.getElementById('flagImage');
             if (flagEl) flagEl.src = FLAG_BASE_URL + domanda.paese.codice + '.png';
@@ -1395,6 +1489,9 @@
 
             db.ref('sfidaBandiere/partite/' + currentGameId).off();
             currentGameId = null;
+            isGameCreator = false;
+            document.getElementById('gamePanel').style.display = 'none';
+            document.getElementById('btnCreaPartita').disabled = false;
         }
 
         // ======================================================================
@@ -1406,6 +1503,10 @@
                 db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: false });
                 currentGameId = null;
             }
+            isGameCreator = false;
+            invitatiAccettati = [];
+            document.getElementById('gamePanel').style.display = 'none';
+            document.getElementById('btnCreaPartita').disabled = false;
             showSection('section-lobby');
             ascoltaInviti();
         }
@@ -1423,4 +1524,4 @@
     </script>
 
 </body>
-    </html>
+</html>
