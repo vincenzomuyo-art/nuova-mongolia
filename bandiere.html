@@ -204,383 +204,464 @@
         // ======================================================================
         //  GIOCO: INDOVINA LA BANDIERA
         // ======================================================================
+// ===== LISTA PAESI (195+) =====
+const PAESI = [
+    { nome: "Afghanistan", codice: "af" },
+    { nome: "Albania", codice: "al" },
+    { nome: "Algeria", codice: "dz" },
+    { nome: "Andorra", codice: "ad" },
+    { nome: "Angola", codice: "ao" },
+    { nome: "Antigua e Barbuda", codice: "ag" },
+    { nome: "Arabia Saudita", codice: "sa" },
+    { nome: "Argentina", codice: "ar" },
+    { nome: "Armenia", codice: "am" },
+    { nome: "Australia", codice: "au" },
+    { nome: "Austria", codice: "at" },
+    { nome: "Azerbaigian", codice: "az" },
+    { nome: "Bahamas", codice: "bs" },
+    { nome: "Bahrein", codice: "bh" },
+    { nome: "Bangladesh", codice: "bd" },
+    { nome: "Barbados", codice: "bb" },
+    { nome: "Belgio", codice: "be" },
+    { nome: "Belize", codice: "bz" },
+    { nome: "Benin", codice: "bj" },
+    { nome: "Bielorussia", codice: "by" },
+    { nome: "Birmania", codice: "mm" },
+    { nome: "Bolivia", codice: "bo" },
+    { nome: "Bosnia ed Erzegovina", codice: "ba" },
+    { nome: "Botswana", codice: "bw" },
+    { nome: "Brasile", codice: "br" },
+    { nome: "Brunei", codice: "bn" },
+    { nome: "Bulgaria", codice: "bg" },
+    { nome: "Burkina Faso", codice: "bf" },
+    { nome: "Burundi", codice: "bi" },
+    { nome: "Cambogia", codice: "kh" },
+    { nome: "Camerun", codice: "cm" },
+    { nome: "Canada", codice: "ca" },
+    { nome: "Capo Verde", codice: "cv" },
+    { nome: "Ciad", codice: "td" },
+    { nome: "Cile", codice: "cl" },
+    { nome: "Cina", codice: "cn" },
+    { nome: "Cipro", codice: "cy" },
+    { nome: "Colombia", codice: "co" },
+    { nome: "Comore", codice: "km" },
+    { nome: "Corea del Nord", codice: "kp" },
+    { nome: "Corea del Sud", codice: "kr" },
+    { nome: "Costa d'Avorio", codice: "ci" },
+    { nome: "Costa Rica", codice: "cr" },
+    { nome: "Croazia", codice: "hr" },
+    { nome: "Cuba", codice: "cu" },
+    { nome: "Danimarca", codice: "dk" },
+    { nome: "Dominica", codice: "dm" },
+    { nome: "Ecuador", codice: "ec" },
+    { nome: "Egitto", codice: "eg" },
+    { nome: "El Salvador", codice: "sv" },
+    { nome: "Emirati Arabi Uniti", codice: "ae" },
+    { nome: "Eritrea", codice: "er" },
+    { nome: "Estonia", codice: "ee" },
+    { nome: "Eswatini", codice: "sz" },
+    { nome: "Etiopia", codice: "et" },
+    { nome: "Fiji", codice: "fj" },
+    { nome: "Filippine", codice: "ph" },
+    { nome: "Finlandia", codice: "fi" },
+    { nome: "Francia", codice: "fr" },
+    { nome: "Gabon", codice: "ga" },
+    { nome: "Gambia", codice: "gm" },
+    { nome: "Georgia", codice: "ge" },
+    { nome: "Germania", codice: "de" },
+    { nome: "Ghana", codice: "gh" },
+    { nome: "Giamaica", codice: "jm" },
+    { nome: "Giappone", codice: "jp" },
+    { nome: "Gibuti", codice: "dj" },
+    { nome: "Giordania", codice: "jo" },
+    { nome: "Grecia", codice: "gr" },
+    { nome: "Grenada", codice: "gd" },
+    { nome: "Guatemala", codice: "gt" },
+    { nome: "Guinea", codice: "gn" },
+    { nome: "Guinea Equatoriale", codice: "gq" },
+    { nome: "Guinea-Bissau", codice: "gw" },
+    { nome: "Guyana", codice: "gy" },
+    { nome: "Haiti", codice: "ht" },
+    { nome: "Honduras", codice: "hn" },
+    { nome: "India", codice: "in" },
+    { nome: "Indonesia", codice: "id" },
+    { nome: "Iran", codice: "ir" },
+    { nome: "Iraq", codice: "iq" },
+    { nome: "Irlanda", codice: "ie" },
+    { nome: "Islanda", codice: "is" },
+    { nome: "Isole Marshall", codice: "mh" },
+    { nome: "Isole Salomone", codice: "sb" },
+    { nome: "Israele", codice: "il" },
+    { nome: "Italia", codice: "it" },
+    { nome: "Kazakistan", codice: "kz" },
+    { nome: "Kenya", codice: "ke" },
+    { nome: "Kirghizistan", codice: "kg" },
+    { nome: "Kiribati", codice: "ki" },
+    { nome: "Kuwait", codice: "kw" },
+    { nome: "Laos", codice: "la" },
+    { nome: "Lesotho", codice: "ls" },
+    { nome: "Lettonia", codice: "lv" },
+    { nome: "Libano", codice: "lb" },
+    { nome: "Liberia", codice: "lr" },
+    { nome: "Libia", codice: "ly" },
+    { nome: "Liechtenstein", codice: "li" },
+    { nome: "Lituania", codice: "lt" },
+    { nome: "Lussemburgo", codice: "lu" },
+    { nome: "Macedonia del Nord", codice: "mk" },
+    { nome: "Madagascar", codice: "mg" },
+    { nome: "Malawi", codice: "mw" },
+    { nome: "Maldive", codice: "mv" },
+    { nome: "Malaysia", codice: "my" },
+    { nome: "Mali", codice: "ml" },
+    { nome: "Malta", codice: "mt" },
+    { nome: "Marocco", codice: "ma" },
+    { nome: "Mauritania", codice: "mr" },
+    { nome: "Mauritius", codice: "mu" },
+    { nome: "Messico", codice: "mx" },
+    { nome: "Micronesia", codice: "fm" },
+    { nome: "Moldavia", codice: "md" },
+    { nome: "Monaco", codice: "mc" },
+    { nome: "Mongolia", codice: "mn" },
+    { nome: "Montenegro", codice: "me" },
+    { nome: "Mozambico", codice: "mz" },
+    { nome: "Namibia", codice: "na" },
+    { nome: "Nauru", codice: "nr" },
+    { nome: "Nepal", codice: "np" },
+    { nome: "Nicaragua", codice: "ni" },
+    { nome: "Niger", codice: "ne" },
+    { nome: "Nigeria", codice: "ng" },
+    { nome: "Norvegia", codice: "no" },
+    { nome: "Nuova Zelanda", codice: "nz" },
+    { nome: "Oman", codice: "om" },
+    { nome: "Paesi Bassi", codice: "nl" },
+    { nome: "Pakistan", codice: "pk" },
+    { nome: "Palau", codice: "pw" },
+    { nome: "Panama", codice: "pa" },
+    { nome: "Papua Nuova Guinea", codice: "pg" },
+    { nome: "Paraguay", codice: "py" },
+    { nome: "Perù", codice: "pe" },
+    { nome: "Polonia", codice: "pl" },
+    { nome: "Portogallo", codice: "pt" },
+    { nome: "Qatar", codice: "qa" },
+    { nome: "Regno Unito", codice: "gb" },
+    { nome: "Repubblica Centrafricana", codice: "cf" },
+    { nome: "Repubblica Ceca", codice: "cz" },
+    { nome: "Repubblica Democratica del Congo", codice: "cd" },
+    { nome: "Repubblica del Congo", codice: "cg" },
+    { nome: "Repubblica Dominicana", codice: "do" },
+    { nome: "Romania", codice: "ro" },
+    { nome: "Ruanda", codice: "rw" },
+    { nome: "Russia", codice: "ru" },
+    { nome: "Saint Kitts e Nevis", codice: "kn" },
+    { nome: "Saint Lucia", codice: "lc" },
+    { nome: "Saint Vincent e Grenadine", codice: "vc" },
+    { nome: "Samoa", codice: "ws" },
+    { nome: "San Marino", codice: "sm" },
+    { nome: "São Tomé e Príncipe", codice: "st" },
+    { nome: "Senegal", codice: "sn" },
+    { nome: "Serbia", codice: "rs" },
+    { nome: "Seychelles", codice: "sc" },
+    { nome: "Sierra Leone", codice: "sl" },
+    { nome: "Singapore", codice: "sg" },
+    { nome: "Siria", codice: "sy" },
+    { nome: "Slovacchia", codice: "sk" },
+    { nome: "Slovenia", codice: "si" },
+    { nome: "Somalia", codice: "so" },
+    { nome: "Spagna", codice: "es" },
+    { nome: "Sri Lanka", codice: "lk" },
+    { nome: "Stati Uniti", codice: "us" },
+    { nome: "Sudafrica", codice: "za" },
+    { nome: "Sudan", codice: "sd" },
+    { nome: "Sudan del Sud", codice: "ss" },
+    { nome: "Suriname", codice: "sr" },
+    { nome: "Svezia", codice: "se" },
+    { nome: "Svizzera", codice: "ch" },
+    { nome: "Tagikistan", codice: "tj" },
+    { nome: "Tanzania", codice: "tz" },
+    { nome: "Thailandia", codice: "th" },
+    { nome: "Timor Est", codice: "tl" },
+    { nome: "Togo", codice: "tg" },
+    { nome: "Tonga", codice: "to" },
+    { nome: "Trinidad e Tobago", codice: "tt" },
+    { nome: "Tunisia", codice: "tn" },
+    { nome: "Turchia", codice: "tr" },
+    { nome: "Turkmenistan", codice: "tm" },
+    { nome: "Tuvalu", codice: "tv" },
+    { nome: "Ucraina", codice: "ua" },
+    { nome: "Uganda", codice: "ug" },
+    { nome: "Ungheria", codice: "hu" },
+    { nome: "Uruguay", codice: "uy" },
+    { nome: "Uzbekistan", codice: "uz" },
+    { nome: "Vanuatu", codice: "vu" },
+    { nome: "Vaticano", codice: "va" },
+    { nome: "Venezuela", codice: "ve" },
+    { nome: "Vietnam", codice: "vn" },
+    { nome: "Yemen", codice: "ye" },
+    { nome: "Zambia", codice: "zm" },
+    { nome: "Zimbabwe", codice: "zw" },
+    { nome: "Kosovo", codice: "xk" },
+    { nome: "Palestina", codice: "ps" },
+    { nome: "Sahara Occidentale", codice: "eh" },
+    { nome: "Taiwan", codice: "tw" },
+    { nome: "Abcasia", codice: "ab" },
+    { nome: "Ossezia del Sud", codice: "ge" },
+    { nome: "Transnistria", codice: "md" },
+    { nome: "Cipro del Nord", codice: "cy" },
+    { nome: "Artsakh", codice: "am" },
+];
 
-        // LISTA PAESI (195+)
-        const PAESI = [
-            { nome: "Afghanistan", codice: "af" },
-            { nome: "Albania", codice: "al" },
-            { nome: "Algeria", codice: "dz" },
-            { nome: "Andorra", codice: "ad" },
-            { nome: "Angola", codice: "ao" },
-            { nome: "Antigua e Barbuda", codice: "ag" },
-            { nome: "Arabia Saudita", codice: "sa" },
-            { nome: "Argentina", codice: "ar" },
-            { nome: "Armenia", codice: "am" },
-            { nome: "Australia", codice: "au" },
-            { nome: "Austria", codice: "at" },
-            { nome: "Azerbaigian", codice: "az" },
-            { nome: "Bahamas", codice: "bs" },
-            { nome: "Bahrein", codice: "bh" },
-            { nome: "Bangladesh", codice: "bd" },
-            { nome: "Barbados", codice: "bb" },
-            { nome: "Belgio", codice: "be" },
-            { nome: "Belize", codice: "bz" },
-            { nome: "Benin", codice: "bj" },
-            { nome: "Bielorussia", codice: "by" },
-            { nome: "Birmania", codice: "mm" },
-            { nome: "Bolivia", codice: "bo" },
-            { nome: "Bosnia ed Erzegovina", codice: "ba" },
-            { nome: "Botswana", codice: "bw" },
-            { nome: "Brasile", codice: "br" },
-            { nome: "Brunei", codice: "bn" },
-            { nome: "Bulgaria", codice: "bg" },
-            { nome: "Burkina Faso", codice: "bf" },
-            { nome: "Burundi", codice: "bi" },
-            { nome: "Cambogia", codice: "kh" },
-            { nome: "Camerun", codice: "cm" },
-            { nome: "Canada", codice: "ca" },
-            { nome: "Capo Verde", codice: "cv" },
-            { nome: "Ciad", codice: "td" },
-            { nome: "Cile", codice: "cl" },
-            { nome: "Cina", codice: "cn" },
-            { nome: "Cipro", codice: "cy" },
-            { nome: "Colombia", codice: "co" },
-            { nome: "Comore", codice: "km" },
-            { nome: "Corea del Nord", codice: "kp" },
-            { nome: "Corea del Sud", codice: "kr" },
-            { nome: "Costa d'Avorio", codice: "ci" },
-            { nome: "Costa Rica", codice: "cr" },
-            { nome: "Croazia", codice: "hr" },
-            { nome: "Cuba", codice: "cu" },
-            { nome: "Danimarca", codice: "dk" },
-            { nome: "Dominica", codice: "dm" },
-            { nome: "Ecuador", codice: "ec" },
-            { nome: "Egitto", codice: "eg" },
-            { nome: "El Salvador", codice: "sv" },
-            { nome: "Emirati Arabi Uniti", codice: "ae" },
-            { nome: "Eritrea", codice: "er" },
-            { nome: "Estonia", codice: "ee" },
-            { nome: "Eswatini", codice: "sz" },
-            { nome: "Etiopia", codice: "et" },
-            { nome: "Fiji", codice: "fj" },
-            { nome: "Filippine", codice: "ph" },
-            { nome: "Finlandia", codice: "fi" },
-            { nome: "Francia", codice: "fr" },
-            { nome: "Gabon", codice: "ga" },
-            { nome: "Gambia", codice: "gm" },
-            { nome: "Georgia", codice: "ge" },
-            { nome: "Germania", codice: "de" },
-            { nome: "Ghana", codice: "gh" },
-            { nome: "Giamaica", codice: "jm" },
-            { nome: "Giappone", codice: "jp" },
-            { nome: "Gibuti", codice: "dj" },
-            { nome: "Giordania", codice: "jo" },
-            { nome: "Grecia", codice: "gr" },
-            { nome: "Grenada", codice: "gd" },
-            { nome: "Guatemala", codice: "gt" },
-            { nome: "Guinea", codice: "gn" },
-            { nome: "Guinea Equatoriale", codice: "gq" },
-            { nome: "Guinea-Bissau", codice: "gw" },
-            { nome: "Guyana", codice: "gy" },
-            { nome: "Haiti", codice: "ht" },
-            { nome: "Honduras", codice: "hn" },
-            { nome: "India", codice: "in" },
-            { nome: "Indonesia", codice: "id" },
-            { nome: "Iran", codice: "ir" },
-            { nome: "Iraq", codice: "iq" },
-            { nome: "Irlanda", codice: "ie" },
-            { nome: "Islanda", codice: "is" },
-            { nome: "Isole Marshall", codice: "mh" },
-            { nome: "Isole Salomone", codice: "sb" },
-            { nome: "Israele", codice: "il" },
-            { nome: "Italia", codice: "it" },
-            { nome: "Kazakistan", codice: "kz" },
-            { nome: "Kenya", codice: "ke" },
-            { nome: "Kirghizistan", codice: "kg" },
-            { nome: "Kiribati", codice: "ki" },
-            { nome: "Kuwait", codice: "kw" },
-            { nome: "Laos", codice: "la" },
-            { nome: "Lesotho", codice: "ls" },
-            { nome: "Lettonia", codice: "lv" },
-            { nome: "Libano", codice: "lb" },
-            { nome: "Liberia", codice: "lr" },
-            { nome: "Libia", codice: "ly" },
-            { nome: "Liechtenstein", codice: "li" },
-            { nome: "Lituania", codice: "lt" },
-            { nome: "Lussemburgo", codice: "lu" },
-            { nome: "Macedonia del Nord", codice: "mk" },
-            { nome: "Madagascar", codice: "mg" },
-            { nome: "Malawi", codice: "mw" },
-            { nome: "Maldive", codice: "mv" },
-            { nome: "Malaysia", codice: "my" },
-            { nome: "Mali", codice: "ml" },
-            { nome: "Malta", codice: "mt" },
-            { nome: "Marocco", codice: "ma" },
-            { nome: "Mauritania", codice: "mr" },
-            { nome: "Mauritius", codice: "mu" },
-            { nome: "Messico", codice: "mx" },
-            { nome: "Micronesia", codice: "fm" },
-            { nome: "Moldavia", codice: "md" },
-            { nome: "Monaco", codice: "mc" },
-            { nome: "Mongolia", codice: "mn" },
-            { nome: "Montenegro", codice: "me" },
-            { nome: "Mozambico", codice: "mz" },
-            { nome: "Namibia", codice: "na" },
-            { nome: "Nauru", codice: "nr" },
-            { nome: "Nepal", codice: "np" },
-            { nome: "Nicaragua", codice: "ni" },
-            { nome: "Niger", codice: "ne" },
-            { nome: "Nigeria", codice: "ng" },
-            { nome: "Norvegia", codice: "no" },
-            { nome: "Nuova Zelanda", codice: "nz" },
-            { nome: "Oman", codice: "om" },
-            { nome: "Paesi Bassi", codice: "nl" },
-            { nome: "Pakistan", codice: "pk" },
-            { nome: "Palau", codice: "pw" },
-            { nome: "Panama", codice: "pa" },
-            { nome: "Papua Nuova Guinea", codice: "pg" },
-            { nome: "Paraguay", codice: "py" },
-            { nome: "Perù", codice: "pe" },
-            { nome: "Polonia", codice: "pl" },
-            { nome: "Portogallo", codice: "pt" },
-            { nome: "Qatar", codice: "qa" },
-            { nome: "Regno Unito", codice: "gb" },
-            { nome: "Repubblica Centrafricana", codice: "cf" },
-            { nome: "Repubblica Ceca", codice: "cz" },
-            { nome: "Repubblica Democratica del Congo", codice: "cd" },
-            { nome: "Repubblica del Congo", codice: "cg" },
-            { nome: "Repubblica Dominicana", codice: "do" },
-            { nome: "Romania", codice: "ro" },
-            { nome: "Ruanda", codice: "rw" },
-            { nome: "Russia", codice: "ru" },
-            { nome: "Saint Kitts e Nevis", codice: "kn" },
-            { nome: "Saint Lucia", codice: "lc" },
-            { nome: "Saint Vincent e Grenadine", codice: "vc" },
-            { nome: "Samoa", codice: "ws" },
-            { nome: "San Marino", codice: "sm" },
-            { nome: "São Tomé e Príncipe", codice: "st" },
-            { nome: "Senegal", codice: "sn" },
-            { nome: "Serbia", codice: "rs" },
-            { nome: "Seychelles", codice: "sc" },
-            { nome: "Sierra Leone", codice: "sl" },
-            { nome: "Singapore", codice: "sg" },
-            { nome: "Siria", codice: "sy" },
-            { nome: "Slovacchia", codice: "sk" },
-            { nome: "Slovenia", codice: "si" },
-            { nome: "Somalia", codice: "so" },
-            { nome: "Spagna", codice: "es" },
-            { nome: "Sri Lanka", codice: "lk" },
-            { nome: "Stati Uniti", codice: "us" },
-            { nome: "Sudafrica", codice: "za" },
-            { nome: "Sudan", codice: "sd" },
-            { nome: "Sudan del Sud", codice: "ss" },
-            { nome: "Suriname", codice: "sr" },
-            { nome: "Svezia", codice: "se" },
-            { nome: "Svizzera", codice: "ch" },
-            { nome: "Tagikistan", codice: "tj" },
-            { nome: "Tanzania", codice: "tz" },
-            { nome: "Thailandia", codice: "th" },
-            { nome: "Timor Est", codice: "tl" },
-            { nome: "Togo", codice: "tg" },
-            { nome: "Tonga", codice: "to" },
-            { nome: "Trinidad e Tobago", codice: "tt" },
-            { nome: "Tunisia", codice: "tn" },
-            { nome: "Turchia", codice: "tr" },
-            { nome: "Turkmenistan", codice: "tm" },
-            { nome: "Tuvalu", codice: "tv" },
-            { nome: "Ucraina", codice: "ua" },
-            { nome: "Uganda", codice: "ug" },
-            { nome: "Ungheria", codice: "hu" },
-            { nome: "Uruguay", codice: "uy" },
-            { nome: "Uzbekistan", codice: "uz" },
-            { nome: "Vanuatu", codice: "vu" },
-            { nome: "Vaticano", codice: "va" },
-            { nome: "Venezuela", codice: "ve" },
-            { nome: "Vietnam", codice: "vn" },
-            { nome: "Yemen", codice: "ye" },
-            { nome: "Zambia", codice: "zm" },
-            { nome: "Zimbabwe", codice: "zw" },
-            // Stati non riconosciuti dall'ONU
-            { nome: "Kosovo", codice: "xk" },
-            { nome: "Palestina", codice: "ps" },
-            { nome: "Sahara Occidentale", codice: "eh" },
-            { nome: "Taiwan", codice: "tw" },
-            { nome: "Abcasia", codice: "ab" },
-            { nome: "Ossezia del Sud", codice: "ge" },
-            { nome: "Transnistria", codice: "md" },
-            { nome: "Cipro del Nord", codice: "cy" },
-            { nome: "Artsakh", codice: "am" },
-        ];
+const FLAG_BASE_URL = 'https://flagcdn.com/w320/';
+const NUM_OPZIONI = 4;
 
-        const FLAG_BASE_URL = 'https://flagcdn.com/w320/';
-        const NUM_OPZIONI = 4;
+// ===== STATO (salvato in localStorage separato) =====
+let stato = {
+    punteggio: 0,
+    tentativi: 0,
+    corretti: 0,
+    sequenza: [],
+    paesiUsati: [],
+    gameCompleted: false, // ← AGGIUNTO
+};
 
-        // ===== STATO (salvato in localStorage separato) =====
-        let stato = {
-            punteggio: 0,
-            tentativi: 0,
-            corretti: 0,
-            sequenza: [], // { paeseCorrente, opzioni, sceltaUtente, corretta }
-        };
-
-        function caricaStato() {
-            try {
-                const salvato = localStorage.getItem('giocoBandiere_stato');
-                if (salvato) {
-                    stato = JSON.parse(salvato);
-                }
-            } catch (e) {}
+function caricaStato() {
+    try {
+        const salvato = localStorage.getItem('giocoBandiere_stato');
+        if (salvato) {
+            stato = JSON.parse(salvato);
+            if (!stato.paesiUsati) stato.paesiUsati = [];
+            if (stato.gameCompleted === undefined) stato.gameCompleted = false;
         }
+    } catch (e) {}
+}
 
-        function salvaStato() {
-            try {
-                localStorage.setItem('giocoBandiere_stato', JSON.stringify(stato));
-            } catch (e) {}
+function salvaStato() {
+    try {
+        localStorage.setItem('giocoBandiere_stato', JSON.stringify(stato));
+    } catch (e) {}
+}
+
+// ===== GENERA DOMANDA =====
+function generaDomanda() {
+    // Se il gioco è già completato, mostra la schermata finale
+    if (stato.gameCompleted) {
+        mostraSchermataFinale();
+        return;
+    }
+
+    // Filtra i paesi non ancora usati
+    const paesiDisponibili = PAESI.filter(p => !stato.paesiUsati.includes(p.codice));
+
+    // Se tutti i paesi sono stati usati → GAME COMPLETED!
+    if (paesiDisponibili.length === 0) {
+        stato.gameCompleted = true;
+        salvaStato();
+        mostraSchermataFinale();
+        return;
+    }
+
+    // Scegli un paese casuale tra quelli disponibili
+    const idx = Math.floor(Math.random() * paesiDisponibili.length);
+    const paeseCorretto = paesiDisponibili[idx];
+
+    // Aggiungi il paese alla lista degli usati
+    stato.paesiUsati.push(paeseCorretto.codice);
+
+    // Scegli 3 paesi sbagliati
+    const altriPaesi = PAESI.filter(p => p.codice !== paeseCorretto.codice);
+    let opzioni = [paeseCorretto];
+    let tentativi = 0;
+    while (opzioni.length < NUM_OPZIONI && tentativi < 1000) {
+        tentativi++;
+        const rand = Math.floor(Math.random() * altriPaesi.length);
+        const p = altriPaesi[rand];
+        if (!opzioni.some(o => o.codice === p.codice)) {
+            opzioni.push(p);
         }
+    }
+    opzioni = opzioni.sort(() => Math.random() - 0.5);
 
-        // ===== FUNZIONI DEL GIOCO =====
-        function generaDomanda() {
-            // Scegli un paese casuale
-            const idx = Math.floor(Math.random() * PAESI.length);
-            const paeseCorretto = PAESI[idx];
+    stato.sequenza.push({
+        paeseCorretto: paeseCorretto,
+        opzioni: opzioni,
+        sceltaUtente: undefined,
+        corretta: undefined,
+    });
+    salvaStato();
+    render();
+}
 
-            // Scegli 3 paesi sbagliati
-            let opzioni = [paeseCorretto];
-            let tentativi = 0;
-            while (opzioni.length < NUM_OPZIONI && tentativi < 1000) {
-                tentativi++;
-                const rand = Math.floor(Math.random() * PAESI.length);
-                const p = PAESI[rand];
-                if (!opzioni.some(o => o.codice === p.codice)) {
-                    opzioni.push(p);
-                }
-            }
-            // Mescola
-            opzioni = opzioni.sort(() => Math.random() - 0.5);
+// ===== SCHERMATA FINALE =====
+function mostraSchermataFinale() {
+    const container = document.getElementById('gameContent');
+    const percentuale = stato.tentativi > 0 ? Math.round((stato.corretti / stato.tentativi) * 100) : 0;
 
-            stato.sequenza.push({
-                paeseCorretto: paeseCorretto,
-                opzioni: opzioni,
-                sceltaUtente: undefined,
-                corretta: undefined,
-            });
-            salvaStato();
-            render();
-        }
-
-        function rispondi(indice) {
-            const ultima = stato.sequenza[stato.sequenza.length - 1];
-            if (!ultima || ultima.sceltaUtente !== undefined) return;
-
-            const scelta = ultima.opzioni[indice];
-            const corretta = scelta.codice === ultima.paeseCorretto.codice;
-
-            ultima.sceltaUtente = indice;
-            ultima.corretta = corretta;
-
-            stato.tentativi++;
-            if (corretta) {
-                stato.corretti++;
-                stato.punteggio += 10;
-            } else {
-                stato.punteggio = Math.max(0, stato.punteggio - 2);
-            }
-
-            salvaStato();
-            render();
-        }
-
-        function prossimaDomanda() {
-            generaDomanda();
-        }
-
-        function riavvia() {
-            stato = {
-                punteggio: 0,
-                tentativi: 0,
-                corretti: 0,
-                sequenza: [],
-            };
-            salvaStato();
-            generaDomanda();
-        }
-
-        // ===== RENDER =====
-        function render() {
-            const container = document.getElementById('gameContent');
-            const scoreDisplay = document.getElementById('scoreDisplay');
-            const percentDisplay = document.getElementById('percentDisplay');
-
-            // Aggiorna stats
-            scoreDisplay.textContent = `🏆 ${stato.punteggio}`;
-            const percent = stato.tentativi > 0 ? Math.round((stato.corretti / stato.tentativi) * 100) : 0;
-            percentDisplay.textContent = `🎯 ${percent}%`;
-
-            // Se non ci sono domande, generane una
-            if (stato.sequenza.length === 0) {
-                generaDomanda();
-                return;
-            }
-
-            const ultima = stato.sequenza[stato.sequenza.length - 1];
-            const paeseCorretto = ultima.paeseCorretto;
-            const opzioni = ultima.opzioni;
-            const sceltaUtente = ultima.sceltaUtente;
-            const corretta = ultima.corretta;
-
-            // Costruisci HTML
-            let html = `
-                <div class="flag-container">
-                    <img src="${FLAG_BASE_URL}${paeseCorretto.codice}.png" alt="Bandiera" loading="lazy" />
-                </div>
-            `;
-
-            // Opzioni
-            html += `<div class="options">`;
-            opzioni.forEach((opzione, idx) => {
-                let classe = '';
-                let disabled = false;
-                if (sceltaUtente !== undefined) {
-                    disabled = true;
-                    if (idx === sceltaUtente && corretta) classe = 'correct';
-                    else if (idx === sceltaUtente && !corretta) classe = 'wrong';
-                    else if (opzione.codice === paeseCorretto.codice) classe = 'correct';
-                }
-                html += `
-                    <button class="${classe} ${disabled ? 'disabled' : ''}" 
-                            onclick="${disabled ? '' : `rispondi(${idx})`}"
-                            ${disabled ? 'disabled' : ''}>
-                        ${opzione.nome}
-                    </button>
-                `;
-            });
-            html += `</div>`;
-
-            // Feedback
-            if (sceltaUtente !== undefined) {
-                html += `
-                    <div class="feedback ${corretta ? 'correct' : 'wrong'}">
-                        ${corretta ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + paeseCorretto.nome}
+    container.innerHTML = `
+        <div style="text-align:center;padding:30px 20px;">
+            <div style="font-size:4rem;margin-bottom:16px;">🏆</div>
+            <h2 style="color:#1a2634;font-size:1.8rem;margin-bottom:8px;">Hai completato tutte le bandiere!</h2>
+            <div style="background:#f8f6f3;border-radius:16px;padding:20px;margin:20px 0;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                        <div style="font-size:0.8rem;color:#6a7a8a;">🏆 Punteggio</div>
+                        <div style="font-size:2rem;font-weight:700;color:#f4c542;">${stato.punteggio}</div>
                     </div>
-                    <button class="next-btn" onclick="prossimaDomanda()">➡️ Prossima domanda</button>
-                `;
-            }
+                    <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                        <div style="font-size:0.8rem;color:#6a7a8a;">✅ Corrette</div>
+                        <div style="font-size:2rem;font-weight:700;color:#28a745;">${stato.corretti} / ${stato.tentativi}</div>
+                    </div>
+                    <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);grid-column:span 2;">
+                        <div style="font-size:0.8rem;color:#6a7a8a;">🎯 Percentuale</div>
+                        <div style="font-size:2rem;font-weight:700;color:#17a2b8;">${percentuale}%</div>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;max-width:320px;margin:0 auto;">
+                <button onclick="riavvia()" style="padding:14px;border-radius:12px;background:#f4c542;color:#1a2634;font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    🔄 Ricomincia
+                </button>
+                <button onclick="sfidaAmica()" style="padding:14px;border-radius:12px;background:#1a2634;color:#fff;font-weight:600;font-size:1rem;border:none;cursor:pointer;transition:0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    ⚡ Sfida un'amica in velocità
+                </button>
+            </div>
+        </div>
+    `;
 
-            html += `
-                <button class="restart-btn" onclick="riavvia()">🔄 Ricomincia</button>
-            `;
+    // Aggiorna gli stats in alto
+    document.getElementById('scoreDisplay').textContent = `🏆 ${stato.punteggio}`;
+    document.getElementById('percentDisplay').textContent = `🎯 ${percentuale}%`;
+}
 
-            container.innerHTML = html;
+// ===== SFIDA AMICA =====
+function sfidaAmica() {
+    alert('⚡ Modalità sfida in lavorazione! Presto disponibile.');
+}
+
+// ===== RENDER =====
+function render() {
+    const container = document.getElementById('gameContent');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const percentDisplay = document.getElementById('percentDisplay');
+
+    // Se il gioco è completato, mostra la schermata finale
+    if (stato.gameCompleted) {
+        mostraSchermataFinale();
+        return;
+    }
+
+    // Aggiorna stats
+    const percent = stato.tentativi > 0 ? Math.round((stato.corretti / stato.tentativi) * 100) : 0;
+    scoreDisplay.textContent = `🏆 ${stato.punteggio}`;
+    percentDisplay.textContent = `🎯 ${percent}%`;
+
+    // Se non ci sono domande, generane una
+    if (stato.sequenza.length === 0) {
+        generaDomanda();
+        return;
+    }
+
+    const ultima = stato.sequenza[stato.sequenza.length - 1];
+    const paeseCorretto = ultima.paeseCorretto;
+    const opzioni = ultima.opzioni;
+    const sceltaUtente = ultima.sceltaUtente;
+    const corretta = ultima.corretta;
+
+    let html = `
+        <div class="flag-container">
+            <img src="${FLAG_BASE_URL}${paeseCorretto.codice}.png" alt="Bandiera" loading="lazy" />
+            <div style="color:#aab;font-size:0.8rem;margin-top:8px;text-align:center;">
+                ${stato.paesiUsati.length} / ${PAESI.length} bandiere completate
+            </div>
+        </div>
+    `;
+
+    html += `<div class="options">`;
+    opzioni.forEach((opzione, idx) => {
+        let classe = '';
+        let disabled = false;
+        if (sceltaUtente !== undefined) {
+            disabled = true;
+            if (idx === sceltaUtente && corretta) classe = 'correct';
+            else if (idx === sceltaUtente && !corretta) classe = 'wrong';
+            else if (opzione.codice === paeseCorretto.codice) classe = 'correct';
         }
+        html += `
+            <button class="${classe} ${disabled ? 'disabled' : ''}" 
+                    onclick="${disabled ? '' : `rispondi(${idx})`}"
+                    ${disabled ? 'disabled' : ''}>
+                ${opzione.nome}
+            </button>
+        `;
+    });
+    html += `</div>`;
 
-        // ===== AVVIA =====
-        caricaStato();
-        // Se non c'è una domanda in corso o l'ultima è già stata risposta
-        if (stato.sequenza.length === 0 || stato.sequenza[stato.sequenza.length - 1].sceltaUtente !== undefined) {
-            generaDomanda();
-        } else {
-            render();
-        }
+    if (sceltaUtente !== undefined) {
+        html += `
+            <div class="feedback ${corretta ? 'correct' : 'wrong'}">
+                ${corretta ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + paeseCorretto.nome}
+            </div>
+            <button class="next-btn" onclick="prossimaDomanda()">➡️ Prossima domanda</button>
+        `;
+    }
+
+    html += `
+        <button class="restart-btn" onclick="riavvia()">🔄 Ricomincia</button>
+    `;
+
+    container.innerHTML = html;
+}
+
+// ===== RISPOSTA =====
+function rispondi(indice) {
+    const ultima = stato.sequenza[stato.sequenza.length - 1];
+    if (!ultima || ultima.sceltaUtente !== undefined) return;
+
+    const scelta = ultima.opzioni[indice];
+    const corretta = scelta.codice === ultima.paeseCorretto.codice;
+
+    ultima.sceltaUtente = indice;
+    ultima.corretta = corretta;
+
+    stato.tentativi++;
+    if (corretta) {
+        stato.corretti++;
+        stato.punteggio += 10;
+    } else {
+        stato.punteggio = Math.max(0, stato.punteggio - 2);
+    }
+
+    salvaStato();
+    render();
+}
+
+// ===== PROSSIMA DOMANDA =====
+function prossimaDomanda() {
+    generaDomanda();
+}
+
+// ===== RIAVVIA =====
+function riavvia() {
+    stato = {
+        punteggio: 0,
+        tentativi: 0,
+        corretti: 0,
+        sequenza: [],
+        paesiUsati: [],
+        gameCompleted: false,
+    };
+    salvaStato();
+    generaDomanda();
+}
+
+// ===== AVVIA =====
+caricaStato();
+
+if (stato.gameCompleted) {
+    mostraSchermataFinale();
+} else if (stato.sequenza.length === 0 || stato.sequenza[stato.sequenza.length - 1].sceltaUtente !== undefined) {
+    generaDomanda();
+} else {
+    render();
+     }
     </script>
 
 </body>
