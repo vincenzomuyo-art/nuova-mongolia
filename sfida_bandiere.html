@@ -998,45 +998,24 @@
         }
 
         function accettaInvito(inviteId) {
-            const inviteRef = db.ref('sfidaBandiere/inviti/' + inviteId);
-            inviteRef.child('stato').set('accettato');
+    const inviteRef = db.ref('sfidaBandiere/inviti/' + inviteId);
+    inviteRef.child('stato').set('accettato');
 
-            // Leggi i dettagli dell'invito
-            inviteRef.once('value', snapshot => {
-                const data = snapshot.val();
-                if (!data) return;
+    // Leggi i dettagli dell'invito
+    inviteRef.once('value', snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
 
-                // Aggiorna lo stato dell'utente
-                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
+        // Aggiorna lo stato dell'utente a inGame (in attesa)
+        db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
 
-                // Crea o entra nella partita
-                // L'utente che accetta entra nella partita dell'invitante
-                // Cerchiamo se esiste già una partita creata dall'invitante
-                db.ref('sfidaBandiere/partite').orderByChild('creatoreId').equalTo(data.mittenteId).once('value', snap => {
-                    const partite = snap.val() || {};
-                    let gameId = null;
-                    let gameData = null;
-
-                    Object.keys(partite).forEach(id => {
-                        const p = partite[id];
-                        if (p.stato === 'in attesa' || p.stato === 'in corso') {
-                            if (Object.keys(p.giocatori || {}).length < MAX_PLAYERS) {
-                                gameId = id;
-                                gameData = p;
-                            }
-                        }
-                    });
-
-                    if (gameId && gameData) {
-                        // Entra nella partita esistente
-                        entriInPartita(gameId, gameData);
-                    } else {
-                        // Crea una nuova partita come seguace
-                        creaPartitaComeSeguace(data.mittenteId);
-                    }
-                });
-            });
-        }
+        alert(`✅ Hai accettato l'invito di ${data.mittenteNome}! Attendere che inizi la partita.`);
+        
+        // Rimuovi l'invito dalla lista
+        // Non cancelliamo, ma lo teniamo per tener traccia
+        // Lo stato 'accettato' sarà usato dall'invitante
+    });
+}
 
         function rifiutaInvito(inviteId) {
             db.ref('sfidaBandiere/inviti/' + inviteId).update({ stato: 'rifiutato' });
