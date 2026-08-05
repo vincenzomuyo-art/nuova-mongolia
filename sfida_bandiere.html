@@ -188,13 +188,8 @@
             margin-top: 10px;
         }
         @keyframes pulse {
-            0%,
-            100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.6;
-            }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
 
         .game-header {
@@ -340,16 +335,6 @@
             min-width: 120px;
         }
 
-        .invite-badge {
-            background: #dc3545;
-            color: #fff;
-            border-radius: 50%;
-            padding: 2px 8px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            margin-left: 4px;
-        }
-
         .back-link {
             display: inline-block;
             margin-top: 16px;
@@ -362,24 +347,23 @@
             text-decoration: underline;
         }
 
-        .status-badge {
-            display: inline-block;
-            padding: 2px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
+        .waiting-players {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            background: #f8f6f3;
+            border-radius: 10px;
+            min-height: 50px;
+            margin: 8px 0;
         }
-        .status-badge.online {
+        .waiting-players .player-tag {
             background: #e8f5e9;
-            color: #28a745;
-        }
-        .status-badge.in-game {
-            background: #fde0e0;
-            color: #dc3545;
-        }
-        .status-badge.waiting {
-            background: #fff3cd;
-            color: #856404;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 2px solid #28a745;
         }
 
         @media (max-width: 600px) {
@@ -413,7 +397,7 @@
         <h1>🏴 Sfida Bandiere</h1>
         <div class="subtitle">Sfida i tuoi amici in tempo reale!</div>
 
-        <!-- ===== SEZIONE 1: LOGIN ===== -->
+        <!-- SEZIONE 1: LOGIN -->
         <div class="section active" id="section-login">
             <div class="form-group">
                 <label>👤 Inserisci il tuo nome</label>
@@ -423,7 +407,7 @@
             <div id="loginError" style="color:#dc3545;margin-top:8px;display:none;"></div>
         </div>
 
-        <!-- ===== SEZIONE 2: LOBBY ===== -->
+        <!-- SEZIONE 2: LOBBY -->
         <div class="section" id="section-lobby">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
                 <span style="font-weight:700;color:#1a2634;">👥 Giocatori online</span>
@@ -432,10 +416,7 @@
             <div class="player-list" id="playerList">
                 <div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun giocatore online</div>
             </div>
-
-            <!-- Inviti ricevuti -->
             <div id="inviteContainer"></div>
-
             <div class="lobby-actions">
                 <div class="row">
                     <button class="btn btn-secondary" onclick="creaPartita()">🎮 Crea partita</button>
@@ -445,9 +426,16 @@
             <a href="https://vincenzomuyo-art.github.io/nuova-mongolia/index.html" class="back-link">← Torna al sito principale</a>
         </div>
 
-        <!-- ===== SEZIONE 3: CREAZIONE PARTITA ===== -->
+        <!-- SEZIONE 3: CREAZIONE PARTITA -->
         <div class="section" id="section-create">
             <h2 style="color:#1a2634;font-size:1.4rem;margin-bottom:12px;">🎮 Crea partita</h2>
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                <span style="font-weight:600;color:#1a2634;">📋 Giocatori invitati:</span>
+                <span id="invitedCount">0</span>
+            </div>
+            <div class="waiting-players" id="invitedPlayers">
+                <span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>
+            </div>
             <div class="form-group">
                 <label>🏷️ Livello di difficoltà</label>
                 <select id="livelloSelect">
@@ -467,12 +455,6 @@
                     <option value="180">180 secondi</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label>👥 Scegli gli avversari (clicca su "Invita" nella lobby)</label>
-                <div id="invitedPlayers" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;padding:8px;background:#f8f6f3;border-radius:10px;">
-                    <span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>
-                </div>
-            </div>
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
                 <button class="btn btn-success" onclick="avviaPartita()" id="btnAvviaPartita" disabled>🚀 Avvia partita</button>
                 <button class="btn btn-outline" onclick="annullaCreazione()">↩️ Annulla</button>
@@ -480,23 +462,22 @@
             <div id="createError" style="color:#dc3545;margin-top:8px;display:none;"></div>
         </div>
 
-        <!-- ===== SEZIONE 4: GIOCO ===== -->
+        <!-- SEZIONE 4: GIOCO -->
         <div class="section" id="section-game">
             <div class="game-header">
                 <div class="timer" id="timerDisplay">⏱️ 60</div>
                 <div class="scores" id="scoreDisplay"></div>
             </div>
             <div id="gameContent">
-                <div class="flag-container">
-                    <img id="flagImage" src="" alt="Bandiera" style="width:100%;max-width:280px;border-radius:8px;" />
+                <div style="text-align:center;padding:40px 20px;">
+                    <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+                    <h3 style="color:#1a2634;">In attesa che il creatore avvii la partita...</h3>
+                    <p style="color:#6a7a8a;">La partita inizierà automaticamente quando il creatore premerà "Avvia".</p>
                 </div>
-                <div class="options-grid" id="optionsGrid"></div>
-                <div id="feedbackArea"></div>
-                <div id="gameStatus" style="text-align:center;color:#6a7a8a;font-weight:600;margin-top:12px;"></div>
             </div>
         </div>
 
-        <!-- ===== SEZIONE 5: CLASSIFICA FINALE ===== -->
+        <!-- SEZIONE 5: CLASSIFICA FINALE -->
         <div class="section" id="section-final">
             <h2 style="color:#1a2634;font-size:1.6rem;text-align:center;margin-bottom:8px;">🏆 Classifica finale</h2>
             <div class="ranking" id="rankingContainer"></div>
@@ -530,17 +511,10 @@
         let currentUser = null;
         let currentUserId = null;
         let currentGameId = null;
-        let gameState = null; // Partita corrente
         let isGameCreator = false;
-        let invitedPlayers = []; // { userId, nickname, accepted }
+        let invitatiAccettati = [];
+        let gameState = null;
         let timerInterval = null;
-        let gameActive = false;
-        let currentQuestionIndex = 0;
-        let questions = [];
-        let answered = false;
-        let punteggi = {}; // { userId: { nickname, punteggio, corrette, totali } }
-
-        const MAX_PLAYERS = 3;
 
         // ======================================================================
         //  LISTA PAESI (195+)
@@ -752,7 +726,6 @@
 
         const FLAG_BASE_URL = 'https://flagcdn.com/w320/';
 
-        // ===== BANDIERE PER LIVELLO =====
         function getBandierePerLivello(livello) {
             const tutte = PAESI;
             switch (livello) {
@@ -785,6 +758,21 @@
                 default:
                     return tutte;
             }
+        }
+
+        function generaOpzioni(paeseCorretto, pool) {
+            const opzioni = [paeseCorretto];
+            const altri = pool.filter(p => p.codice !== paeseCorretto.codice);
+            let tentativi = 0;
+            while (opzioni.length < 4 && tentativi < 100) {
+                tentativi++;
+                const rand = Math.floor(Math.random() * altri.length);
+                const p = altri[rand];
+                if (!opzioni.some(o => o.codice === p.codice)) {
+                    opzioni.push(p);
+                }
+            }
+            return opzioni.sort(() => Math.random() - 0.5);
         }
 
         // ======================================================================
@@ -821,7 +809,6 @@
             currentUser = nickname;
             currentUserId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
 
-            // Salva utente su Firebase
             const userRef = db.ref('sfidaBandiere/utenti/' + currentUserId);
             userRef.set({
                 nickname: currentUser,
@@ -830,19 +817,12 @@
                 lastSeen: firebase.database.ServerValue.TIMESTAMP
             });
 
-            // Rimuovi quando si disconnette
             userRef.onDisconnect().update({
                 online: false,
                 lastSeen: firebase.database.ServerValue.TIMESTAMP
             });
 
-            // Rimuovi completamente dopo 2 minuti di inattività (gestito da server)
-            // Ma per noi va bene così
-
-            // Ascolta inviti
             ascoltaInviti();
-
-            // Ascolta utenti online
             ascoltaUtentiOnline();
 
             showSection('section-lobby');
@@ -853,8 +833,12 @@
             if (currentUserId) {
                 db.ref('sfidaBandiere/utenti/' + currentUserId).remove();
             }
+            if (currentGameId) {
+                db.ref('sfidaBandiere/partite/' + currentGameId).remove();
+            }
             currentUser = null;
             currentUserId = null;
+            currentGameId = null;
             showSection('section-login');
         }
 
@@ -862,10 +846,9 @@
         //  ASCOLTA UTENTI ONLINE
         // ======================================================================
         let onlineUsers = {};
-        let usersRef = db.ref('sfidaBandiere/utenti');
 
         function ascoltaUtentiOnline() {
-            usersRef.on('value', snapshot => {
+            db.ref('sfidaBandiere/utenti').on('value', snapshot => {
                 const data = snapshot.val() || {};
                 onlineUsers = {};
                 const list = [];
@@ -886,26 +869,26 @@
 
                 document.getElementById('onlineCount').textContent = count + ' connessi';
                 renderPlayerList(list);
-                aggiornaPulsantiInvito();
             });
         }
 
         function renderPlayerList(list) {
             const container = document.getElementById('playerList');
             if (list.length === 0) {
-                container.innerHTML = '<div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun altro giocatore online</div>';
+                container.innerHTML =
+                '<div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun altro giocatore online</div>';
                 return;
             }
 
             container.innerHTML = list.map(p => `
-                <div class="player-item" id="player-${p.id}">
+                <div class="player-item">
                     <div>
                         <span class="name">${p.nickname}</span>
                         <span class="status ${p.inGame ? 'in-game' : 'online'}">${p.inGame ? '🔴 In partita' : '🟢 Online'}</span>
                     </div>
                     <div>
                         <button class="btn btn-sm btn-primary" onclick="invitaGiocatore('${p.id}')" 
-                                id="inviteBtn-${p.id}" ${p.inGame || currentGameId ? 'disabled' : ''}>
+                                ${p.inGame || currentGameId ? 'disabled' : ''}>
                             📨 Invita
                         </button>
                     </div>
@@ -913,65 +896,18 @@
             `).join('');
         }
 
-        function aggiornaPulsantiInvito() {
-            // Se sono in partita o in creazione, disabilita
-            const inGame = currentGameId !== null;
-            document.querySelectorAll('[id^="inviteBtn-"]').forEach(btn => {
-                const id = btn.id.replace('inviteBtn-', '');
-                const user = onlineUsers[id];
-                if (!user) return;
-                btn.disabled = inGame || user.inGame || invitedPlayers.some(p => p.userId === id && p.accepted);
-            });
-        }
-
         // ======================================================================
         //  INVITI
         // ======================================================================
-        let currentInvites = [];
-
-        function invitaGiocatore(userId) {
-    if (!currentGameId) {
-        alert('Crea prima una partita.');
-        return;
-    }
-    
-    const user = onlineUsers[userId];
-    if (!user) return;
-    if (user.inGame) {
-        alert('Questo giocatore è già in partita.');
-        return;
-    }
-    if (invitedPlayers.some(p => p.userId === userId && p.accepted)) {
-        alert('Questo giocatore ha già accettato il tuo invito.');
-        return;
-    }
-
-    const inviteId = 'invite_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-    const inviteRef = db.ref('sfidaBandiere/inviti/' + inviteId);
-    inviteRef.set({
-        mittenteId: currentUserId,
-        mittenteNome: currentUser,
-        destinatarioId: userId,
-        destinatarioNome: user.nickname,
-        partitaId: currentGameId, // ← AGGIUNTO
-        stato: 'in attesa',
-        timestamp: firebase.database.ServerValue.TIMESTAMP
-    });
-
-    alert(`✅ Invito inviato a ${user.nickname}!`);
-}
-
         function ascoltaInviti() {
             db.ref('sfidaBandiere/inviti').orderByChild('destinatarioId').equalTo(currentUserId).on('value', snapshot => {
                 const data = snapshot.val() || {};
                 const invites = [];
                 Object.keys(data).forEach(id => {
-                    const inv = data[id];
-                    if (inv.stato === 'in attesa') {
-                        invites.push({ id, ...inv });
+                    if (data[id].stato === 'in attesa') {
+                        invites.push({ id, ...data[id] });
                     }
                 });
-                currentInvites = invites;
                 renderInviti(invites);
             });
         }
@@ -996,297 +932,170 @@
             `).join('');
         }
 
-        function accettaInvito(inviteId) {
-    const inviteRef = db.ref('sfidaBandiere/inviti/' + inviteId);
-    inviteRef.child('stato').set('accettato');
-
-    inviteRef.once('value', snapshot => {
-        const data = snapshot.val();
-        if (!data) return;
-        
-        const gameId = data.partitaId;
-        if (!gameId) {
-            alert('❌ Errore: partita non trovata.');
-            return;
-        }
-
-        // Aggiungi il giocatore alla partita
-        const update = {};
-        update['giocatori/' + currentUserId] = {
-            nickname: currentUser,
-            punteggio: 0,
-            corrette: 0,
-            totali: 0,
-            pronto: true
-        };
-        db.ref('sfidaBandiere/partite/' + gameId).update(update).then(() => {
-            db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
-            currentGameId = gameId;
-            // Entra nella partita (in ascolto)
-            entraInPartita(gameId);
-            
-            // Mostra un messaggio di attesa
-            document.getElementById('gameContent').innerHTML = `
-                <div style="text-align:center;padding:40px 20px;">
-                    <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
-                    <h3 style="color:#1a2634;">In attesa che ${data.mittenteNome} avvii la partita...</h3>
-                    <p style="color:#6a7a8a;">La partita inizierà quando il creatore premerà "Avvia".</p>
-                </div>
-            `;
-            showSection('section-game');
-        });
-    });
-}
-
         function rifiutaInvito(inviteId) {
             db.ref('sfidaBandiere/inviti/' + inviteId).update({ stato: 'rifiutato' });
             alert('❌ Invito rifiutato.');
         }
 
         // ======================================================================
-        //  CREAZIONE PARTITA
+        //  CREA PARTITA
         // ======================================================================
-        let invitatiAccettati = [];
-
         function creaPartita() {
-    if (currentGameId) {
-        alert('Sei già in una partita.');
-        return;
-    }
-
-    // Crea SUBITO la partita su Firebase
-    const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
-    const partitaRef = db.ref('sfidaBandiere/partite/' + gameId);
-    
-    // Salva l'ID partita globalmente
-    currentGameId = gameId;
-    isGameCreator = true;
-    invitedPlayers = [];
-    invitatiAccettati = [];
-
-    // Crea la partita in stato "in attesa"
-    partitaRef.set({
-        creatoreId: currentUserId,
-        creatoreNome: currentUser,
-        livello: 'medio', // default, verrà cambiato al momento dell'avvio
-        tempoMax: 60,
-        stato: 'in attesa',
-        inizio: null,
-        giocatori: {
-            [currentUserId]: {
-                nickname: currentUser,
-                punteggio: 0,
-                corrette: 0,
-                totali: 0,
-                pronto: true
+            if (currentGameId) {
+                alert('Sei già in una partita.');
+                return;
             }
-        },
-        domande: [],
-        domandaCorrente: 0,
-        timerScaduto: false,
-        fine: null
-    }).then(() => {
-        // Aggiorna stato utente
-        db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
-        
-        // Mostra schermata di creazione
-        document.getElementById('invitedPlayers').innerHTML = '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
-        document.getElementById('btnAvviaPartita').disabled = true;
-        showSection('section-create');
-        
-        // Ascolta gli inviti accettati per questa partita
-        ascoltaInvitiAccettatiPerPartita(gameId);
-        
-        // Ascolta le modifiche alla partita (per sapere quando parte)
-        ascoltaPartitaInAttesa(gameId);
-    });
-}
 
-function ascoltaInvitiAccettatiPerPartita(gameId) {
-    db.ref('sfidaBandiere/inviti').orderByChild('partitaId').equalTo(gameId).on('value', snapshot => {
-        const data = snapshot.val() || {};
-        const accettati = [];
-        Object.keys(data).forEach(id => {
-            if (data[id].stato === 'accettato') {
-                accettati.push({ id, ...data[id] });
-            }
-        });
+            const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            const partitaRef = db.ref('sfidaBandiere/partite/' + gameId);
 
-        invitatiAccettati = accettati.map(inv => ({
-            userId: inv.destinatarioId,
-            nickname: inv.destinatarioNome,
-            accepted: true
-        }));
+            partitaRef.set({
+                creatoreId: currentUserId,
+                creatoreNome: currentUser,
+                livello: 'medio',
+                tempoMax: 60,
+                stato: 'in attesa',
+                inizio: null,
+                giocatori: {
+                    [currentUserId]: {
+                        nickname: currentUser,
+                        punteggio: 0,
+                        corrette: 0,
+                        totali: 0
+                    }
+                },
+                domande: [],
+                domandaCorrente: 0,
+                timerScaduto: false,
+                fine: null
+            }).then(() => {
+                currentGameId = gameId;
+                isGameCreator = true;
+                invitatiAccettati = [];
 
-        const container = document.getElementById('invitedPlayers');
-        if (invitatiAccettati.length === 0) {
-            container.innerHTML = '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
-            document.getElementById('btnAvviaPartita').disabled = true;
-        } else {
-            container.innerHTML = invitatiAccettati.map(p =>
-                `<span style="background:#e8f5e9;padding:4px 14px;border-radius:20px;font-weight:600;font-size:0.9rem;border:2px solid #28a745;">✅ ${p.nickname}</span>`
-            ).join('');
-            document.getElementById('btnAvviaPartita').disabled = false;
-        }
-    });
-}
+                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
 
-        function ascoltaPartitaInAttesa(gameId) {
-    const gameRef = db.ref('sfidaBandiere/partite/' + gameId);
-    gameRef.on('value', snapshot => {
-        const data = snapshot.val();
-        if (!data) return;
-        
-        // Se la partita passa da "in attesa" a "in corso" e io sono il creatore
-        if (data.stato === 'in corso' && data.creatoreId === currentUserId) {
-            // Il creatore è già dentro, non fare nulla
-            return;
+                document.getElementById('invitedPlayers').innerHTML =
+                    '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
+                document.getElementById('btnAvviaPartita').disabled = true;
+                document.getElementById('invitedCount').textContent = '0';
+
+                showSection('section-create');
+
+                ascoltaInvitiAccettati(gameId);
+            });
         }
-        
-        // Se la partita è in corso e io sono un giocatore (non creatore), aggiorna
-        if (data.stato === 'in corso' && data.giocatori && data.giocatori[currentUserId]) {
-            // Entra nel gioco
-            aggiornaGioco(data);
-        }
-    });
-        }
-        
-        function ascoltaInvitiAccettati() {
-            db.ref('sfidaBandiere/inviti').orderByChild('mittenteId').equalTo(currentUserId).on('value', snapshot => {
+
+        function ascoltaInvitiAccettati(gameId) {
+            db.ref('sfidaBandiere/inviti').orderByChild('partitaId').equalTo(gameId).on('value', snapshot => {
                 const data = snapshot.val() || {};
                 const accettati = [];
                 Object.keys(data).forEach(id => {
-                    const inv = data[id];
-                    if (inv.stato === 'accettato') {
-                        accettati.push({ id, ...inv });
+                    if (data[id].stato === 'accettato' && data[id].destinatarioId !== currentUserId) {
+                        accettati.push({ id, ...data[id] });
                     }
                 });
 
                 invitatiAccettati = accettati.map(inv => ({
                     userId: inv.destinatarioId,
-                    nickname: inv.destinatarioNome,
-                    accepted: true
+                    nickname: inv.destinatarioNome
                 }));
 
-                // Aggiorna la lista
                 const container = document.getElementById('invitedPlayers');
+                const countEl = document.getElementById('invitedCount');
+
                 if (invitatiAccettati.length === 0) {
-                    container.innerHTML =
-                    '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
+                    container.innerHTML = '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
                     document.getElementById('btnAvviaPartita').disabled = true;
+                    countEl.textContent = '0';
                 } else {
                     container.innerHTML = invitatiAccettati.map(p =>
-                        `<span style="background:#e8f5e9;padding:4px 14px;border-radius:20px;font-weight:600;font-size:0.9rem;border:2px solid #28a745;">✅ ${p.nickname}</span>`
+                        `<span class="player-tag">✅ ${p.nickname}</span>`
                     ).join('');
                     document.getElementById('btnAvviaPartita').disabled = false;
+                    countEl.textContent = invitatiAccettati.length;
                 }
             });
         }
 
-        function annullaCreazione() {
-    if (currentGameId) {
-        db.ref('sfidaBandiere/partite/' + currentGameId).remove();
-        db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: false });
-        currentGameId = null;
-    }
-    // Rimuovi listener
-    db.ref('sfidaBandiere/inviti').orderByChild('partitaId').equalTo(currentGameId).off();
-    showSection('section-lobby');
-    isGameCreator = false;
-    invitatiAccettati = [];
-    invitedPlayers = [];
-    document.getElementById('btnAvviaPartita').disabled = true;
+        // ======================================================================
+        //  INVITA GIOCATORE
+        // ======================================================================
+        function invitaGiocatore(userId) {
+            if (!currentGameId) {
+                alert('Crea prima una partita.');
+                return;
+            }
+
+            const user = onlineUsers[userId];
+            if (!user) return;
+            if (user.inGame) {
+                alert('Questo giocatore è già in partita.');
+                return;
+            }
+
+            const inviteId = 'invite_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            db.ref('sfidaBandiere/inviti/' + inviteId).set({
+                mittenteId: currentUserId,
+                mittenteNome: currentUser,
+                destinatarioId: userId,
+                destinatarioNome: user.nickname,
+                partitaId: currentGameId,
+                stato: 'in attesa',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            alert(`✅ Invito inviato a ${user.nickname}!`);
         }
 
-        function avviaPartita() {
-    const livello = document.getElementById('livelloSelect').value;
-    const tempo = parseInt(document.getElementById('tempoSelect').value);
+        // ======================================================================
+        //  ACCETTA INVITO
+        // ======================================================================
+        function accettaInvito(inviteId) {
+            const inviteRef = db.ref('sfidaBandiere/inviti/' + inviteId);
+            inviteRef.child('stato').set('accettato');
 
-    if (invitatiAccettati.length === 0) {
-        alert('Aspetta che almeno un giocatore accetti l\'invito.');
-        return;
-    }
+            inviteRef.once('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) return;
 
-    // Aggiorna la partita esistente
-    const bandiere = getBandierePerLivello(livello);
-    const domande = bandiere.map(p => ({
-        paese: p,
-        opzioni: generaOpzioni(p, bandiere)
-    }));
+                const gameId = data.partitaId;
+                if (!gameId) {
+                    alert('❌ Errore: partita non trovata.');
+                    return;
+                }
 
-    const update = {
-        livello: livello,
-        tempoMax: tempo,
-        stato: 'in corso',
-        inizio: firebase.database.ServerValue.TIMESTAMP,
-        domande: domande,
-        domandaCorrente: 0,
-        timerScaduto: false,
-        fine: null
-    };
+                // Aggiungi il giocatore alla partita
+                const update = {};
+                update['giocatori/' + currentUserId] = {
+                    nickname: currentUser,
+                    punteggio: 0,
+                    corrette: 0,
+                    totali: 0
+                };
+                db.ref('sfidaBandiere/partite/' + gameId).update(update).then(() => {
+                    db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
+                    currentGameId = gameId;
+                    showSection('section-game');
+                    document.getElementById('gameContent').innerHTML = `
+                        <div style="text-align:center;padding:40px 20px;">
+                            <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+                            <h3 style="color:#1a2634;">In attesa che il creatore avvii la partita...</h3>
+                            <p style="color:#6a7a8a;">La partita inizierà quando ${data.mittenteNome} premerà "Avvia".</p>
+                        </div>
+                    `;
 
-    db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
-        // Il gioco è avviato, entrambi i giocatori lo vedranno grazie agli ascoltatori
-        showSection('section-game');
-    });
-}
-
-        function creaPartitaComeSeguace(creatoreId) {
-            // Cerca la partita dell'invitante
-            db.ref('sfidaBandiere/partite').orderByChild('creatoreId').equalTo(creatoreId).once('value', snap => {
-                const data = snap.val() || {};
-                let gameId = null;
-                let gameData = null;
-
-                Object.keys(data).forEach(id => {
-                    const p = data[id];
-                    if (p.stato === 'in attesa' || p.stato === 'in corso') {
-                        if (Object.keys(p.giocatori || {}).length < MAX_PLAYERS) {
-                            gameId = id;
-                            gameData = p;
-                        }
-                    }
+                    // Ascolta la partita
+                    ascoltaPartita(gameId);
                 });
-
-                if (gameId && gameData) {
-                    entriInPartita(gameId, gameData);
-                } else {
-                    alert('❌ La partita non esiste più.');
-                    showSection('section-lobby');
-                }
-            });
-        }
-
-        function entriInPartita(gameId, gameData) {
-            // Aggiungi il giocatore alla partita
-            const update = {};
-            update['giocatori/' + currentUserId] = {
-                nickname: currentUser,
-                punteggio: 0,
-                corrette: 0,
-                totali: 0,
-                pronto: true
-            };
-            db.ref('sfidaBandiere/partite/' + gameId).update(update).then(() => {
-                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
-                currentGameId = gameId;
-                entraInPartita(gameId);
             });
         }
 
         // ======================================================================
-        //  ENTRARE IN PARTITA (gioco)
+        //  ASCOLTA PARTITA (per i giocatori non creatori)
         // ======================================================================
-        function entraInPartita(gameId) {
-            // Rimuovi listener inviti
-            db.ref('sfidaBandiere/inviti').orderByChild('destinatarioId').equalTo(currentUserId).off();
-
-            showSection('section-game');
-            currentGameId = gameId;
-
-            // Ascolta la partita
-            const gameRef = db.ref('sfidaBandiere/partite/' + gameId);
-            gameRef.on('value', snapshot => {
+        function ascoltaPartita(gameId) {
+            db.ref('sfidaBandiere/partite/' + gameId).on('value', snapshot => {
                 const data = snapshot.val();
                 if (!data) {
                     alert('La partita è stata cancellata.');
@@ -1294,20 +1103,74 @@ function ascoltaInvitiAccettatiPerPartita(gameId) {
                     return;
                 }
 
-                gameState = data;
-                aggiornaGioco(data);
+                if (data.stato === 'in corso') {
+                    gameState = data;
+                    aggiornaGioco(data);
+                } else if (data.stato === 'terminata') {
+                    mostraClassifica(data);
+                }
             });
-
-            // Ascolta lo stato timer
-            // Il timer è gestito dal client, ma sincronizzato via Firebase
         }
 
-        function aggiornaGioco(data) {
-            if (!data) return;
+        // ======================================================================
+        //  AVVIA PARTITA (creatore)
+        // ======================================================================
+        function avviaPartita() {
+            if (invitatiAccettati.length === 0) {
+                alert('Aspetta che almeno un giocatore accetti l\'invito.');
+                return;
+            }
 
-            // Se la partita è finita
-            if (data.stato === 'terminata' || data.timerScaduto) {
-                mostraClassifica(data);
+            const livello = document.getElementById('livelloSelect').value;
+            const tempo = parseInt(document.getElementById('tempoSelect').value);
+            const bandiere = getBandierePerLivello(livello);
+            const domande = bandiere.map(p => ({
+                paese: p,
+                opzioni: generaOpzioni(p, bandiere)
+            }));
+
+            const update = {
+                livello: livello,
+                tempoMax: tempo,
+                stato: 'in corso',
+                inizio: firebase.database.ServerValue.TIMESTAMP,
+                domande: domande,
+                domandaCorrente: 0,
+                timerScaduto: false,
+                fine: null
+            };
+
+            db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
+                showSection('section-game');
+                // Il creatore deve anche aggiornare la sua vista
+                db.ref('sfidaBandiere/partite/' + currentGameId).once('value', snap => {
+                    gameState = snap.val();
+                    aggiornaGioco(gameState);
+                });
+                // Ascolta la partita anche per il creatore
+                ascoltaPartita(currentGameId);
+            });
+        }
+
+        function annullaCreazione() {
+            if (currentGameId) {
+                db.ref('sfidaBandiere/partite/' + currentGameId).remove();
+                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: false });
+                // Rimuovi listener
+                db.ref('sfidaBandiere/inviti').orderByChild('partitaId').equalTo(currentGameId).off();
+                currentGameId = null;
+            }
+            isGameCreator = false;
+            invitatiAccettati = [];
+            showSection('section-lobby');
+        }
+
+        // ======================================================================
+        //  GIOCO
+        // ======================================================================
+        function aggiornaGioco(data) {
+            if (!data || data.stato === 'terminata') {
+                if (data && data.stato === 'terminata') mostraClassifica(data);
                 return;
             }
 
@@ -1321,9 +1184,8 @@ function ascoltaInvitiAccettatiPerPartita(gameId) {
 
             // Aggiorna timer
             if (data.tempoMax && data.inizio) {
-                const inizio = data.inizio;
                 const now = Date.now();
-                const elapsed = (now - inizio) / 1000;
+                const elapsed = (now - data.inizio) / 1000;
                 const remaining = Math.max(0, data.tempoMax - Math.floor(elapsed));
                 const timerEl = document.getElementById('timerDisplay');
                 timerEl.textContent = `⏱️ ${remaining}`;
@@ -1339,11 +1201,9 @@ function ascoltaInvitiAccettatiPerPartita(gameId) {
                 }
             }
 
-            // Mostra la domanda corrente
             const domande = data.domande || [];
             const idx = data.domandaCorrente || 0;
             if (idx >= domande.length) {
-                // Fine delle domande
                 db.ref('sfidaBandiere/partite/' + currentGameId).update({
                     stato: 'terminata',
                     fine: firebase.database.ServerValue.TIMESTAMP
@@ -1354,24 +1214,22 @@ function ascoltaInvitiAccettatiPerPartita(gameId) {
             const domanda = domande[idx];
             if (!domanda) return;
 
-            // Verifica se l'utente ha già risposto
             const giocatori = data.giocatori || {};
             const mioStato = giocatori[currentUserId];
-            if (mioStato && mioStato.totali !== undefined && mioStato.totali > idx) {
-                // Già risposto a questa domanda
-                mostraDomanda(domanda, true);
-            } else {
-                mostraDomanda(domanda, false);
-            }
+            const alreadyAnswered = mioStato && mioStato.totali !== undefined && mioStato.totali > idx;
+
+            mostraDomanda(domanda, alreadyAnswered, data);
         }
 
-        function mostraDomanda(domanda, alreadyAnswered) {
+        function mostraDomanda(domanda, alreadyAnswered, data) {
             const flagEl = document.getElementById('flagImage');
-            flagEl.src = FLAG_BASE_URL + domanda.paese.codice + '.png';
+            if (flagEl) flagEl.src = FLAG_BASE_URL + domanda.paese.codice + '.png';
 
             const grid = document.getElementById('optionsGrid');
             const feedback = document.getElementById('feedbackArea');
             const status = document.getElementById('gameStatus');
+
+            if (!grid) return;
 
             if (alreadyAnswered) {
                 grid.innerHTML = domanda.opzioni.map((o, i) => {
@@ -1385,25 +1243,27 @@ function ascoltaInvitiAccettatiPerPartita(gameId) {
 
                 const isCorrect = domanda.rispostaUtente !== undefined &&
                     domanda.opzioni[domanda.rispostaUtente]?.codice === domanda.paese.codice;
-                feedback.innerHTML = `
-                    <div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
-                        ${isCorrect ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + domanda.paese.nome}
-                    </div>
-                `;
-                status.textContent = '⏳ In attesa della prossima domanda...';
+                if (feedback) {
+                    feedback.innerHTML = `
+                        <div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
+                            ${isCorrect ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + domanda.paese.nome}
+                        </div>
+                    `;
+                }
+                if (status) status.textContent = '⏳ In attesa della prossima domanda...';
                 return;
             }
 
             grid.innerHTML = domanda.opzioni.map((o, i) =>
                 `<button onclick="rispondiBandiera(${i})" id="opt-${i}">${o.nome}</button>`
             ).join('');
-            feedback.innerHTML = '';
-            status.textContent = `🧠 ${domanda.opzioni.length} opzioni - scegli la bandiera giusta`;
+            if (feedback) feedback.innerHTML = '';
+            if (status) status.textContent = `🧠 ${domanda.opzioni.length} opzioni - scegli la bandiera giusta`;
         }
 
         function rispondiBandiera(indice) {
             if (!gameState) return;
-            if (document.querySelector('#optionsGrid button:disabled')) return; // già risposto
+            if (document.querySelector('#optionsGrid button:disabled')) return;
 
             const domande = gameState.domande || [];
             const idx = gameState.domandaCorrente || 0;
@@ -1412,7 +1272,6 @@ function ascoltaInvitiAccettatiPerPartita(gameId) {
             const domanda = domande[idx];
             const isCorrect = domanda.opzioni[indice].codice === domanda.paese.codice;
 
-            // Aggiorna il punteggio del giocatore
             const update = {};
             const giocatori = gameState.giocatori || {};
             const mio = giocatori[currentUserId] || { nickname: currentUser, punteggio: 0, corrette: 0, totali: 0 };
@@ -1423,35 +1282,31 @@ function ascoltaInvitiAccettatiPerPartita(gameId) {
             update['giocatori/' + currentUserId + '/punteggio'] = isCorrect ? punteggio + 10 : punteggio;
             update['giocatori/' + currentUserId + '/corrette'] = isCorrect ? corrette + 1 : corrette;
             update['giocatori/' + currentUserId + '/totali'] = totali;
+            update['domande/' + idx + '/rispostaUtente'] = indice;
 
-            // Salva la risposta nella domanda
-            const domandaPath = 'domande/' + idx + '/rispostaUtente';
-            update[domandaPath] = indice;
-
-            // Passa alla prossima domanda se tutti hanno risposto
-            // Ma per semplicità, facciamo avanzare dopo 2 secondi
             db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
-                // Mostra il risultato
                 const grid = document.getElementById('optionsGrid');
                 const feedback = document.getElementById('feedbackArea');
                 const status = document.getElementById('gameStatus');
 
-                grid.querySelectorAll('button').forEach((btn, i) => {
-                    btn.disabled = true;
-                    const isCorr = domanda.opzioni[i].codice === domanda.paese.codice;
-                    if (isCorr) btn.classList.add('correct');
-                    else if (i === indice && !isCorr) btn.classList.add('wrong');
-                });
-
-                feedback.innerHTML = `
-                    <div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
-                        ${isCorrect ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + domanda.paese.nome}
-                    </div>
-                `;
-                status.textContent = '⏳ Prossima domanda tra 2 secondi...';
+                if (grid) {
+                    grid.querySelectorAll('button').forEach((btn, i) => {
+                        btn.disabled = true;
+                        const isCorr = domanda.opzioni[i].codice === domanda.paese.codice;
+                        if (isCorr) btn.classList.add('correct');
+                        else if (i === indice && !isCorr) btn.classList.add('wrong');
+                    });
+                }
+                if (feedback) {
+                    feedback.innerHTML = `
+                        <div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
+                            ${isCorrect ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + domanda.paese.nome}
+                        </div>
+                    `;
+                }
+                if (status) status.textContent = '⏳ Prossima domanda tra 2 secondi...';
 
                 setTimeout(() => {
-                    // Passa alla prossima domanda
                     const prossimaIdx = idx + 1;
                     db.ref('sfidaBandiere/partite/' + currentGameId).update({
                         domandaCorrente: prossimaIdx
@@ -1497,29 +1352,13 @@ function ascoltaInvitiAccettatiPerPartita(gameId) {
                 `;
             }).join('');
 
-            // Rimuovi listener e dati
             db.ref('sfidaBandiere/partite/' + currentGameId).off();
             currentGameId = null;
         }
 
         // ======================================================================
-        //  FUNZIONI DI SUPPORTO
+        //  TORNA ALLA LOBBY
         // ======================================================================
-        function generaOpzioni(paeseCorretto, pool) {
-            const opzioni = [paeseCorretto];
-            const altri = pool.filter(p => p.codice !== paeseCorretto.codice);
-            let tentativi = 0;
-            while (opzioni.length < 4 && tentativi < 100) {
-                tentativi++;
-                const rand = Math.floor(Math.random() * altri.length);
-                const p = altri[rand];
-                if (!opzioni.some(o => o.codice === p.codice)) {
-                    opzioni.push(p);
-                }
-            }
-            return opzioni.sort(() => Math.random() - 0.5);
-        }
-
         function tornaAllaLobby() {
             if (currentGameId) {
                 db.ref('sfidaBandiere/partite/' + currentGameId).off();
@@ -1532,33 +1371,15 @@ function ascoltaInvitiAccettatiPerPartita(gameId) {
 
         function tornaLobby() {
             tornaAllaLobby();
-            showSection('section-lobby');
         }
 
         // ======================================================================
-        //  REINDIRIZZAMENTO DA ALTRI PAGINE
+        //  AVVIO
         // ======================================================================
-        // Se la pagina viene caricata con parametro "invite=...", gestisci automaticamente
         window.onload = function() {
-            const params = new URLSearchParams(window.location.search);
-            const invite = params.get('invite');
-            if (invite) {
-                // Mostra un messaggio
-                setTimeout(() => {
-                    alert('📨 Invito ricevuto! Accedi per vedere la sfida.');
-                }, 500);
-            }
-            // Se non loggato, mostra login
-            if (!currentUser) {
-                showSection('section-login');
-            }
+            showSection('section-login');
         };
-
-        // ======================================================================
-        //  PULSANTE "TORNA AL SITO PRINCIPALE"
-        // ======================================================================
-        // Già presente nei link
     </script>
 
 </body>
-</html>
+    </html>
