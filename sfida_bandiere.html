@@ -10,6 +10,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <style>
+        /* ===== STILI GENERALI (identici a prima, ma completi) ===== */
         * {
             margin: 0;
             padding: 0;
@@ -188,8 +189,13 @@
             margin-top: 10px;
         }
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
         }
 
         .game-header {
@@ -418,7 +424,7 @@
         <h1>🏴 Sfida Bandiere</h1>
         <div class="subtitle">Sfida i tuoi amici in tempo reale!</div>
 
-        <!-- SEZIONE 1: LOGIN -->
+        <!-- ==================== SEZIONE 1: LOGIN ==================== -->
         <div class="section active" id="section-login">
             <div class="form-group">
                 <label>👤 Inserisci il tuo nome</label>
@@ -428,7 +434,7 @@
             <div id="loginError" style="color:#dc3545;margin-top:8px;display:none;"></div>
         </div>
 
-        <!-- SEZIONE 2: LOBBY (TUTTO QUI) -->
+        <!-- ==================== SEZIONE 2: LOBBY ==================== -->
         <div class="section" id="section-lobby">
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
                 <span style="font-weight:700;color:#1a2634;">👥 Giocatori online</span>
@@ -439,7 +445,7 @@
             </div>
             <div id="inviteContainer"></div>
 
-            <!-- PANNELLO PARTITA (appare quando si crea una partita) -->
+            <!-- PANNELLO PARTITA (creata dal creatore) -->
             <div id="gamePanel" style="display:none;">
                 <div class="game-panel">
                     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
@@ -471,7 +477,7 @@
             <a href="https://vincenzomuyo-art.github.io/nuova-mongolia/index.html" class="back-link">← Torna al sito principale</a>
         </div>
 
-        <!-- SEZIONE 3: MODIFICA IMPOSTAZIONI (solo per il creatore) -->
+        <!-- ==================== SEZIONE 3: IMPOSTAZIONI ==================== -->
         <div class="section" id="section-settings">
             <h2 style="color:#1a2634;font-size:1.4rem;margin-bottom:12px;">⚙️ Impostazioni partita</h2>
             <div class="form-group">
@@ -499,23 +505,23 @@
             </div>
         </div>
 
-        <!-- SEZIONE 4: GIOCO -->
+        <!-- ==================== SEZIONE 4: GIOCO ==================== -->
         <div class="section" id="section-game">
             <div class="game-header">
                 <div class="timer" id="timerDisplay">⏱️ 60</div>
                 <div class="scores" id="scoreDisplay"></div>
             </div>
+            <!-- Contenitore dinamico per la partita -->
             <div id="gameContent">
-                <div style="text-align:center;padding:40px 20px;">
-                    <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
-                    <h3 style="color:#1a2634;">In attesa che il creatore avvii la partita...</h3>
-                    <p style="color:#6a7a8a;">La partita inizierà automaticamente quando il creatore premerà "Avvia".</p>
-                    <button onclick="avviaPartita()" id="gameContent">Aviia partita</button>
-                </div>
+                <!-- Verrà riempito da JavaScript -->
+            </div>
+            <!-- Pulsante per tornare alla lobby (visibile sempre) -->
+            <div style="text-align:center;margin-top:16px;">
+                <button class="btn btn-outline" onclick="tornaAllaLobby()">↩️ Torna alla lobby</button>
             </div>
         </div>
 
-        <!-- SEZIONE 5: CLASSIFICA FINALE -->
+        <!-- ==================== SEZIONE 5: CLASSIFICA FINALE ==================== -->
         <div class="section" id="section-final">
             <h2 style="color:#1a2634;font-size:1.6rem;text-align:center;margin-bottom:8px;">🏆 Classifica finale</h2>
             <div class="ranking" id="rankingContainer"></div>
@@ -552,7 +558,7 @@
         let isGameCreator = false;
         let invitatiAccettati = [];
         let gameState = null;
-        let timerInterval = null;
+        let timerInterval = null;         // per aggiornare il timer visivo
 
         // ======================================================================
         //  LISTA PAESI (195+)
@@ -764,6 +770,9 @@
 
         const FLAG_BASE_URL = 'https://flagcdn.com/w320/';
 
+        // ======================================================================
+        //  FUNZIONI DI UTILITY
+        // ======================================================================
         function getBandierePerLivello(livello) {
             const tutte = PAESI;
             switch (livello) {
@@ -814,7 +823,7 @@
         }
 
         // ======================================================================
-        //  FUNZIONI UI
+        //  UI UTILITY
         // ======================================================================
         function showSection(id) {
             document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
@@ -874,14 +883,23 @@
             if (currentGameId) {
                 db.ref('sfidaBandiere/partite/' + currentGameId).remove();
             }
+            resetGameState();
+            showSection('section-login');
+        }
+
+        function resetGameState() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
             currentUser = null;
             currentUserId = null;
             currentGameId = null;
             isGameCreator = false;
             invitatiAccettati = [];
+            gameState = null;
             document.getElementById('gamePanel').style.display = 'none';
             document.getElementById('btnCreaPartita').disabled = false;
-            showSection('section-login');
         }
 
         // ======================================================================
@@ -919,7 +937,7 @@
             const container = document.getElementById('playerList');
             if (list.length === 0) {
                 container.innerHTML =
-                '<div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun altro giocatore online</div>';
+                    '<div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun altro giocatore online</div>';
                 return;
             }
 
@@ -999,7 +1017,7 @@
         }
 
         // ======================================================================
-        //  CREA PARTITA (NUOVO FLUSSO)
+        //  CREA PARTITA
         // ======================================================================
         function creaPartita() {
             if (currentGameId) {
@@ -1036,15 +1054,11 @@
 
                 db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
 
-                // Mostra il pannello nella lobby
                 document.getElementById('gamePanel').style.display = 'block';
                 document.getElementById('btnCreaPartita').disabled = true;
                 aggiornaPannelloPartita();
 
-                // Ascolta gli accettati
                 ascoltaInvitiAccettati(gameId);
-
-                // Ascolta la partita
                 ascoltaPartita(gameId);
             });
         }
@@ -1074,7 +1088,7 @@
                 }
             }
 
-            if (btnAvvia) btnAvvia.disabled = false; // sempre abilitato
+            if (btnAvvia) btnAvvia.disabled = false;
         }
 
         function ascoltaInvitiAccettati(gameId) {
@@ -1156,6 +1170,7 @@
                     currentGameId = gameId;
                     isGameCreator = false;
                     showSection('section-game');
+                    // Mostra messaggio di attesa
                     document.getElementById('gameContent').innerHTML = `
                         <div style="text-align:center;padding:40px 20px;">
                             <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
@@ -1185,14 +1200,22 @@
                     if (document.getElementById('section-lobby').classList.contains('active')) {
                         showSection('section-game');
                     }
+                    // Avvia il timer se non già avviato
+                    if (!timerInterval) {
+                        avviaTimer(data);
+                    }
                     aggiornaGioco(data);
                 } else if (data.stato === 'terminata') {
+                    // Ferma il timer
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                    }
                     mostraClassifica(data);
                 } else if (data.stato === 'in attesa') {
-                    // Mostra il pulsante Avvia al creatore anche in game
-                    if (data.creatoreId === currentUserId) {
-                        // Se siamo in game e la partita è in attesa, mostriamo il pulsante Avvia
-                        if (document.getElementById('section-game').classList.contains('active')) {
+                    // Se siamo in game e il creatore è in attesa, mostriamo il pulsante Avvia
+                    if (document.getElementById('section-game').classList.contains('active')) {
+                        if (data.creatoreId === currentUserId) {
                             document.getElementById('gameContent').innerHTML = `
                                 <div style="text-align:center;padding:40px 20px;">
                                     <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
@@ -1201,15 +1224,52 @@
                                     <button class="btn btn-success" onclick="avviaPartita()" style="padding:14px 40px;font-size:1.2rem;">
                                         🚀 Avvia partita
                                     </button>
-                                    <div style="margin-top:12px;">
-                                        <button class="btn btn-outline" onclick="tornaAllaLobby()" style="padding:8px 20px;">↩️ Torna alla lobby</button>
-                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            // Messaggio di attesa per gli altri
+                            document.getElementById('gameContent').innerHTML = `
+                                <div style="text-align:center;padding:40px 20px;">
+                                    <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+                                    <h3 style="color:#1a2634;">In attesa che il creatore avvii la partita...</h3>
+                                    <p style="color:#6a7a8a;">La partita inizierà quando il creatore premerà "Avvia".</p>
                                 </div>
                             `;
                         }
                     }
                 }
             });
+        }
+
+        // ======================================================================
+        //  TIMER IN TEMPO REALE
+        // ======================================================================
+        function avviaTimer(data) {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!gameState || gameState.stato !== 'in corso') {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    return;
+                }
+                const now = Date.now();
+                const elapsed = (now - gameState.inizio) / 1000;
+                const remaining = Math.max(0, gameState.tempoMax - Math.floor(elapsed));
+                const timerEl = document.getElementById('timerDisplay');
+                timerEl.textContent = `⏱️ ${remaining}`;
+                timerEl.className = 'timer' + (remaining <= 10 ? ' warning' : '');
+
+                if (remaining <= 0 && !gameState.timerScaduto) {
+                    // Scaduto: termina partita
+                    db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                        timerScaduto: true,
+                        stato: 'terminata',
+                        fine: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }, 1000);
         }
 
         // ======================================================================
@@ -1279,10 +1339,7 @@
 
                 db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
                     showSection('section-game');
-                    db.ref('sfidaBandiere/partite/' + currentGameId).once('value', snap2 => {
-                        gameState = snap2.val();
-                        aggiornaGioco(gameState);
-                    });
+                    // Il listener aggiornerà tutto
                 });
             });
         }
@@ -1302,7 +1359,7 @@
         }
 
         // ======================================================================
-        //  GIOCO
+        //  GIOCO - AGGIORNAMENTO UI
         // ======================================================================
         function aggiornaGioco(data) {
             if (!data || data.stato === 'terminata') {
@@ -1318,28 +1375,12 @@
             }).join('');
             document.getElementById('scoreDisplay').innerHTML = scoreHtml;
 
-            // Aggiorna timer
-            if (data.tempoMax && data.inizio) {
-                const now = Date.now();
-                const elapsed = (now - data.inizio) / 1000;
-                const remaining = Math.max(0, data.tempoMax - Math.floor(elapsed));
-                const timerEl = document.getElementById('timerDisplay');
-                timerEl.textContent = `⏱️ ${remaining}`;
-                timerEl.className = 'timer' + (remaining <= 10 ? ' warning' : '');
-
-                if (remaining <= 0 && !data.timerScaduto) {
-                    db.ref('sfidaBandiere/partite/' + currentGameId).update({
-                        timerScaduto: true,
-                        stato: 'terminata',
-                        fine: firebase.database.ServerValue.TIMESTAMP
-                    });
-                    return;
-                }
-            }
+            // Il timer è gestito da un intervallo separato
 
             const domande = data.domande || [];
             const idx = data.domandaCorrente || 0;
             if (idx >= domande.length) {
+                // Fine domande
                 db.ref('sfidaBandiere/partite/' + currentGameId).update({
                     stato: 'terminata',
                     fine: firebase.database.ServerValue.TIMESTAMP
@@ -1357,60 +1398,70 @@
             mostraDomanda(domanda, alreadyAnswered, data);
         }
 
+        // ======================================================================
+        //  MOSTRA DOMANDA (crea HTML dinamico)
+        // ======================================================================
         function mostraDomanda(domanda, alreadyAnswered, data) {
-            const flagEl = document.getElementById('flagImage');
-            if (flagEl) flagEl.src = FLAG_BASE_URL + domanda.paese.codice + '.png';
+            const container = document.getElementById('gameContent');
+            const isCreator = isGameCreator; // per eventuali info
 
-            const grid = document.getElementById('optionsGrid');
-            const feedback = document.getElementById('feedbackArea');
-            const status = document.getElementById('gameStatus');
+            // Costruiamo l'HTML
+            let html = `
+                <div class="flag-container">
+                    <img src="${FLAG_BASE_URL}${domanda.paese.codice}.png" alt="Bandiera" />
+                </div>
+                <div id="optionsGrid" class="options-grid">
+            `;
 
-            if (!grid) return;
+            domanda.opzioni.forEach((o, i) => {
+                let classe = '';
+                let disabled = '';
+                if (alreadyAnswered) {
+                    disabled = 'disabled';
+                    if (o.codice === domanda.paese.codice) classe = 'correct';
+                    else if (domanda.rispostaUtente === i && o.codice !== domanda.paese.codice) classe = 'wrong';
+                }
+                html += `<button class="${classe}" ${disabled} onclick="rispondiBandiera(${i})" id="opt-${i}">${o.nome}</button>`;
+            });
+
+            html += `</div><div id="feedbackArea"></div><div id="gameStatus" style="text-align:center;margin-top:8px;font-weight:600;">`;
 
             if (alreadyAnswered) {
-                grid.innerHTML = domanda.opzioni.map((o, i) => {
-                    const isCorrect = o.codice === domanda.paese.codice;
-                    const isSelected = domanda.rispostaUtente === i;
-                    let classe = '';
-                    if (isCorrect) classe = 'correct';
-                    else if (isSelected && !isCorrect) classe = 'wrong';
-                    return `<button class="${classe}" disabled>${o.nome}</button>`;
-                }).join('');
-
                 const isCorrect = domanda.rispostaUtente !== undefined &&
                     domanda.opzioni[domanda.rispostaUtente]?.codice === domanda.paese.codice;
-                if (feedback) {
-                    feedback.innerHTML = `
-                        <div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
+                html += `<div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
                             ${isCorrect ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + domanda.paese.nome}
-                        </div>
-                    `;
-                }
-                if (status) status.textContent = '⏳ In attesa della prossima domanda...';
-                return;
+                        </div>`;
+                html += `<div style="margin-top:8px;">⏳ Prossima domanda tra 2 secondi...</div>`;
+            } else {
+                html += `🧠 Scegli la bandiera corretta tra le opzioni`;
             }
 
-            grid.innerHTML = domanda.opzioni.map((o, i) =>
-                `<button onclick="rispondiBandiera(${i})" id="opt-${i}">${o.nome}</button>`
-            ).join('');
-            if (feedback) feedback.innerHTML = '';
-            if (status) status.textContent = `🧠 ${domanda.opzioni.length} opzioni - scegli la bandiera giusta`;
+            html += `</div>`;
+
+            container.innerHTML = html;
         }
 
+        // ======================================================================
+        //  RISPOSTA BANDIERA
+        // ======================================================================
         function rispondiBandiera(indice) {
             if (!gameState) return;
-            if (document.querySelector('#optionsGrid button:disabled')) return;
+            // Controlla se ha già risposto
+            const giocatori = gameState.giocatori || {};
+            const mio = giocatori[currentUserId];
+            const idx = gameState.domandaCorrente || 0;
+            if (mio && mio.totali !== undefined && mio.totali > idx) {
+                return; // già risposto
+            }
 
             const domande = gameState.domande || [];
-            const idx = gameState.domandaCorrente || 0;
             if (idx >= domande.length) return;
 
             const domanda = domande[idx];
             const isCorrect = domanda.opzioni[indice].codice === domanda.paese.codice;
 
             const update = {};
-            const giocatori = gameState.giocatori || {};
-            const mio = giocatori[currentUserId] || { nickname: currentUser, punteggio: 0, corrette: 0, totali: 0 };
             const punteggio = mio.punteggio || 0;
             const corrette = mio.corrette || 0;
             const totali = (mio.totali || 0) + 1;
@@ -1421,10 +1472,11 @@
             update['domande/' + idx + '/rispostaUtente'] = indice;
 
             db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
+                // Disabilita i bottoni e mostra feedback (verrà gestito da aggiornaGioco dopo il cambio)
+                // Ma per immediatezza, blocchiamo i bottoni e mostriamo feedback
                 const grid = document.getElementById('optionsGrid');
                 const feedback = document.getElementById('feedbackArea');
                 const status = document.getElementById('gameStatus');
-
                 if (grid) {
                     grid.querySelectorAll('button').forEach((btn, i) => {
                         btn.disabled = true;
@@ -1440,8 +1492,9 @@
                         </div>
                     `;
                 }
-                if (status) status.textContent = '⏳ Prossima domanda tra 2 secondi...';
+                if (status) status.innerHTML = '⏳ Prossima domanda tra 2 secondi...';
 
+                // Dopo 2 secondi, passa alla prossima domanda
                 setTimeout(() => {
                     const prossimaIdx = idx + 1;
                     db.ref('sfidaBandiere/partite/' + currentGameId).update({
@@ -1489,6 +1542,11 @@
             }).join('');
 
             db.ref('sfidaBandiere/partite/' + currentGameId).off();
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            // Resetta lo stato ma conserva l'utente loggato
             currentGameId = null;
             isGameCreator = false;
             document.getElementById('gamePanel').style.display = 'none';
@@ -1496,12 +1554,16 @@
         }
 
         // ======================================================================
-        //  TORNA ALLA LOBBY
+        //  TORNA ALLA LOBBY (da gioco o ovunque)
         // ======================================================================
         function tornaAllaLobby() {
             if (currentGameId) {
                 db.ref('sfidaBandiere/partite/' + currentGameId).off();
                 db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: false });
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
                 currentGameId = null;
             }
             isGameCreator = false;
