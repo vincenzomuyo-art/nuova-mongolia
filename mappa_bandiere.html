@@ -80,6 +80,11 @@
             background: #e8ecf0;
         }
 
+        /* Nasconde i nomi dei paesi sulla mappa */
+        .leaflet-tooltip {
+            display: none !important;
+        }
+
         .flag-options {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
@@ -94,9 +99,8 @@
             cursor: pointer;
             transition: 0.2s;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
         }
         .flag-options button:hover:not(:disabled) {
             border-color: #f4c542;
@@ -119,11 +123,6 @@
             max-width: 120px;
             border-radius: 6px;
             border: 1px solid #eee;
-        }
-        .flag-options button .label {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #1a2634;
         }
 
         .feedback {
@@ -194,14 +193,6 @@
             text-decoration: underline;
         }
 
-        .country-name {
-            text-align: center;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #1a2634;
-            margin: 8px 0;
-        }
-
         @media (max-width: 600px) {
             .game-container {
                 padding: 16px;
@@ -235,7 +226,6 @@
         </div>
 
         <div id="map"></div>
-        <div id="countryNameDisplay" class="country-name"></div>
 
         <div id="flagContainer">
             <div class="flag-options" id="flagOptions"></div>
@@ -531,11 +521,10 @@
                             };
                         },
                         onEachFeature: function(feature, layer) {
-                            // Non facciamo nulla per ora
+                            // NON aggiungiamo tooltip con i nomi
                         }
                     }).addTo(map);
 
-                    // Dopo aver caricato la mappa, inizia il gioco
                     generaDomanda();
                 })
                 .catch(err => {
@@ -587,14 +576,11 @@
             currentOptions = opzioni;
             answered = false;
 
-            // Aggiorna mappa
+            // Aggiorna mappa (evidenzia il paese)
             evidenziaPaese(paese);
 
-            // Aggiorna nome paese
-            document.getElementById('countryNameDisplay').textContent = `📍 ${paese.nome}`;
-
-            // Mostra bandiere
-            mostraBandiere(opzioni, paese);
+            // Mostra le bandiere (solo immagini, senza nome)
+            mostraBandiere(opzioni);
 
             // Pulisci feedback
             document.getElementById('feedbackArea').innerHTML = '';
@@ -620,7 +606,6 @@
                 const props = layer.feature?.properties;
                 if (!props) return;
 
-                // Confronto approssimativo
                 const names = [props.name, props.NAME, props.name_long, props.ADMIN];
                 const match = names.some(n => {
                     if (!n) return false;
@@ -630,7 +615,6 @@
                 });
 
                 if (match) {
-                    // Clona il layer e coloralo di rosso
                     const cloned = layer.toGeoJSON();
                     highlightLayer = L.geoJSON(cloned, {
                         style: {
@@ -641,14 +625,12 @@
                         }
                     }).addTo(map);
 
-                    // Centra la mappa sul paese
                     map.setView([paese.lat, paese.lng], 4);
                     found = true;
                 }
             });
 
             if (!found) {
-                // Se non trova il paese, usa le coordinate
                 highlightLayer = L.circle([paese.lat, paese.lng], {
                     radius: 200000,
                     color: '#dc3545',
@@ -660,13 +642,12 @@
             }
         }
 
-        // ===== MOSTRA BANDIERE =====
-        function mostraBandiere(opzioni, paeseCorretto) {
+        // ===== MOSTRA BANDIERE (SOLO IMMAGINI) =====
+        function mostraBandiere(opzioni) {
             const container = document.getElementById('flagOptions');
             container.innerHTML = opzioni.map((p, idx) => `
                 <button onclick="rispondi(${idx})" id="opt-${idx}">
-                    <img src="${FLAG_BASE_URL}${p.codice}.png" alt="${p.nome}" loading="lazy" />
-                    <span class="label">${p.nome}</span>
+                    <img src="${FLAG_BASE_URL}${p.codice}.png" alt="Bandiera" loading="lazy" />
                 </button>
             `).join('');
         }
@@ -693,11 +674,11 @@
             const feedback = document.getElementById('feedbackArea');
             if (corretta) {
                 feedback.innerHTML = `
-                    <div class="feedback correct">✅ Corretto! La bandiera giusta è ${currentCountry.nome}</div>
+                    <div class="feedback correct">✅ Corretto!</div>
                 `;
             } else {
                 feedback.innerHTML = `
-                    <div class="feedback wrong">❌ Sbagliato! La bandiera giusta è ${currentCountry.nome}</div>
+                    <div class="feedback wrong">❌ Sbagliato! La risposta corretta era ${currentCountry.nome}</div>
                 `;
             }
 
@@ -761,7 +742,6 @@
                 </div>
             `;
 
-            document.getElementById('countryNameDisplay').textContent = '';
             document.getElementById('nextButtonContainer').innerHTML = '';
             document.getElementById('feedbackArea').innerHTML = '';
             document.getElementById('flagOptions').innerHTML = '';
