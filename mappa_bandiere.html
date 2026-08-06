@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌍 Indovina la bandiera sulla mappa</title>
+
+    <!-- Leaflet (per la mappa) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f3f0;
+            color: #1e1e1e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .game-container {
+            max-width: 900px;
+            width: 100%;
+            background: #fff;
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: #1a2634;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6a7a8a;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .header-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .header-stats .stats {
+            display: flex;
+            gap: 16px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #6a7a8a;
+        }
+        .header-stats .stats span {
+            background: #f8f6f3;
+            padding: 4px 14px;
+            border-radius: 20px;
+        }
+        .header-stats .stats .score {
+            color: #f4c542;
+        }
+
+        #map {
+            width: 100%;
+            height: 400px;
+            border-radius: 16px;
+            border: 2px solid #ddd;
+            margin-bottom: 16px;
+            background: #e8ecf0;
+        }
+
+        .flag-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .flag-options button {
+            padding: 8px;
+            border-radius: 12px;
+            border: 3px solid #ddd;
+            background: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .flag-options button:hover:not(:disabled) {
+            border-color: #f4c542;
+            transform: scale(1.03);
+        }
+        .flag-options button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+        .flag-options button.correct {
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+        .flag-options button.wrong {
+            border-color: #dc3545;
+            background: #fde0e0;
+        }
+        .flag-options button img {
+            width: 100%;
+            max-width: 120px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+        .flag-options button .label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1a2634;
+        }
+
+        .feedback {
+            text-align: center;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin: 8px 0;
+        }
+        .feedback.correct {
+            background: #e8f5e9;
+            color: #28a745;
+            border: 2px solid #28a745;
+        }
+        .feedback.wrong {
+            background: #fde0e0;
+            color: #dc3545;
+            border: 2px solid #dc3545;
+        }
+
+        .next-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            background: #f4c542;
+            color: #1a2634;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+        }
+        .next-btn:hover {
+            background: #ffd966;
+            transform: scale(1.02);
+        }
+
+        .restart-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            background: #6c757d;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 8px;
+        }
+        .restart-btn:hover {
+            background: #5a6268;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 16px;
+            color: #6a7a8a;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover {
+            color: #1a2634;
+            text-decoration: underline;
+        }
+
+        .country-name {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1a2634;
+            margin: 8px 0;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 16px;
+            }
+            .flag-options {
+                grid-template-columns: 1fr 1fr;
+            }
+            .header-stats {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            #map {
+                height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>🌍 Indovina la bandiera sulla mappa</h1>
+        <div class="subtitle">Trova il paese evidenziato e scegli la bandiera giusta</div>
+
+        <div class="header-stats">
+            <div class="stats">
+                <span>🏆 <span class="score" id="scoreDisplay">0</span></span>
+                <span>🎯 <span id="percentDisplay">0%</span></span>
+                <span>📊 <span id="attemptDisplay">0</span></span>
+            </div>
+        </div>
+
+        <div id="map"></div>
+        <div id="countryNameDisplay" class="country-name"></div>
+
+        <div id="flagContainer">
+            <div class="flag-options" id="flagOptions"></div>
+        </div>
+
+        <div id="feedbackArea"></div>
+        <div id="nextButtonContainer"></div>
+
+        <button class="restart-btn" onclick="riavvia()">🔄 Ricomincia</button>
+        <a href="https://vincenzomuyo-art.github.io/nuova-mongolia/index.html" class="back-link">← Torna al sito principale</a>
+    </div>
+
+    <script>
+        // ======================================================================
+        //  GIOCO: INDOVINA LA BANDIERA SULLA MAPPA
+        // ======================================================================
+
+        // ===== LISTA PAESI (con coordinate centro per la mappa) =====
+        const PAESI = [
+            { nome: "Afghanistan", codice: "af", lat: 33.939, lng: 67.710 },
+            { nome: "Albania", codice: "al", lat: 41.153, lng: 20.168 },
+            { nome: "Algeria", codice: "dz", lat: 28.033, lng: 1.659 },
+            { nome: "Andorra", codice: "ad", lat: 42.506, lng: 1.522 },
+            { nome: "Angola", codice: "ao", lat: -11.203, lng: 17.874 },
+            { nome: "Antigua e Barbuda", codice: "ag", lat: 17.061, lng: -61.796 },
+            { nome: "Arabia Saudita", codice: "sa", lat: 23.886, lng: 45.079 },
+            { nome: "Argentina", codice: "ar", lat: -38.416, lng: -63.617 },
+            { nome: "Armenia", codice: "am", lat: 40.069, lng: 45.038 },
+            { nome: "Australia", codice: "au", lat: -25.274, lng: 133.775 },
+            { nome: "Austria", codice: "at", lat: 47.516, lng: 14.550 },
+            { nome: "Azerbaigian", codice: "az", lat: 40.143, lng: 47.577 },
+            { nome: "Bahamas", codice: "bs", lat: 25.034, lng: -77.396 },
+            { nome: "Bahrein", codice: "bh", lat: 25.930, lng: 50.638 },
+            { nome: "Bangladesh", codice: "bd", lat: 23.685, lng: 90.356 },
+            { nome: "Barbados", codice: "bb", lat: 13.194, lng: -59.543 },
+            { nome: "Belgio", codice: "be", lat: 50.503, lng: 4.470 },
+            { nome: "Belize", codice: "bz", lat: 17.190, lng: -88.497 },
+            { nome: "Benin", codice: "bj", lat: 9.308, lng: 2.316 },
+            { nome: "Bielorussia", codice: "by", lat: 53.710, lng: 27.953 },
+            { nome: "Birmania", codice: "mm", lat: 21.917, lng: 95.956 },
+            { nome: "Bolivia", codice: "bo", lat: -16.290, lng: -63.589 },
+            { nome: "Bosnia ed Erzegovina", codice: "ba", lat: 43.916, lng: 17.679 },
+            { nome: "Botswana", codice: "bw", lat: -22.328, lng: 24.685 },
+            { nome: "Brasile", codice: "br", lat: -14.235, lng: -51.925 },
+            { nome: "Brunei", codice: "bn", lat: 4.535, lng: 114.728 },
+            { nome: "Bulgaria", codice: "bg", lat: 42.734, lng: 25.486 },
+            { nome: "Burkina Faso", codice: "bf", lat: 12.238, lng: -1.561 },
+            { nome: "Burundi", codice: "bi", lat: -3.373, lng: 29.919 },
+            { nome: "Cambogia", codice: "kh", lat: 12.565, lng: 104.991 },
+            { nome: "Camerun", codice: "cm", lat: 7.370, lng: 12.355 },
+            { nome: "Canada", codice: "ca", lat: 56.130, lng: -106.347 },
+            { nome: "Capo Verde", codice: "cv", lat: 16.538, lng: -23.042 },
+            { nome: "Ciad", codice: "td", lat: 15.454, lng: 18.732 },
+            { nome: "Cile", codice: "cl", lat: -35.675, lng: -71.543 },
+            { nome: "Cina", codice: "cn", lat: 35.862, lng: 104.195 },
+            { nome: "Cipro", codice: "cy", lat: 35.126, lng: 33.430 },
+            { nome: "Colombia", codice: "co", lat: 4.571, lng: -74.297 },
+            { nome: "Comore", codice: "km", lat: -11.645, lng: 43.333 },
+            { nome: "Corea del Nord", codice: "kp", lat: 40.340, lng: 127.510 },
+            { nome: "Corea del Sud", codice: "kr", lat: 35.908, lng: 127.766 },
+            { nome: "Costa d'Avorio", codice: "ci", lat: 7.540, lng: -5.547 },
+            { nome: "Costa Rica", codice: "cr", lat: 9.749, lng: -83.753 },
+            { nome: "Croazia", codice: "hr", lat: 45.100, lng: 15.200 },
+            { nome: "Cuba", codice: "cu", lat: 21.522, lng: -77.781 },
+            { nome: "Danimarca", codice: "dk", lat: 56.264, lng: 9.502 },
+            { nome: "Dominica", codice: "dm", lat: 15.415, lng: -61.371 },
+            { nome: "Ecuador", codice: "ec", lat: -1.831, lng: -78.183 },
+            { nome: "Egitto", codice: "eg", lat: 26.821, lng: 30.802 },
+            { nome: "El Salvador", codice: "sv", lat: 13.794, lng: -88.897 },
+            { nome: "Emirati Arabi Uniti", codice: "ae", lat: 23.424, lng: 53.848 },
+            { nome: "Eritrea", codice: "er", lat: 15.179, lng: 39.782 },
+            { nome: "Estonia", codice: "ee", lat: 58.596, lng: 25.014 },
+            { nome: "Eswatini", codice: "sz", lat: -26.522, lng: 31.466 },
+            { nome: "Etiopia", codice: "et", lat: 9.145, lng: 40.490 },
+            { nome: "Fiji", codice: "fj", lat: -17.714, lng: 178.065 },
+            { nome: "Filippine", codice: "ph", lat: 12.880, lng: 121.774 },
+            { nome: "Finlandia", codice: "fi", lat: 61.924, lng: 25.748 },
+            { nome: "Francia", codice: "fr", lat: 46.603, lng: 1.888 },
+            { nome: "Gabon", codice: "ga", lat: -0.804, lng: 11.609 },
+            { nome: "Gambia", codice: "gm", lat: 13.443, lng: -15.310 },
+            { nome: "Georgia", codice: "ge", lat: 42.315, lng: 43.357 },
+            { nome: "Germania", codice: "de", lat: 51.166, lng: 10.451 },
+            { nome: "Ghana", codice: "gh", lat: 7.947, lng: -1.023 },
+            { nome: "Giamaica", codice: "jm", lat: 18.109, lng: -77.298 },
+            { nome: "Giappone", codice: "jp", lat: 36.205, lng: 138.253 },
+            { nome: "Gibuti", codice: "dj", lat: 11.825, lng: 42.590 },
+            { nome: "Giordania", codice: "jo", lat: 30.585, lng: 36.238 },
+            { nome: "Grecia", codice: "gr", lat: 39.074, lng: 21.824 },
+            { nome: "Grenada", codice: "gd", lat: 12.116, lng: -61.679 },
+            { nome: "Guatemala", codice: "gt", lat: 15.783, lng: -90.231 },
+            { nome: "Guinea", codice: "gn", lat: 9.946, lng: -9.697 },
+            { nome: "Guinea Equatoriale", codice: "gq", lat: 1.651, lng: 10.268 },
+            { nome: "Guinea-Bissau", codice: "gw", lat: 11.804, lng: -15.180 },
+            { nome: "Guyana", codice: "gy", lat: 4.860, lng: -58.930 },
+            { nome: "Haiti", codice: "ht", lat: 18.971, lng: -72.285 },
+            { nome: "Honduras", codice: "hn", lat: 15.200, lng: -86.242 },
+            { nome: "India", codice: "in", lat: 20.594, lng: 78.963 },
+            { nome: "Indonesia", codice: "id", lat: -0.789, lng: 113.921 },
+            { nome: "Iran", codice: "ir", lat: 32.428, lng: 53.688 },
+            { nome: "Iraq", codice: "iq", lat: 33.223, lng: 43.679 },
+            { nome: "Irlanda", codice: "ie", lat: 53.142, lng: -7.692 },
+            { nome: "Islanda", codice: "is", lat: 64.963, lng: -19.021 },
+            { nome: "Isole Marshall", codice: "mh", lat: 7.131, lng: 171.184 },
+            { nome: "Isole Salomone", codice: "sb", lat: -9.646, lng: 160.156 },
+            { nome: "Israele", codice: "il", lat: 31.046, lng: 34.852 },
+            { nome: "Italia", codice: "it", lat: 41.872, lng: 12.567 },
+            { nome: "Kazakistan", codice: "kz", lat: 48.020, lng: 66.920 },
+            { nome: "Kenya", codice: "ke", lat: -1.286, lng: 36.817 },
+            { nome: "Kirghizistan", codice: "kg", lat: 41.204, lng: 74.766 },
+            { nome: "Kiribati", codice: "ki", lat: -3.370, lng: -168.734 },
+            { nome: "Kuwait", codice: "kw", lat: 29.312, lng: 47.482 },
+            { nome: "Laos", codice: "la", lat: 19.856, lng: 102.495 },
+            { nome: "Lesotho", codice: "ls", lat: -29.610, lng: 28.234 },
+            { nome: "Lettonia", codice: "lv", lat: 56.880, lng: 24.604 },
+            { nome: "Libano", codice: "lb", lat: 33.855, lng: 35.862 },
+            { nome: "Liberia", codice: "lr", lat: 6.428, lng: -9.430 },
+            { nome: "Libia", codice: "ly", lat: 26.335, lng: 17.228 },
+            { nome: "Liechtenstein", codice: "li", lat: 47.129, lng: 9.554 },
+            { nome: "Lituania", codice: "lt", lat: 55.170, lng: 23.882 },
+            { nome: "Lussemburgo", codice: "lu", lat: 49.816, lng: 6.130 },
+            { nome: "Macedonia del Nord", codice: "mk", lat: 41.609, lng: 21.745 },
+            { nome: "Madagascar", codice: "mg", lat: -18.767, lng: 46.869 },
+            { nome: "Malawi", codice: "mw", lat: -13.254, lng: 34.302 },
+            { nome: "Maldive", codice: "mv", lat: 3.203, lng: 73.221 },
+            { nome: "Malaysia", codice: "my", lat: 4.210, lng: 101.976 },
+            { nome: "Mali", codice: "ml", lat: 17.571, lng: -3.996 },
+            { nome: "Malta", codice: "mt", lat: 35.938, lng: 14.375 },
+            { nome: "Marocco", codice: "ma", lat: 31.792, lng: -7.093 },
+            { nome: "Mauritania", codice: "mr", lat: 21.008, lng: -10.941 },
+            { nome: "Mauritius", codice: "mu", lat: -20.348, lng: 57.552 },
+            { nome: "Messico", codice: "mx", lat: 23.634, lng: -102.553 },
+            { nome: "Micronesia", codice: "fm", lat: 6.887, lng: 158.219 },
+            { nome: "Moldavia", codice: "md", lat: 47.412, lng: 28.370 },
+            { nome: "Monaco", codice: "mc", lat: 43.738, lng: 7.425 },
+            { nome: "Mongolia", codice: "mn", lat: 46.862, lng: 103.847 },
+            { nome: "Montenegro", codice: "me", lat: 42.709, lng: 19.374 },
+            { nome: "Mozambico", codice: "mz", lat: -18.666, lng: 35.530 },
+            { nome: "Namibia", codice: "na", lat: -22.958, lng: 18.491 },
+            { nome: "Nauru", codice: "nr", lat: -0.523, lng: 166.935 },
+            { nome: "Nepal", codice: "np", lat: 28.395, lng: 84.124 },
+            { nome: "Nicaragua", codice: "ni", lat: 12.865, lng: -85.207 },
+            { nome: "Niger", codice: "ne", lat: 17.608, lng: 8.082 },
+            { nome: "Nigeria", codice: "ng", lat: 9.082, lng: 8.675 },
+            { nome: "Norvegia", codice: "no", lat: 60.472, lng: 8.469 },
+            { nome: "Nuova Zelanda", codice: "nz", lat: -40.901, lng: 174.886 },
+            { nome: "Oman", codice: "om", lat: 21.474, lng: 55.974 },
+            { nome: "Paesi Bassi", codice: "nl", lat: 52.133, lng: 5.291 },
+            { nome: "Pakistan", codice: "pk", lat: 30.375, lng: 69.345 },
+            { nome: "Palau", codice: "pw", lat: 7.515, lng: 134.583 },
+            { nome: "Panama", codice: "pa", lat: 8.538, lng: -80.782 },
+            { nome: "Papua Nuova Guinea", codice: "pg", lat: -6.315, lng: 143.956 },
+            { nome: "Paraguay", codice: "py", lat: -23.442, lng: -58.444 },
+            { nome: "Perù", codice: "pe", lat: -9.190, lng: -75.015 },
+            { nome: "Polonia", codice: "pl", lat: 51.919, lng: 19.145 },
+            { nome: "Portogallo", codice: "pt", lat: 39.400, lng: -8.224 },
+            { nome: "Qatar", codice: "qa", lat: 25.355, lng: 51.184 },
+            { nome: "Regno Unito", codice: "gb", lat: 55.378, lng: -3.436 },
+            { nome: "Repubblica Centrafricana", codice: "cf", lat: 6.611, lng: 20.939 },
+            { nome: "Repubblica Ceca", codice: "cz", lat: 49.817, lng: 15.473 },
+            { nome: "Repubblica Democratica del Congo", codice: "cd", lat: -4.038, lng: 21.759 },
+            { nome: "Repubblica del Congo", codice: "cg", lat: -0.228, lng: 15.828 },
+            { nome: "Repubblica Dominicana", codice: "do", lat: 18.736, lng: -70.162 },
+            { nome: "Romania", codice: "ro", lat: 45.943, lng: 24.967 },
+            { nome: "Ruanda", codice: "rw", lat: -1.940, lng: 29.874 },
+            { nome: "Russia", codice: "ru", lat: 61.524, lng: 105.319 },
+            { nome: "Saint Kitts e Nevis", codice: "kn", lat: 17.358, lng: -62.783 },
+            { nome: "Saint Lucia", codice: "lc", lat: 13.909, lng: -60.979 },
+            { nome: "Saint Vincent e Grenadine", codice: "vc", lat: 12.985, lng: -61.287 },
+            { nome: "Samoa", codice: "ws", lat: -13.759, lng: -172.105 },
+            { nome: "San Marino", codice: "sm", lat: 43.942, lng: 12.457 },
+            { nome: "São Tomé e Príncipe", codice: "st", lat: 0.186, lng: 6.613 },
+            { nome: "Senegal", codice: "sn", lat: 14.497, lng: -14.452 },
+            { nome: "Serbia", codice: "rs", lat: 44.016, lng: 21.006 },
+            { nome: "Seychelles", codice: "sc", lat: -4.680, lng: 55.492 },
+            { nome: "Sierra Leone", codice: "sl", lat: 8.461, lng: -11.779 },
+            { nome: "Singapore", codice: "sg", lat: 1.352, lng: 103.820 },
+            { nome: "Siria", codice: "sy", lat: 34.802, lng: 38.997 },
+            { nome: "Slovacchia", codice: "sk", lat: 48.669, lng: 19.699 },
+            { nome: "Slovenia", codice: "si", lat: 46.151, lng: 14.995 },
+            { nome: "Somalia", codice: "so", lat: 5.152, lng: 46.200 },
+            { nome: "Spagna", codice: "es", lat: 40.463, lng: -3.749 },
+            { nome: "Sri Lanka", codice: "lk", lat: 7.873, lng: 80.772 },
+            { nome: "Stati Uniti", codice: "us", lat: 37.090, lng: -95.713 },
+            { nome: "Sudafrica", codice: "za", lat: -30.559, lng: 22.938 },
+            { nome: "Sudan", codice: "sd", lat: 12.863, lng: 30.218 },
+            { nome: "Sudan del Sud", codice: "ss", lat: 6.877, lng: 31.307 },
+            { nome: "Suriname", codice: "sr", lat: 4.089, lng: -56.078 },
+            { nome: "Svezia", codice: "se", lat: 60.128, lng: 18.643 },
+            { nome: "Svizzera", codice: "ch", lat: 46.818, lng: 8.228 },
+            { nome: "Tagikistan", codice: "tj", lat: 38.861, lng: 71.276 },
+            { nome: "Tanzania", codice: "tz", lat: -6.369, lng: 34.889 },
+            { nome: "Thailandia", codice: "th", lat: 15.870, lng: 100.993 },
+            { nome: "Timor Est", codice: "tl", lat: -8.874, lng: 125.728 },
+            { nome: "Togo", codice: "tg", lat: 8.619, lng: 0.825 },
+            { nome: "Tonga", codice: "to", lat: -21.179, lng: -175.198 },
+            { nome: "Trinidad e Tobago", codice: "tt", lat: 10.692, lng: -61.222 },
+            { nome: "Tunisia", codice: "tn", lat: 33.887, lng: 9.538 },
+            { nome: "Turchia", codice: "tr", lat: 38.964, lng: 35.243 },
+            { nome: "Turkmenistan", codice: "tm", lat: 38.970, lng: 59.556 },
+            { nome: "Tuvalu", codice: "tv", lat: -7.110, lng: 177.649 },
+            { nome: "Ucraina", codice: "ua", lat: 48.380, lng: 31.166 },
+            { nome: "Uganda", codice: "ug", lat: 1.373, lng: 32.290 },
+            { nome: "Ungheria", codice: "hu", lat: 47.162, lng: 19.503 },
+            { nome: "Uruguay", codice: "uy", lat: -32.523, lng: -55.766 },
+            { nome: "Uzbekistan", codice: "uz", lat: 41.377, lng: 64.586 },
+            { nome: "Vanuatu", codice: "vu", lat: -15.377, lng: 166.959 },
+            { nome: "Vaticano", codice: "va", lat: 41.903, lng: 12.453 },
+            { nome: "Venezuela", codice: "ve", lat: 6.424, lng: -66.590 },
+            { nome: "Vietnam", codice: "vn", lat: 14.058, lng: 108.277 },
+            { nome: "Yemen", codice: "ye", lat: 15.553, lng: 48.516 },
+            { nome: "Zambia", codice: "zm", lat: -13.134, lng: 27.849 },
+            { nome: "Zimbabwe", codice: "zw", lat: -19.015, lng: 29.155 },
+            // Non riconosciuti ONU
+            { nome: "Kosovo", codice: "xk", lat: 42.603, lng: 20.902 },
+            { nome: "Palestina", codice: "ps", lat: 31.947, lng: 35.227 },
+            { nome: "Sahara Occidentale", codice: "eh", lat: 24.216, lng: -12.886 },
+            { nome: "Taiwan", codice: "tw", lat: 23.698, lng: 120.960 },
+            { nome: "Abcasia", codice: "ab", lat: 43.022, lng: 41.015 },
+            { nome: "Ossezia del Sud", codice: "ge", lat: 42.287, lng: 43.835 },
+            { nome: "Transnistria", codice: "md", lat: 46.846, lng: 29.600 },
+            { nome: "Cipro del Nord", codice: "cy", lat: 35.186, lng: 33.382 },
+            { nome: "Artsakh", codice: "am", lat: 39.840, lng: 46.773 },
+        ];
+
+        const FLAG_BASE_URL = 'https://flagcdn.com/w320/';
+        const NUM_OPZIONI = 4;
+
+        // ===== STATO =====
+        let stato = {
+            punteggio: 0,
+            tentativi: 0,
+            corretti: 0,
+            paesiUsati: [],
+            gameCompleted: false,
+        };
+
+        let map = null;
+        let currentCountry = null;
+        let currentOptions = [];
+        let answered = false;
+        let geoJsonLayer = null;
+        let highlightLayer = null;
+        let mapInitialized = false;
+
+        // ===== CARICA STATO =====
+        function caricaStato() {
+            try {
+                const salvato = localStorage.getItem('mappaBandiere_stato');
+                if (salvato) {
+                    stato = JSON.parse(salvato);
+                    if (!stato.paesiUsati) stato.paesiUsati = [];
+                    if (stato.gameCompleted === undefined) stato.gameCompleted = false;
+                }
+            } catch (e) {}
+        }
+
+        function salvaStato() {
+            try {
+                localStorage.setItem('mappaBandiere_stato', JSON.stringify(stato));
+            } catch (e) {}
+        }
+
+        // ===== INIZIALIZZA MAPPA =====
+        function initMap() {
+            if (mapInitialized) return;
+
+            map = L.map('map', {
+                center: [20, 0],
+                zoom: 2,
+                zoomControl: false,
+                attributionControl: false,
+            });
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '',
+                subdomains: 'abcd',
+                maxZoom: 19,
+            }).addTo(map);
+
+            mapInitialized = true;
+
+            // Carica GeoJSON dei paesi
+            fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
+                .then(res => res.json())
+                .then(data => {
+                    geoJsonLayer = L.geoJSON(data, {
+                        style: function(feature) {
+                            return {
+                                fillColor: '#d3d3d3',
+                                fillOpacity: 0.6,
+                                color: '#888',
+                                weight: 1,
+                            };
+                        },
+                        onEachFeature: function(feature, layer) {
+                            // Non facciamo nulla per ora
+                        }
+                    }).addTo(map);
+
+                    // Dopo aver caricato la mappa, inizia il gioco
+                    generaDomanda();
+                })
+                .catch(err => {
+                    console.error('Errore caricamento GeoJSON:', err);
+                    document.getElementById('flagContainer').innerHTML =
+                        '<div style="text-align:center;color:#dc3545;padding:20px;">❌ Errore caricamento mappa. Ricarica la pagina.</div>';
+                });
+        }
+
+        // ===== GENERA DOMANDA =====
+        function generaDomanda() {
+            if (stato.gameCompleted) {
+                mostraSchermataFinale();
+                return;
+            }
+
+            // Filtra paesi non usati
+            const disponibili = PAESI.filter(p => !stato.paesiUsati.includes(p.codice));
+
+            if (disponibili.length === 0) {
+                stato.gameCompleted = true;
+                salvaStato();
+                mostraSchermataFinale();
+                return;
+            }
+
+            // Scegli paese casuale
+            const idx = Math.floor(Math.random() * disponibili.length);
+            const paese = disponibili[idx];
+            currentCountry = paese;
+
+            // Segna come usato
+            stato.paesiUsati.push(paese.codice);
+            salvaStato();
+
+            // Scegli 3 paesi sbagliati
+            const altri = PAESI.filter(p => p.codice !== paese.codice);
+            let opzioni = [paese];
+            let tentativi = 0;
+            while (opzioni.length < NUM_OPZIONI && tentativi < 100) {
+                tentativi++;
+                const rand = Math.floor(Math.random() * altri.length);
+                const p = altri[rand];
+                if (!opzioni.some(o => o.codice === p.codice)) {
+                    opzioni.push(p);
+                }
+            }
+            opzioni = opzioni.sort(() => Math.random() - 0.5);
+            currentOptions = opzioni;
+            answered = false;
+
+            // Aggiorna mappa
+            evidenziaPaese(paese);
+
+            // Aggiorna nome paese
+            document.getElementById('countryNameDisplay').textContent = `📍 ${paese.nome}`;
+
+            // Mostra bandiere
+            mostraBandiere(opzioni, paese);
+
+            // Pulisci feedback
+            document.getElementById('feedbackArea').innerHTML = '';
+            document.getElementById('nextButtonContainer').innerHTML = '';
+
+            // Aggiorna stats
+            aggiornaStats();
+        }
+
+        // ===== EVIDENZIA PAESE SULLA MAPPA =====
+        function evidenziaPaese(paese) {
+            if (!geoJsonLayer) return;
+
+            // Rimuovi highlight precedente
+            if (highlightLayer) {
+                map.removeLayer(highlightLayer);
+                highlightLayer = null;
+            }
+
+            // Cerca il feature con il nome corrispondente (approssimativo)
+            let found = false;
+            geoJsonLayer.eachLayer(function(layer) {
+                const props = layer.feature?.properties;
+                if (!props) return;
+
+                // Confronto approssimativo
+                const names = [props.name, props.NAME, props.name_long, props.ADMIN];
+                const match = names.some(n => {
+                    if (!n) return false;
+                    return n.toLowerCase().includes(paese.nome.toLowerCase()) ||
+                        paese.nome.toLowerCase().includes(n.toLowerCase()) ||
+                        n.toLowerCase() === paese.nome.toLowerCase();
+                });
+
+                if (match) {
+                    // Clona il layer e coloralo di rosso
+                    const cloned = layer.toGeoJSON();
+                    highlightLayer = L.geoJSON(cloned, {
+                        style: {
+                            fillColor: '#dc3545',
+                            fillOpacity: 0.7,
+                            color: '#dc3545',
+                            weight: 2,
+                        }
+                    }).addTo(map);
+
+                    // Centra la mappa sul paese
+                    map.setView([paese.lat, paese.lng], 4);
+                    found = true;
+                }
+            });
+
+            if (!found) {
+                // Se non trova il paese, usa le coordinate
+                highlightLayer = L.circle([paese.lat, paese.lng], {
+                    radius: 200000,
+                    color: '#dc3545',
+                    fillColor: '#dc3545',
+                    fillOpacity: 0.3,
+                    weight: 3,
+                }).addTo(map);
+                map.setView([paese.lat, paese.lng], 4);
+            }
+        }
+
+        // ===== MOSTRA BANDIERE =====
+        function mostraBandiere(opzioni, paeseCorretto) {
+            const container = document.getElementById('flagOptions');
+            container.innerHTML = opzioni.map((p, idx) => `
+                <button onclick="rispondi(${idx})" id="opt-${idx}">
+                    <img src="${FLAG_BASE_URL}${p.codice}.png" alt="${p.nome}" loading="lazy" />
+                    <span class="label">${p.nome}</span>
+                </button>
+            `).join('');
+        }
+
+        // ===== RISPOSTA =====
+        function rispondi(indice) {
+            if (answered) return;
+            answered = true;
+
+            const scelta = currentOptions[indice];
+            const corretta = scelta.codice === currentCountry.codice;
+
+            stato.tentativi++;
+            if (corretta) {
+                stato.corretti++;
+                stato.punteggio += 10;
+            } else {
+                stato.punteggio = Math.max(0, stato.punteggio - 2);
+            }
+            salvaStato();
+            aggiornaStats();
+
+            // Mostra feedback
+            const feedback = document.getElementById('feedbackArea');
+            if (corretta) {
+                feedback.innerHTML = `
+                    <div class="feedback correct">✅ Corretto! La bandiera giusta è ${currentCountry.nome}</div>
+                `;
+            } else {
+                feedback.innerHTML = `
+                    <div class="feedback wrong">❌ Sbagliato! La bandiera giusta è ${currentCountry.nome}</div>
+                `;
+            }
+
+            // Evidenzia risposte
+            const buttons = document.querySelectorAll('#flagOptions button');
+            buttons.forEach((btn, i) => {
+                btn.disabled = true;
+                const p = currentOptions[i];
+                if (p.codice === currentCountry.codice) {
+                    btn.classList.add('correct');
+                } else if (i === indice && !corretta) {
+                    btn.classList.add('wrong');
+                }
+            });
+
+            // Mostra pulsante prossima
+            document.getElementById('nextButtonContainer').innerHTML = `
+                <button class="next-btn" onclick="prossimaDomanda()">➡️ Prossima domanda</button>
+            `;
+        }
+
+        // ===== PROSSIMA DOMANDA =====
+        function prossimaDomanda() {
+            generaDomanda();
+        }
+
+        // ===== AGGIORNA STATS =====
+        function aggiornaStats() {
+            document.getElementById('scoreDisplay').textContent = stato.punteggio;
+            const percent = stato.tentativi > 0 ? Math.round((stato.corretti / stato.tentativi) * 100) : 0;
+            document.getElementById('percentDisplay').textContent = percent + '%';
+            document.getElementById('attemptDisplay').textContent = stato.tentativi;
+        }
+
+        // ===== SCHERMATA FINALE =====
+        function mostraSchermataFinale() {
+            const container = document.getElementById('flagContainer');
+            const percent = stato.tentativi > 0 ? Math.round((stato.corretti / stato.tentativi) * 100) : 0;
+
+            container.innerHTML = `
+                <div style="text-align:center;padding:40px 20px;">
+                    <div style="font-size:4rem;margin-bottom:16px;">🏆</div>
+                    <h2 style="color:#1a2634;font-size:1.8rem;margin-bottom:8px;">Hai completato tutte le bandiere!</h2>
+                    <div style="background:#f8f6f3;border-radius:16px;padding:20px;margin:20px 0;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                            <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                                <div style="font-size:0.8rem;color:#6a7a8a;">🏆 Punteggio</div>
+                                <div style="font-size:2rem;font-weight:700;color:#f4c542;">${stato.punteggio}</div>
+                            </div>
+                            <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                                <div style="font-size:0.8rem;color:#6a7a8a;">✅ Corrette</div>
+                                <div style="font-size:2rem;font-weight:700;color:#28a745;">${stato.corretti} / ${stato.tentativi}</div>
+                            </div>
+                            <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                                <div style="font-size:0.8rem;color:#6a7a8a;">🎯 Percentuale</div>
+                                <div style="font-size:2rem;font-weight:700;color:#17a2b8;">${percent}%</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="restart-btn" onclick="riavvia()" style="background:#f4c542;color:#1a2634;font-weight:700;font-size:1rem;padding:14px;">🔄 Ricomincia</button>
+                </div>
+            `;
+
+            document.getElementById('countryNameDisplay').textContent = '';
+            document.getElementById('nextButtonContainer').innerHTML = '';
+            document.getElementById('feedbackArea').innerHTML = '';
+            document.getElementById('flagOptions').innerHTML = '';
+        }
+
+        // ===== RIAVVIA =====
+        function riavvia() {
+            stato = {
+                punteggio: 0,
+                tentativi: 0,
+                corretti: 0,
+                paesiUsati: [],
+                gameCompleted: false,
+            };
+            salvaStato();
+
+            if (geoJsonLayer) {
+                if (highlightLayer) {
+                    map.removeLayer(highlightLayer);
+                    highlightLayer = null;
+                }
+            }
+
+            document.getElementById('flagContainer').innerHTML = `
+                <div class="flag-options" id="flagOptions"></div>
+            `;
+            document.getElementById('feedbackArea').innerHTML = '';
+            document.getElementById('nextButtonContainer').innerHTML = '';
+
+            generaDomanda();
+        }
+
+        // ===== AVVIA =====
+        function avvia() {
+            caricaStato();
+            initMap();
+        }
+
+        // Avvia quando la pagina è caricata
+        document.addEventListener('DOMContentLoaded', avvia);
+    </script>
+</body>
+</html>
