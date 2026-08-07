@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🌍 Sfida Bandiere sulla Mappa</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        /* ===== STILI GENERALI (da Sfida Bandiere) ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f3f0;
+            color: #1e1e1e;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: #fff;
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: #1a2634;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6a7a8a;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #1a2634;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #f4c542;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(244, 197, 66, 0.2);
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn:hover {
+            transform: scale(1.02);
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        .btn-primary {
+            background: #f4c542;
+            color: #1a2634;
+        }
+        .btn-primary:hover {
+            background: #ffd966;
+        }
+        .btn-secondary {
+            background: #1a2634;
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: #2a3a4a;
+        }
+        .btn-success {
+            background: #28a745;
+            color: #fff;
+        }
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #1a2634;
+            border: 2px solid #ddd;
+        }
+        .btn-outline:hover {
+            border-color: #f4c542;
+            background: #f8f6f3;
+        }
+        .btn-block {
+            width: 100%;
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f6f3;
+            border-radius: 10px;
+            border-left: 4px solid #f4c542;
+        }
+        .player-item .name {
+            font-weight: 600;
+            color: #1a2634;
+        }
+        .player-item .status {
+            font-size: 0.8rem;
+            color: #6a7a8a;
+        }
+        .player-item .status.online {
+            color: #28a745;
+        }
+        .player-item .status.in-game {
+            color: #dc3545;
+        }
+
+        .invite-notification {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 12px;
+            padding: 16px;
+            margin: 12px 0;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+        }
+        .invite-notification .invite-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .game-header .timer {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f4c542;
+        }
+        .game-header .timer.warning {
+            color: #dc3545;
+            animation: pulse 1s infinite;
+        }
+        .game-header .scores {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .game-header .scores .score-item {
+            background: #f8f6f3;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .game-header .scores .score-item .pts {
+            color: #f4c542;
+        }
+
+        /* ===== MAPPA (Leaflet) ===== */
+        #map {
+            width: 100%;
+            height: 380px;
+            border-radius: 16px;
+            border: 2px solid #ddd;
+            margin-bottom: 16px;
+            background: #e8ecf0;
+        }
+        /* Nasconde i nomi sulla mappa */
+        .leaflet-tooltip {
+            display: none !important;
+        }
+        .leaflet-popup {
+            display: none !important;
+        }
+
+        /* ===== OPZIONI (bandiere) ===== */
+        .flag-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .flag-options button {
+            padding: 8px;
+            border-radius: 12px;
+            border: 3px solid #ddd;
+            background: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .flag-options button:hover:not(:disabled) {
+            border-color: #f4c542;
+            transform: scale(1.03);
+        }
+        .flag-options button:disabled {
+            opacity: 0.6;
+            cursor: default;
+        }
+        .flag-options button.correct {
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+        .flag-options button.wrong {
+            border-color: #dc3545;
+            background: #fde0e0;
+        }
+        .flag-options button img {
+            width: 100%;
+            max-width: 120px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+        }
+
+        .feedback-bar {
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            margin: 8px 0;
+        }
+        .feedback-bar.correct {
+            background: #e8f5e9;
+            color: #28a745;
+        }
+        .feedback-bar.wrong {
+            background: #fde0e0;
+            color: #dc3545;
+        }
+
+        .ranking {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 16px 0;
+        }
+        .ranking .rank-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #f8f6f3;
+            border-radius: 10px;
+            border-left: 4px solid #f4c542;
+        }
+        .ranking .rank-item .pos {
+            font-weight: 700;
+            color: #1a2634;
+            min-width: 40px;
+        }
+        .ranking .rank-item .pos.gold {
+            color: #ffd700;
+        }
+        .ranking .rank-item .pos.silver {
+            color: #c0c0c0;
+        }
+        .ranking .rank-item .pos.bronze {
+            color: #cd7f32;
+        }
+
+        .lobby-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 12px;
+        }
+        .lobby-actions .row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .lobby-actions .row .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .game-panel {
+            background: #f8f6f3;
+            border-radius: 16px;
+            padding: 16px;
+            margin: 12px 0;
+            border-left: 4px solid #f4c542;
+        }
+        .game-panel .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .game-panel .game-info .label {
+            font-weight: 600;
+            color: #1a2634;
+        }
+        .game-panel .game-info .value {
+            color: #6a7a8a;
+        }
+        .game-panel .players-invited {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .game-panel .players-invited .tag {
+            background: #e8f5e9;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 2px solid #28a745;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 16px;
+            color: #6a7a8a;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        .back-link:hover {
+            color: #1a2634;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
+            .flag-options {
+                grid-template-columns: 1fr 1fr;
+            }
+            .game-header {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+            }
+            #map {
+                height: 280px;
+            }
+            .lobby-actions .row {
+                flex-direction: column;
+            }
+            .lobby-actions .row .btn {
+                flex: 1;
+            }
+            .player-item {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="app">
+        <h1>🌍 Sfida Bandiere sulla Mappa</h1>
+        <div class="subtitle">Sfida i tuoi amici: indovina il paese evidenziato sulla mappa!</div>
+
+        <!-- ==================== SEZIONE 1: LOGIN ==================== -->
+        <div class="section active" id="section-login">
+            <div class="form-group">
+                <label>👤 Inserisci il tuo nome</label>
+                <input type="text" id="nicknameInput" placeholder="Il tuo nome" maxlength="20" />
+            </div>
+            <button class="btn btn-primary btn-block" onclick="login()">🚀 Entra nella lobby</button>
+            <div id="loginError" style="color:#dc3545;margin-top:8px;display:none;"></div>
+        </div>
+
+        <!-- ==================== SEZIONE 2: LOBBY ==================== -->
+        <div class="section" id="section-lobby">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                <span style="font-weight:700;color:#1a2634;">👥 Giocatori online</span>
+                <span id="onlineCount" style="font-size:0.85rem;color:#6a7a8a;">0 connessi</span>
+            </div>
+            <div class="player-list" id="playerList">
+                <div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun giocatore online</div>
+            </div>
+            <div id="inviteContainer"></div>
+
+            <!-- PANNELLO PARTITA (creata dal creatore) -->
+            <div id="gamePanel" style="display:none;">
+                <div class="game-panel">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+                        <span style="font-weight:700;font-size:1.1rem;color:#1a2634;">🎮 La tua partita</span>
+                        <span id="gameStatusBadge" style="background:#ffc107;padding:2px 14px;border-radius:20px;font-weight:600;font-size:0.8rem;color:#1a2634;">In attesa</span>
+                    </div>
+                    <div class="game-info">
+                        <span><span class="label">👥 Invitati:</span> <span id="invitedCount">0</span></span>
+                        <span><span class="label">🏷️ Livello:</span> <span class="value" id="gameLevel">Medio</span></span>
+                        <span><span class="label">⏱️ Tempo:</span> <span class="value" id="gameTime">60s</span></span>
+                    </div>
+                    <div class="players-invited" id="invitedPlayersList">
+                        <span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>
+                    </div>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">
+                        <button class="btn btn-success" onclick="avviaPartita()" id="btnAvviaPartita">🚀 Avvia partita</button>
+                        <button class="btn btn-outline" onclick="annullaCreazione()">↩️ Annulla partita</button>
+                        <button class="btn btn-secondary" onclick="modificaImpostazioni()">⚙️ Modifica</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lobby-actions">
+                <div class="row">
+                    <button class="btn btn-secondary" onclick="creaPartita()" id="btnCreaPartita">🎮 Crea partita</button>
+                    <button class="btn btn-outline" onclick="logout()">🚪 Esci</button>
+                </div>
+            </div>
+            <a href="https://vincenzomuyo-art.github.io/nuova-mongolia/index.html" class="back-link">← Torna al sito principale</a>
+        </div>
+
+        <!-- ==================== SEZIONE 3: IMPOSTAZIONI ==================== -->
+        <div class="section" id="section-settings">
+            <h2 style="color:#1a2634;font-size:1.4rem;margin-bottom:12px;">⚙️ Impostazioni partita</h2>
+            <div class="form-group">
+                <label>🏷️ Livello di difficoltà</label>
+                <select id="livelloSelect">
+                    <option value="facile">Facile (30 paesi noti)</option>
+                    <option value="medio" selected>Medio (50 paesi)</option>
+                    <option value="difficile">Difficile (70 paesi)</option>
+                    <option value="impossibile">Impossibile (tutti i paesi)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>⏱️ Tempo partita (secondi)</label>
+                <select id="tempoSelect">
+                    <option value="30">30 secondi</option>
+                    <option value="60" selected>60 secondi</option>
+                    <option value="90">90 secondi</option>
+                    <option value="120">120 secondi</option>
+                    <option value="180">180 secondi</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+                <button class="btn btn-primary" onclick="salvaImpostazioni()">💾 Salva</button>
+                <button class="btn btn-outline" onclick="tornaALobby()">↩️ Indietro</button>
+            </div>
+        </div>
+
+        <!-- ==================== SEZIONE 4: GIOCO ==================== -->
+        <div class="section" id="section-game">
+            <div class="game-header">
+                <div class="timer" id="timerDisplay">⏱️ 60</div>
+                <div class="scores" id="scoreDisplay"></div>
+            </div>
+            <!-- Contenitore dinamico per mappa e opzioni -->
+            <div id="gameContent">
+                <!-- Verrà riempito da JavaScript -->
+            </div>
+            <div style="text-align:center;margin-top:16px;">
+                <button class="btn btn-outline" onclick="tornaAllaLobby()">↩️ Torna alla lobby</button>
+            </div>
+        </div>
+
+        <!-- ==================== SEZIONE 5: CLASSIFICA FINALE ==================== -->
+        <div class="section" id="section-final">
+            <h2 style="color:#1a2634;font-size:1.6rem;text-align:center;margin-bottom:8px;">🏆 Classifica finale</h2>
+            <div class="ranking" id="rankingContainer"></div>
+            <div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;">
+                <button class="btn btn-primary btn-block" onclick="tornaLobby()">🔄 Nuova partita</button>
+                <a href="https://vincenzomuyo-art.github.io/nuova-mongolia/index.html" class="btn btn-secondary btn-block" style="text-decoration:none;text-align:center;">🏠 Torna al sito principale</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ======================================================================
+        //  FIREBASE CONFIG (identica a prima)
+        // ======================================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBgEPx8OSxCHEl6-liRB1irwFEGqxrrGgs",
+            authDomain: "database-nuova-mongolia.firebaseapp.com",
+            databaseURL: "https://database-nuova-mongolia-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "database-nuova-mongolia",
+            storageBucket: "database-nuova-mongolia.firebasestorage.app",
+            messagingSenderId: "192624624351",
+            appId: "1:192624624351:web:4e6cc660a9461d3cda9f6a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // ======================================================================
+        //  VARIABILI GLOBALI
+        // ======================================================================
+        let currentUser = null;
+        let currentUserId = null;
+        let currentGameId = null;
+        let isGameCreator = false;
+        let invitatiAccettati = [];
+        let gameState = null;
+        let timerInterval = null;
+
+        // Variabili per la mappa
+        let map = null;
+        let geoJsonLayer = null;
+        let highlightLayer = null;
+        let mapInitialized = false;
+
+        // ======================================================================
+        //  LISTA PAESI (con coordinate centro per la mappa)
+        // ======================================================================
+        const PAESI = [
+            { nome: "Afghanistan", codice: "af", lat: 33.939, lng: 67.710 },
+            { nome: "Albania", codice: "al", lat: 41.153, lng: 20.168 },
+            { nome: "Algeria", codice: "dz", lat: 28.033, lng: 1.659 },
+            { nome: "Andorra", codice: "ad", lat: 42.506, lng: 1.522 },
+            { nome: "Angola", codice: "ao", lat: -11.203, lng: 17.874 },
+            { nome: "Antigua e Barbuda", codice: "ag", lat: 17.061, lng: -61.796 },
+            { nome: "Arabia Saudita", codice: "sa", lat: 23.886, lng: 45.079 },
+            { nome: "Argentina", codice: "ar", lat: -38.416, lng: -63.617 },
+            { nome: "Armenia", codice: "am", lat: 40.069, lng: 45.038 },
+            { nome: "Australia", codice: "au", lat: -25.274, lng: 133.775 },
+            { nome: "Austria", codice: "at", lat: 47.516, lng: 14.550 },
+            { nome: "Azerbaigian", codice: "az", lat: 40.143, lng: 47.577 },
+            { nome: "Bahamas", codice: "bs", lat: 25.034, lng: -77.396 },
+            { nome: "Bahrein", codice: "bh", lat: 25.930, lng: 50.638 },
+            { nome: "Bangladesh", codice: "bd", lat: 23.685, lng: 90.356 },
+            { nome: "Barbados", codice: "bb", lat: 13.194, lng: -59.543 },
+            { nome: "Belgio", codice: "be", lat: 50.503, lng: 4.470 },
+            { nome: "Belize", codice: "bz", lat: 17.190, lng: -88.497 },
+            { nome: "Benin", codice: "bj", lat: 9.308, lng: 2.316 },
+            { nome: "Bielorussia", codice: "by", lat: 53.710, lng: 27.953 },
+            { nome: "Birmania", codice: "mm", lat: 21.917, lng: 95.956 },
+            { nome: "Bolivia", codice: "bo", lat: -16.290, lng: -63.589 },
+            { nome: "Bosnia ed Erzegovina", codice: "ba", lat: 43.916, lng: 17.679 },
+            { nome: "Botswana", codice: "bw", lat: -22.328, lng: 24.685 },
+            { nome: "Brasile", codice: "br", lat: -14.235, lng: -51.925 },
+            { nome: "Brunei", codice: "bn", lat: 4.535, lng: 114.728 },
+            { nome: "Bulgaria", codice: "bg", lat: 42.734, lng: 25.486 },
+            { nome: "Burkina Faso", codice: "bf", lat: 12.238, lng: -1.561 },
+            { nome: "Burundi", codice: "bi", lat: -3.373, lng: 29.919 },
+            { nome: "Cambogia", codice: "kh", lat: 12.565, lng: 104.991 },
+            { nome: "Camerun", codice: "cm", lat: 7.370, lng: 12.355 },
+            { nome: "Canada", codice: "ca", lat: 56.130, lng: -106.347 },
+            { nome: "Capo Verde", codice: "cv", lat: 16.538, lng: -23.042 },
+            { nome: "Ciad", codice: "td", lat: 15.454, lng: 18.732 },
+            { nome: "Cile", codice: "cl", lat: -35.675, lng: -71.543 },
+            { nome: "Cina", codice: "cn", lat: 35.862, lng: 104.195 },
+            { nome: "Cipro", codice: "cy", lat: 35.126, lng: 33.430 },
+            { nome: "Colombia", codice: "co", lat: 4.571, lng: -74.297 },
+            { nome: "Comore", codice: "km", lat: -11.645, lng: 43.333 },
+            { nome: "Corea del Nord", codice: "kp", lat: 40.340, lng: 127.510 },
+            { nome: "Corea del Sud", codice: "kr", lat: 35.908, lng: 127.766 },
+            { nome: "Costa d'Avorio", codice: "ci", lat: 7.540, lng: -5.547 },
+            { nome: "Costa Rica", codice: "cr", lat: 9.749, lng: -83.753 },
+            { nome: "Croazia", codice: "hr", lat: 45.100, lng: 15.200 },
+            { nome: "Cuba", codice: "cu", lat: 21.522, lng: -77.781 },
+            { nome: "Danimarca", codice: "dk", lat: 56.264, lng: 9.502 },
+            { nome: "Dominica", codice: "dm", lat: 15.415, lng: -61.371 },
+            { nome: "Ecuador", codice: "ec", lat: -1.831, lng: -78.183 },
+            { nome: "Egitto", codice: "eg", lat: 26.821, lng: 30.802 },
+            { nome: "El Salvador", codice: "sv", lat: 13.794, lng: -88.897 },
+            { nome: "Emirati Arabi Uniti", codice: "ae", lat: 23.424, lng: 53.848 },
+            { nome: "Eritrea", codice: "er", lat: 15.179, lng: 39.782 },
+            { nome: "Estonia", codice: "ee", lat: 58.596, lng: 25.014 },
+            { nome: "Eswatini", codice: "sz", lat: -26.522, lng: 31.466 },
+            { nome: "Etiopia", codice: "et", lat: 9.145, lng: 40.490 },
+            { nome: "Fiji", codice: "fj", lat: -17.714, lng: 178.065 },
+            { nome: "Filippine", codice: "ph", lat: 12.880, lng: 121.774 },
+            { nome: "Finlandia", codice: "fi", lat: 61.924, lng: 25.748 },
+            { nome: "Francia", codice: "fr", lat: 46.603, lng: 1.888 },
+            { nome: "Gabon", codice: "ga", lat: -0.804, lng: 11.609 },
+            { nome: "Gambia", codice: "gm", lat: 13.443, lng: -15.310 },
+            { nome: "Georgia", codice: "ge", lat: 42.315, lng: 43.357 },
+            { nome: "Germania", codice: "de", lat: 51.166, lng: 10.451 },
+            { nome: "Ghana", codice: "gh", lat: 7.947, lng: -1.023 },
+            { nome: "Giamaica", codice: "jm", lat: 18.109, lng: -77.298 },
+            { nome: "Giappone", codice: "jp", lat: 36.205, lng: 138.253 },
+            { nome: "Gibuti", codice: "dj", lat: 11.825, lng: 42.590 },
+            { nome: "Giordania", codice: "jo", lat: 30.585, lng: 36.238 },
+            { nome: "Grecia", codice: "gr", lat: 39.074, lng: 21.824 },
+            { nome: "Grenada", codice: "gd", lat: 12.116, lng: -61.679 },
+            { nome: "Guatemala", codice: "gt", lat: 15.783, lng: -90.231 },
+            { nome: "Guinea", codice: "gn", lat: 9.946, lng: -9.697 },
+            { nome: "Guinea Equatoriale", codice: "gq", lat: 1.651, lng: 10.268 },
+            { nome: "Guinea-Bissau", codice: "gw", lat: 11.804, lng: -15.180 },
+            { nome: "Guyana", codice: "gy", lat: 4.860, lng: -58.930 },
+            { nome: "Haiti", codice: "ht", lat: 18.971, lng: -72.285 },
+            { nome: "Honduras", codice: "hn", lat: 15.200, lng: -86.242 },
+            { nome: "India", codice: "in", lat: 20.594, lng: 78.963 },
+            { nome: "Indonesia", codice: "id", lat: -0.789, lng: 113.921 },
+            { nome: "Iran", codice: "ir", lat: 32.428, lng: 53.688 },
+            { nome: "Iraq", codice: "iq", lat: 33.223, lng: 43.679 },
+            { nome: "Irlanda", codice: "ie", lat: 53.142, lng: -7.692 },
+            { nome: "Islanda", codice: "is", lat: 64.963, lng: -19.021 },
+            { nome: "Isole Marshall", codice: "mh", lat: 7.131, lng: 171.184 },
+            { nome: "Isole Salomone", codice: "sb", lat: -9.646, lng: 160.156 },
+            { nome: "Israele", codice: "il", lat: 31.046, lng: 34.852 },
+            { nome: "Italia", codice: "it", lat: 41.872, lng: 12.567 },
+            { nome: "Kazakistan", codice: "kz", lat: 48.020, lng: 66.920 },
+            { nome: "Kenya", codice: "ke", lat: -1.286, lng: 36.817 },
+            { nome: "Kirghizistan", codice: "kg", lat: 41.204, lng: 74.766 },
+            { nome: "Kiribati", codice: "ki", lat: -3.370, lng: -168.734 },
+            { nome: "Kuwait", codice: "kw", lat: 29.312, lng: 47.482 },
+            { nome: "Laos", codice: "la", lat: 19.856, lng: 102.495 },
+            { nome: "Lesotho", codice: "ls", lat: -29.610, lng: 28.234 },
+            { nome: "Lettonia", codice: "lv", lat: 56.880, lng: 24.604 },
+            { nome: "Libano", codice: "lb", lat: 33.855, lng: 35.862 },
+            { nome: "Liberia", codice: "lr", lat: 6.428, lng: -9.430 },
+            { nome: "Libia", codice: "ly", lat: 26.335, lng: 17.228 },
+            { nome: "Liechtenstein", codice: "li", lat: 47.129, lng: 9.554 },
+            { nome: "Lituania", codice: "lt", lat: 55.170, lng: 23.882 },
+            { nome: "Lussemburgo", codice: "lu", lat: 49.816, lng: 6.130 },
+            { nome: "Macedonia del Nord", codice: "mk", lat: 41.609, lng: 21.745 },
+            { nome: "Madagascar", codice: "mg", lat: -18.767, lng: 46.869 },
+            { nome: "Malawi", codice: "mw", lat: -13.254, lng: 34.302 },
+            { nome: "Maldive", codice: "mv", lat: 3.203, lng: 73.221 },
+            { nome: "Malaysia", codice: "my", lat: 4.210, lng: 101.976 },
+            { nome: "Mali", codice: "ml", lat: 17.571, lng: -3.996 },
+            { nome: "Malta", codice: "mt", lat: 35.938, lng: 14.375 },
+            { nome: "Marocco", codice: "ma", lat: 31.792, lng: -7.093 },
+            { nome: "Mauritania", codice: "mr", lat: 21.008, lng: -10.941 },
+            { nome: "Mauritius", codice: "mu", lat: -20.348, lng: 57.552 },
+            { nome: "Messico", codice: "mx", lat: 23.634, lng: -102.553 },
+            { nome: "Micronesia", codice: "fm", lat: 6.887, lng: 158.219 },
+            { nome: "Moldavia", codice: "md", lat: 47.412, lng: 28.370 },
+            { nome: "Monaco", codice: "mc", lat: 43.738, lng: 7.425 },
+            { nome: "Mongolia", codice: "mn", lat: 46.862, lng: 103.847 },
+            { nome: "Montenegro", codice: "me", lat: 42.709, lng: 19.374 },
+            { nome: "Mozambico", codice: "mz", lat: -18.666, lng: 35.530 },
+            { nome: "Namibia", codice: "na", lat: -22.958, lng: 18.491 },
+            { nome: "Nauru", codice: "nr", lat: -0.523, lng: 166.935 },
+            { nome: "Nepal", codice: "np", lat: 28.395, lng: 84.124 },
+            { nome: "Nicaragua", codice: "ni", lat: 12.865, lng: -85.207 },
+            { nome: "Niger", codice: "ne", lat: 17.608, lng: 8.082 },
+            { nome: "Nigeria", codice: "ng", lat: 9.082, lng: 8.675 },
+            { nome: "Norvegia", codice: "no", lat: 60.472, lng: 8.469 },
+            { nome: "Nuova Zelanda", codice: "nz", lat: -40.901, lng: 174.886 },
+            { nome: "Oman", codice: "om", lat: 21.474, lng: 55.974 },
+            { nome: "Paesi Bassi", codice: "nl", lat: 52.133, lng: 5.291 },
+            { nome: "Pakistan", codice: "pk", lat: 30.375, lng: 69.345 },
+            { nome: "Palau", codice: "pw", lat: 7.515, lng: 134.583 },
+            { nome: "Panama", codice: "pa", lat: 8.538, lng: -80.782 },
+            { nome: "Papua Nuova Guinea", codice: "pg", lat: -6.315, lng: 143.956 },
+            { nome: "Paraguay", codice: "py", lat: -23.442, lng: -58.444 },
+            { nome: "Perù", codice: "pe", lat: -9.190, lng: -75.015 },
+            { nome: "Polonia", codice: "pl", lat: 51.919, lng: 19.145 },
+            { nome: "Portogallo", codice: "pt", lat: 39.400, lng: -8.224 },
+            { nome: "Qatar", codice: "qa", lat: 25.355, lng: 51.184 },
+            { nome: "Regno Unito", codice: "gb", lat: 55.378, lng: -3.436 },
+            { nome: "Repubblica Centrafricana", codice: "cf", lat: 6.611, lng: 20.939 },
+            { nome: "Repubblica Ceca", codice: "cz", lat: 49.817, lng: 15.473 },
+            { nome: "Repubblica Democratica del Congo", codice: "cd", lat: -4.038, lng: 21.759 },
+            { nome: "Repubblica del Congo", codice: "cg", lat: -0.228, lng: 15.828 },
+            { nome: "Repubblica Dominicana", codice: "do", lat: 18.736, lng: -70.162 },
+            { nome: "Romania", codice: "ro", lat: 45.943, lng: 24.967 },
+            { nome: "Ruanda", codice: "rw", lat: -1.940, lng: 29.874 },
+            { nome: "Russia", codice: "ru", lat: 61.524, lng: 105.319 },
+            { nome: "Saint Kitts e Nevis", codice: "kn", lat: 17.358, lng: -62.783 },
+            { nome: "Saint Lucia", codice: "lc", lat: 13.909, lng: -60.979 },
+            { nome: "Saint Vincent e Grenadine", codice: "vc", lat: 12.985, lng: -61.287 },
+            { nome: "Samoa", codice: "ws", lat: -13.759, lng: -172.105 },
+            { nome: "San Marino", codice: "sm", lat: 43.942, lng: 12.457 },
+            { nome: "São Tomé e Príncipe", codice: "st", lat: 0.186, lng: 6.613 },
+            { nome: "Senegal", codice: "sn", lat: 14.497, lng: -14.452 },
+            { nome: "Serbia", codice: "rs", lat: 44.016, lng: 21.006 },
+            { nome: "Seychelles", codice: "sc", lat: -4.680, lng: 55.492 },
+            { nome: "Sierra Leone", codice: "sl", lat: 8.461, lng: -11.779 },
+            { nome: "Singapore", codice: "sg", lat: 1.352, lng: 103.820 },
+            { nome: "Siria", codice: "sy", lat: 34.802, lng: 38.997 },
+            { nome: "Slovacchia", codice: "sk", lat: 48.669, lng: 19.699 },
+            { nome: "Slovenia", codice: "si", lat: 46.151, lng: 14.995 },
+            { nome: "Somalia", codice: "so", lat: 5.152, lng: 46.200 },
+            { nome: "Spagna", codice: "es", lat: 40.463, lng: -3.749 },
+            { nome: "Sri Lanka", codice: "lk", lat: 7.873, lng: 80.772 },
+            { nome: "Stati Uniti", codice: "us", lat: 37.090, lng: -95.713 },
+            { nome: "Sudafrica", codice: "za", lat: -30.559, lng: 22.938 },
+            { nome: "Sudan", codice: "sd", lat: 12.863, lng: 30.218 },
+            { nome: "Sudan del Sud", codice: "ss", lat: 6.877, lng: 31.307 },
+            { nome: "Suriname", codice: "sr", lat: 4.089, lng: -56.078 },
+            { nome: "Svezia", codice: "se", lat: 60.128, lng: 18.643 },
+            { nome: "Svizzera", codice: "ch", lat: 46.818, lng: 8.228 },
+            { nome: "Tagikistan", codice: "tj", lat: 38.861, lng: 71.276 },
+            { nome: "Tanzania", codice: "tz", lat: -6.369, lng: 34.889 },
+            { nome: "Thailandia", codice: "th", lat: 15.870, lng: 100.993 },
+            { nome: "Timor Est", codice: "tl", lat: -8.874, lng: 125.728 },
+            { nome: "Togo", codice: "tg", lat: 8.619, lng: 0.825 },
+            { nome: "Tonga", codice: "to", lat: -21.179, lng: -175.198 },
+            { nome: "Trinidad e Tobago", codice: "tt", lat: 10.692, lng: -61.222 },
+            { nome: "Tunisia", codice: "tn", lat: 33.887, lng: 9.538 },
+            { nome: "Turchia", codice: "tr", lat: 38.964, lng: 35.243 },
+            { nome: "Turkmenistan", codice: "tm", lat: 38.970, lng: 59.556 },
+            { nome: "Tuvalu", codice: "tv", lat: -7.110, lng: 177.649 },
+            { nome: "Ucraina", codice: "ua", lat: 48.380, lng: 31.166 },
+            { nome: "Uganda", codice: "ug", lat: 1.373, lng: 32.290 },
+            { nome: "Ungheria", codice: "hu", lat: 47.162, lng: 19.503 },
+            { nome: "Uruguay", codice: "uy", lat: -32.523, lng: -55.766 },
+            { nome: "Uzbekistan", codice: "uz", lat: 41.377, lng: 64.586 },
+            { nome: "Vanuatu", codice: "vu", lat: -15.377, lng: 166.959 },
+            { nome: "Vaticano", codice: "va", lat: 41.903, lng: 12.453 },
+            { nome: "Venezuela", codice: "ve", lat: 6.424, lng: -66.590 },
+            { nome: "Vietnam", codice: "vn", lat: 14.058, lng: 108.277 },
+            { nome: "Yemen", codice: "ye", lat: 15.553, lng: 48.516 },
+            { nome: "Zambia", codice: "zm", lat: -13.134, lng: 27.849 },
+            { nome: "Zimbabwe", codice: "zw", lat: -19.015, lng: 29.155 },
+            // Non riconosciuti ONU
+            { nome: "Kosovo", codice: "xk", lat: 42.603, lng: 20.902 },
+            { nome: "Palestina", codice: "ps", lat: 31.947, lng: 35.227 },
+            { nome: "Sahara Occidentale", codice: "eh", lat: 24.216, lng: -12.886 },
+            { nome: "Taiwan", codice: "tw", lat: 23.698, lng: 120.960 },
+            { nome: "Abcasia", codice: "ab", lat: 43.022, lng: 41.015 },
+            { nome: "Ossezia del Sud", codice: "ge", lat: 42.287, lng: 43.835 },
+            { nome: "Transnistria", codice: "md", lat: 46.846, lng: 29.600 },
+            { nome: "Cipro del Nord", codice: "cy", lat: 35.186, lng: 33.382 },
+            { nome: "Artsakh", codice: "am", lat: 39.840, lng: 46.773 },
+        ];
+
+        const FLAG_BASE_URL = 'https://flagcdn.com/w320/';
+        const NUM_OPZIONI = 4;
+
+        // ======================================================================
+        //  FUNZIONI DI UTILITY (da Sfida Bandiere)
+        // ======================================================================
+        function getBandierePerLivello(livello) {
+            const tutte = PAESI;
+            switch (livello) {
+                case 'facile':
+                    return tutte.filter(p =>
+                        ['it', 'fr', 'de', 'gb', 'es', 'pt', 'us', 'ca', 'br', 'ar', 'mx', 'au', 'nz', 'in', 'cn', 'jp',
+                            'kr', 'ru', 'za', 'eg', 'ma', 'tr', 'gr', 'nl', 'be', 'ch', 'at', 'se', 'no'
+                        ].includes(p.codice)
+                    );
+                case 'medio':
+                    return tutte.filter(p =>
+                        !['af', 'ad', 'ag', 'am', 'az', 'bs', 'bb', 'bz', 'bj', 'bt', 'bw', 'bf', 'bi', 'cv', 'td', 'km',
+                            'cg', 'cd', 'dm', 'dj', 'er', 'sz', 'fj', 'ga', 'gm', 'gd', 'gn', 'gw', 'gy', 'ht', 'ki',
+                            'ls', 'li', 'mg', 'mw', 'mv', 'ml', 'mr', 'mu', 'fm', 'mc', 'me', 'mz', 'na', 'nr', 'ni',
+                            'ne', 'pw', 'pg', 'py', 'kn', 'lc', 'vc', 'ws', 'sm', 'st', 'sc', 'sl', 'sb', 'sr', 'tg',
+                            'to', 'tt', 'tv', 'vu', 'zm', 'zw', 'xk', 'ps', 'eh', 'tw', 'ab', 'ge', 'md', 'am'
+                        ].includes(p.codice)
+                    );
+                case 'difficile':
+                    return tutte.filter(p =>
+                        ['af', 'al', 'dz', 'ao', 'ag', 'am', 'az', 'bs', 'bb', 'bz', 'bj', 'bt', 'bw', 'bf', 'bi', 'kh',
+                            'cm', 'cv', 'cf', 'td', 'km', 'cg', 'cd', 'dm', 'dj', 'er', 'sz', 'fj', 'ga', 'gm', 'gd',
+                            'gn', 'gw', 'gy', 'ht', 'ki', 'ls', 'li', 'mg', 'mw', 'mv', 'ml', 'mr', 'mu', 'fm', 'mc',
+                            'me', 'mz', 'na', 'nr', 'ni', 'ne', 'pw', 'pg', 'py', 'kn', 'lc', 'vc', 'ws', 'sm', 'st',
+                            'sc', 'sl', 'sb', 'sr', 'tg', 'to', 'tt', 'tv', 'vu', 'zm', 'zw', 'xk', 'ps', 'eh', 'tw',
+                            'ab', 'ge', 'md', 'am'
+                        ].includes(p.codice)
+                    );
+                case 'impossibile':
+                default:
+                    return tutte;
+            }
+        }
+
+        function generaOpzioni(paeseCorretto, pool) {
+            const opzioni = [paeseCorretto];
+            const altri = pool.filter(p => p.codice !== paeseCorretto.codice);
+            let tentativi = 0;
+            while (opzioni.length < NUM_OPZIONI && tentativi < 100) {
+                tentativi++;
+                const rand = Math.floor(Math.random() * altri.length);
+                const p = altri[rand];
+                if (!opzioni.some(o => o.codice === p.codice)) {
+                    opzioni.push(p);
+                }
+            }
+            return opzioni.sort(() => Math.random() - 0.5);
+        }
+
+        // ======================================================================
+        //  UI UTILITY
+        // ======================================================================
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showError(id, msg) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = msg;
+                el.style.display = 'block';
+                setTimeout(() => { el.style.display = 'none'; }, 4000);
+            }
+        }
+
+        // ======================================================================
+        //  LOGIN / LOGOUT (identico a prima)
+        // ======================================================================
+        function login() {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            if (!nickname) {
+                showError('loginError', 'Inserisci un nome valido.');
+                return;
+            }
+            if (nickname.length > 20) {
+                showError('loginError', 'Il nome non può superare i 20 caratteri.');
+                return;
+            }
+
+            currentUser = nickname;
+            currentUserId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+            const userRef = db.ref('sfidaBandiere/utenti/' + currentUserId);
+            userRef.set({
+                nickname: currentUser,
+                online: true,
+                inGame: false,
+                lastSeen: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            userRef.onDisconnect().update({
+                online: false,
+                lastSeen: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            ascoltaInviti();
+            ascoltaUtentiOnline();
+
+            showSection('section-lobby');
+            document.getElementById('nicknameInput').value = '';
+        }
+
+        function logout() {
+            if (currentUserId) {
+                db.ref('sfidaBandiere/utenti/' + currentUserId).remove();
+            }
+            if (currentGameId) {
+                db.ref('sfidaBandiere/partite/' + currentGameId).remove();
+            }
+            resetGameState();
+            showSection('section-login');
+        }
+
+        function resetGameState() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            currentUser = null;
+            currentUserId = null;
+            currentGameId = null;
+            isGameCreator = false;
+            invitatiAccettati = [];
+            gameState = null;
+            document.getElementById('gamePanel').style.display = 'none';
+            document.getElementById('btnCreaPartita').disabled = false;
+            // Resetta la mappa se attiva
+            if (map) {
+                map.remove();
+                map = null;
+                mapInitialized = false;
+                geoJsonLayer = null;
+                highlightLayer = null;
+            }
+        }
+
+        // ======================================================================
+        //  ASCOLTA UTENTI ONLINE
+        // ======================================================================
+        let onlineUsers = {};
+
+        function ascoltaUtentiOnline() {
+            db.ref('sfidaBandiere/utenti').on('value', snapshot => {
+                const data = snapshot.val() || {};
+                onlineUsers = {};
+                const list = [];
+                let count = 0;
+
+                Object.keys(data).forEach(id => {
+                    const user = data[id];
+                    if (user.online && user.nickname !== currentUser) {
+                        onlineUsers[id] = user;
+                        list.push({
+                            id: id,
+                            nickname: user.nickname,
+                            inGame: user.inGame || false
+                        });
+                        count++;
+                    }
+                });
+
+                document.getElementById('onlineCount').textContent = count + ' connessi';
+                renderPlayerList(list);
+                aggiornaBottoniInvito();
+            });
+        }
+
+        function renderPlayerList(list) {
+            const container = document.getElementById('playerList');
+            if (list.length === 0) {
+                container.innerHTML =
+                    '<div style="text-align:center;color:#6a7a8a;padding:20px;">Nessun altro giocatore online</div>';
+                return;
+            }
+
+            container.innerHTML = list.map(p => `
+                <div class="player-item">
+                    <div>
+                        <span class="name">${p.nickname}</span>
+                        <span class="status ${p.inGame ? 'in-game' : 'online'}">${p.inGame ? '🔴 In partita' : '🟢 Online'}</span>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-primary" onclick="invitaGiocatore('${p.id}')" 
+                                id="inviteBtn-${p.id}"
+                                ${p.inGame || (currentGameId && !isGameCreator) ? 'disabled' : ''}>
+                            📨 Invita
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function aggiornaBottoniInvito() {
+            const canInvite = isGameCreator && currentGameId !== null;
+            document.querySelectorAll('[id^="inviteBtn-"]').forEach(btn => {
+                if (!canInvite) {
+                    btn.disabled = true;
+                } else {
+                    const id = btn.id.replace('inviteBtn-', '');
+                    const user = onlineUsers[id];
+                    if (user && user.inGame) {
+                        btn.disabled = true;
+                    } else {
+                        btn.disabled = false;
+                    }
+                }
+            });
+        }
+
+        // ======================================================================
+        //  INVITI
+        // ======================================================================
+        function ascoltaInviti() {
+            db.ref('sfidaBandiere/inviti').orderByChild('destinatarioId').equalTo(currentUserId).on('value', snapshot => {
+                const data = snapshot.val() || {};
+                const invites = [];
+                Object.keys(data).forEach(id => {
+                    if (data[id].stato === 'in attesa') {
+                        invites.push({ id, ...data[id] });
+                    }
+                });
+                renderInviti(invites);
+            });
+        }
+
+        function renderInviti(invites) {
+            const container = document.getElementById('inviteContainer');
+            if (invites.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = invites.map(inv => `
+                <div class="invite-notification">
+                    <div style="font-weight:600;color:#1a2634;font-size:1rem;">
+                        📨 ${inv.mittenteNome} ti sta sfidando!
+                    </div>
+                    <div class="invite-actions">
+                        <button class="btn btn-sm btn-success" onclick="accettaInvito('${inv.id}')">✅ Accetta</button>
+                        <button class="btn btn-sm btn-danger" onclick="rifiutaInvito('${inv.id}')">❌ Rifiuta</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function rifiutaInvito(inviteId) {
+            db.ref('sfidaBandiere/inviti/' + inviteId).update({ stato: 'rifiutato' });
+            alert('❌ Invito rifiutato.');
+        }
+
+        // ======================================================================
+        //  CREA PARTITA
+        // ======================================================================
+        function creaPartita() {
+            if (currentGameId) {
+                alert('Sei già in una partita.');
+                return;
+            }
+
+            const gameId = 'game_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            const partitaRef = db.ref('sfidaBandiere/partite/' + gameId);
+
+            partitaRef.set({
+                creatoreId: currentUserId,
+                creatoreNome: currentUser,
+                livello: 'medio',
+                tempoMax: 60,
+                stato: 'in attesa',
+                inizio: null,
+                giocatori: {
+                    [currentUserId]: {
+                        nickname: currentUser,
+                        punteggio: 0,
+                        corrette: 0,
+                        totali: 0
+                    }
+                },
+                domande: [],
+                domandaCorrente: 0,
+                timerScaduto: false,
+                fine: null
+            }).then(() => {
+                currentGameId = gameId;
+                isGameCreator = true;
+                invitatiAccettati = [];
+
+                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
+
+                document.getElementById('gamePanel').style.display = 'block';
+                document.getElementById('btnCreaPartita').disabled = true;
+                aggiornaPannelloPartita();
+
+                ascoltaInvitiAccettati(gameId);
+                ascoltaPartita(gameId);
+            });
+        }
+
+        function aggiornaPannelloPartita() {
+            const livelloMap = { facile: 'Facile', medio: 'Medio', difficile: 'Difficile', impossibile: 'Impossibile' };
+            const livello = document.getElementById('livelloSelect')?.value || 'medio';
+            const tempo = document.getElementById('tempoSelect')?.value || 60;
+
+            const levelLabel = document.getElementById('gameLevel');
+            const timeLabel = document.getElementById('gameTime');
+            const countLabel = document.getElementById('invitedCount');
+            const container = document.getElementById('invitedPlayersList');
+            const btnAvvia = document.getElementById('btnAvviaPartita');
+
+            if (levelLabel) levelLabel.textContent = livelloMap[livello] || 'Medio';
+            if (timeLabel) timeLabel.textContent = tempo + 's';
+            if (countLabel) countLabel.textContent = invitatiAccettati.length;
+
+            if (container) {
+                if (invitatiAccettati.length === 0) {
+                    container.innerHTML = '<span style="color:#6a7a8a;font-size:0.9rem;">Nessun invito ancora accettato</span>';
+                } else {
+                    container.innerHTML = invitatiAccettati.map(p =>
+                        `<span class="tag">✅ ${p.nickname}</span>`
+                    ).join('');
+                }
+            }
+
+            if (btnAvvia) btnAvvia.disabled = false;
+        }
+
+        function ascoltaInvitiAccettati(gameId) {
+            db.ref('sfidaBandiere/inviti').orderByChild('partitaId').equalTo(gameId).on('value', snapshot => {
+                const data = snapshot.val() || {};
+                const accettati = [];
+                Object.keys(data).forEach(id => {
+                    if (data[id].stato === 'accettato' && data[id].destinatarioId !== currentUserId) {
+                        accettati.push({ id, ...data[id] });
+                    }
+                });
+
+                invitatiAccettati = accettati.map(inv => ({
+                    userId: inv.destinatarioId,
+                    nickname: inv.destinatarioNome
+                }));
+
+                aggiornaPannelloPartita();
+                aggiornaBottoniInvito();
+            });
+        }
+
+        // ======================================================================
+        //  INVITA GIOCATORE
+        // ======================================================================
+        function invitaGiocatore(userId) {
+            if (!currentGameId || !isGameCreator) {
+                alert('Devi creare una partita per invitare.');
+                return;
+            }
+
+            const user = onlineUsers[userId];
+            if (!user) return;
+            if (user.inGame) {
+                alert('Questo giocatore è già in partita.');
+                return;
+            }
+
+            const inviteId = 'invite_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+            db.ref('sfidaBandiere/inviti/' + inviteId).set({
+                mittenteId: currentUserId,
+                mittenteNome: currentUser,
+                destinatarioId: userId,
+                destinatarioNome: user.nickname,
+                partitaId: currentGameId,
+                stato: 'in attesa',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            alert(`✅ Invito inviato a ${user.nickname}!`);
+        }
+
+        // ======================================================================
+        //  ACCETTA INVITO
+        // ======================================================================
+        function accettaInvito(inviteId) {
+            const inviteRef = db.ref('sfidaBandiere/inviti/' + inviteId);
+            inviteRef.child('stato').set('accettato');
+
+            inviteRef.once('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) return;
+
+                const gameId = data.partitaId;
+                if (!gameId) {
+                    alert('❌ Errore: partita non trovata.');
+                    return;
+                }
+
+                const update = {};
+                update['giocatori/' + currentUserId] = {
+                    nickname: currentUser,
+                    punteggio: 0,
+                    corrette: 0,
+                    totali: 0
+                };
+                db.ref('sfidaBandiere/partite/' + gameId).update(update).then(() => {
+                    db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: true });
+                    currentGameId = gameId;
+                    isGameCreator = false;
+                    showSection('section-game');
+                    // Mostra messaggio di attesa
+                    document.getElementById('gameContent').innerHTML = `
+                        <div style="text-align:center;padding:40px 20px;">
+                            <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+                            <h3 style="color:#1a2634;">In attesa che il creatore avvii la partita...</h3>
+                            <p style="color:#6a7a8a;">La partita inizierà quando ${data.mittenteNome} premerà "Avvia".</p>
+                        </div>
+                    `;
+                    ascoltaPartita(gameId);
+                });
+            });
+        }
+
+        // ======================================================================
+        //  ASCOLTA PARTITA (per tutti)
+        // ======================================================================
+        function ascoltaPartita(gameId) {
+            db.ref('sfidaBandiere/partite/' + gameId).on('value', snapshot => {
+                const data = snapshot.val();
+                if (!data) {
+                    alert('La partita è stata cancellata.');
+                    tornaAllaLobby();
+                    return;
+                }
+
+                if (data.stato === 'in corso') {
+                    gameState = data;
+                    if (document.getElementById('section-lobby').classList.contains('active')) {
+                        showSection('section-game');
+                    }
+                    // Inizializza la mappa se non lo è già
+                    if (!mapInitialized) {
+                        initMap();
+                    }
+                    // Avvia il timer se non già avviato
+                    if (!timerInterval) {
+                        avviaTimer(data);
+                    }
+                    aggiornaGioco(data);
+                } else if (data.stato === 'terminata') {
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                        timerInterval = null;
+                    }
+                    mostraClassifica(data);
+                } else if (data.stato === 'in attesa') {
+                    if (document.getElementById('section-game').classList.contains('active')) {
+                        if (data.creatoreId === currentUserId) {
+                            document.getElementById('gameContent').innerHTML = `
+                                <div style="text-align:center;padding:40px 20px;">
+                                    <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+                                    <h3 style="color:#1a2634;">Sei il creatore! Avvia la partita quando sei pronto.</h3>
+                                    <p style="color:#6a7a8a;margin-bottom:20px;">Hai ${invitatiAccettati.length} giocatori pronti.</p>
+                                    <button class="btn btn-success" onclick="avviaPartita()" style="padding:14px 40px;font-size:1.2rem;">
+                                        🚀 Avvia partita
+                                    </button>
+                                </div>
+                            `;
+                        } else {
+                            document.getElementById('gameContent').innerHTML = `
+                                <div style="text-align:center;padding:40px 20px;">
+                                    <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+                                    <h3 style="color:#1a2634;">In attesa che il creatore avvii la partita...</h3>
+                                    <p style="color:#6a7a8a;">La partita inizierà quando il creatore premerà "Avvia".</p>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+            });
+        }
+
+        // ======================================================================
+        //  TIMER IN TEMPO REALE
+        // ======================================================================
+        function avviaTimer(data) {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                if (!gameState || gameState.stato !== 'in corso') {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    return;
+                }
+                const now = Date.now();
+                const elapsed = (now - gameState.inizio) / 1000;
+                const remaining = Math.max(0, gameState.tempoMax - Math.floor(elapsed));
+                const timerEl = document.getElementById('timerDisplay');
+                timerEl.textContent = `⏱️ ${remaining}`;
+                timerEl.className = 'timer' + (remaining <= 10 ? ' warning' : '');
+
+                if (remaining <= 0 && !gameState.timerScaduto) {
+                    db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                        timerScaduto: true,
+                        stato: 'terminata',
+                        fine: firebase.database.ServerValue.TIMESTAMP
+                    });
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+            }, 1000);
+        }
+
+        // ======================================================================
+        //  MODIFICA IMPOSTAZIONI (solo creatore)
+        // ======================================================================
+        function modificaImpostazioni() {
+            if (!isGameCreator) {
+                alert('Solo il creatore può modificare le impostazioni.');
+                return;
+            }
+            showSection('section-settings');
+        }
+
+        function salvaImpostazioni() {
+            const livello = document.getElementById('livelloSelect').value;
+            const tempo = parseInt(document.getElementById('tempoSelect').value);
+            db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                livello: livello,
+                tempoMax: tempo
+            }).then(() => {
+                aggiornaPannelloPartita();
+                tornaALobby();
+                alert('✅ Impostazioni salvate!');
+            });
+        }
+
+        function tornaALobby() {
+            showSection('section-lobby');
+            aggiornaPannelloPartita();
+        }
+
+        // ======================================================================
+        //  AVVIA PARTITA (creatore)
+        // ======================================================================
+        function avviaPartita() {
+            if (!isGameCreator) {
+                alert('Solo il creatore può avviare la partita.');
+                return;
+            }
+
+            if (invitatiAccettati.length === 0) {
+                if (!confirm('⚠️ Nessun giocatore ha ancora accettato l\'invito. Vuoi avviare la partita in modalità test (da solo)?')) {
+                    return;
+                }
+            }
+
+            db.ref('sfidaBandiere/partite/' + currentGameId).once('value', snap => {
+                const data = snap.val();
+                if (!data) return;
+
+                const livello = data.livello || 'medio';
+                const bandiere = getBandierePerLivello(livello);
+                const domande = bandiere.map(p => ({
+                    paese: p,
+                    opzioni: generaOpzioni(p, bandiere)
+                }));
+
+                const update = {
+                    stato: 'in corso',
+                    inizio: firebase.database.ServerValue.TIMESTAMP,
+                    domande: domande,
+                    domandaCorrente: 0,
+                    timerScaduto: false,
+                    fine: null
+                };
+
+                db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
+                    showSection('section-game');
+                });
+            });
+        }
+
+        function annullaCreazione() {
+            if (currentGameId && isGameCreator) {
+                db.ref('sfidaBandiere/partite/' + currentGameId).remove();
+                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: false });
+                db.ref('sfidaBandiere/inviti').orderByChild('partitaId').equalTo(currentGameId).off();
+                currentGameId = null;
+            }
+            isGameCreator = false;
+            invitatiAccettati = [];
+            document.getElementById('gamePanel').style.display = 'none';
+            document.getElementById('btnCreaPartita').disabled = false;
+            showSection('section-lobby');
+        }
+
+        // ======================================================================
+        //  INIZIALIZZA MAPPA (Leaflet - senza nomi)
+        // ======================================================================
+        function initMap() {
+            if (mapInitialized) return;
+
+            // Creiamo il contenitore se non c'è già
+            let mapContainer = document.getElementById('map');
+            if (!mapContainer) {
+                // Se non esiste, lo aggiungiamo nel gameContent
+                document.getElementById('gameContent').innerHTML =
+                    '<div id="map" style="width:100%;height:380px;border-radius:16px;border:2px solid #ddd;margin-bottom:16px;"></div>';
+                mapContainer = document.getElementById('map');
+            }
+
+            map = L.map('map', {
+                center: [20, 0],
+                zoom: 2,
+                zoomControl: true,
+                attributionControl: false,
+            });
+
+            // Tile senza nomi
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+                attribution: '',
+                subdomains: 'abcd',
+                maxZoom: 19,
+            }).addTo(map);
+
+            mapInitialized = true;
+
+            // Carica GeoJSON dei paesi
+            fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
+                .then(res => res.json())
+                .then(data => {
+                    geoJsonLayer = L.geoJSON(data, {
+                        style: function(feature) {
+                            return {
+                                fillColor: '#d3d3d3',
+                                fillOpacity: 0.6,
+                                color: '#888',
+                                weight: 1,
+                            };
+                        },
+                        onEachFeature: function(feature, layer) {
+                            // Niente tooltip
+                        }
+                    }).addTo(map);
+                    // Se c'è già una domanda, evidenzia il paese
+                    if (gameState && gameState.domande && gameState.domande.length > 0) {
+                        const idx = gameState.domandaCorrente || 0;
+                        if (idx < gameState.domande.length) {
+                            evidenziaPaese(gameState.domande[idx].paese);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Errore caricamento GeoJSON:', err);
+                });
+        }
+
+        // ===== EVIDENZIA PAESE SULLA MAPPA =====
+        function evidenziaPaese(paese) {
+            if (!geoJsonLayer) return;
+
+            if (highlightLayer) {
+                map.removeLayer(highlightLayer);
+                highlightLayer = null;
+            }
+
+            let found = false;
+            geoJsonLayer.eachLayer(function(layer) {
+                const props = layer.feature?.properties;
+                if (!props) return;
+
+                const names = [props.name, props.NAME, props.name_long, props.ADMIN];
+                const match = names.some(n => {
+                    if (!n) return false;
+                    return n.toLowerCase().includes(paese.nome.toLowerCase()) ||
+                        paese.nome.toLowerCase().includes(n.toLowerCase()) ||
+                        n.toLowerCase() === paese.nome.toLowerCase();
+                });
+
+                if (match) {
+                    const cloned = layer.toGeoJSON();
+                    highlightLayer = L.geoJSON(cloned, {
+                        style: {
+                            fillColor: '#dc3545',
+                            fillOpacity: 0.7,
+                            color: '#dc3545',
+                            weight: 2,
+                        }
+                    }).addTo(map);
+
+                    map.setView([paese.lat, paese.lng], 4);
+                    found = true;
+                }
+            });
+
+            if (!found) {
+                highlightLayer = L.circle([paese.lat, paese.lng], {
+                    radius: 200000,
+                    color: '#dc3545',
+                    fillColor: '#dc3545',
+                    fillOpacity: 0.3,
+                    weight: 3,
+                }).addTo(map);
+                map.setView([paese.lat, paese.lng], 4);
+            }
+        }
+
+        // ======================================================================
+        //  GIOCO - AGGIORNAMENTO UI
+        // ======================================================================
+        function aggiornaGioco(data) {
+            if (!data || data.stato === 'terminata') {
+                if (data && data.stato === 'terminata') mostraClassifica(data);
+                return;
+            }
+
+            // Aggiorna punteggi
+            const scores = data.giocatori || {};
+            const scoreHtml = Object.keys(scores).map(id => {
+                const s = scores[id];
+                return `<span class="score-item">${s.nickname}: <span class="pts">${s.punteggio || 0}</span> pts</span>`;
+            }).join('');
+            document.getElementById('scoreDisplay').innerHTML = scoreHtml;
+
+            const domande = data.domande || [];
+            const idx = data.domandaCorrente || 0;
+            if (idx >= domande.length) {
+                db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                    stato: 'terminata',
+                    fine: firebase.database.ServerValue.TIMESTAMP
+                });
+                return;
+            }
+
+            const domanda = domande[idx];
+            if (!domanda) return;
+
+            const giocatori = data.giocatori || {};
+            const mioStato = giocatori[currentUserId];
+            const alreadyAnswered = mioStato && mioStato.totali !== undefined && mioStato.totali > idx;
+
+            mostraDomanda(domanda, alreadyAnswered, data);
+        }
+
+        // ======================================================================
+        //  MOSTRA DOMANDA (con mappa e bandiere)
+        // ======================================================================
+        function mostraDomanda(domanda, alreadyAnswered, data) {
+            const container = document.getElementById('gameContent');
+
+            // Se la mappa non è ancora inizializzata, la creiamo
+            if (!mapInitialized) {
+                container.innerHTML = `<div id="map" style="width:100%;height:380px;border-radius:16px;border:2px solid #ddd;margin-bottom:16px;"></div>`;
+                initMap();
+                // Dopo l'inizializzazione, l'evidenziazione verrà fatta dal callback del GeoJSON
+                // ma per sicurezza la facciamo anche qui dopo un breve delay
+                setTimeout(() => {
+                    evidenziaPaese(domanda.paese);
+                }, 500);
+            } else {
+                // La mappa esiste già, aggiorna l'evidenziazione
+                evidenziaPaese(domanda.paese);
+            }
+
+            // Costruisce le opzioni (solo immagini delle bandiere)
+            let html = `<div class="flag-options" id="flagOptions">`;
+            domanda.opzioni.forEach((o, i) => {
+                let classe = '';
+                let disabled = '';
+                if (alreadyAnswered) {
+                    disabled = 'disabled';
+                    if (o.codice === domanda.paese.codice) classe = 'correct';
+                    else if (domanda.rispostaUtente === i && o.codice !== domanda.paese.codice) classe = 'wrong';
+                }
+                html += `
+                    <button class="${classe}" ${disabled} onclick="rispondiBandiera(${i})" id="opt-${i}">
+                        <img src="${FLAG_BASE_URL}${o.codice}.png" alt="Bandiera" loading="lazy" />
+                    </button>
+                `;
+            });
+            html += `</div>`;
+
+            // Feedback e stato
+            html += `<div id="feedbackArea"></div>`;
+            html += `<div id="gameStatus" style="text-align:center;margin-top:8px;font-weight:600;">`;
+
+            if (alreadyAnswered) {
+                const isCorrect = domanda.rispostaUtente !== undefined &&
+                    domanda.opzioni[domanda.rispostaUtente]?.codice === domanda.paese.codice;
+                html += `<div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
+                            ${isCorrect ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + domanda.paese.nome}
+                        </div>`;
+                html += `<div style="margin-top:8px;">⏳ Prossima domanda tra 2 secondi...</div>`;
+            } else {
+                html += `🧠 Scegli la bandiera corretta tra le opzioni`;
+            }
+
+            html += `</div>`;
+
+            // Aggiorna il contenitore (senza toccare il div #map che è stato aggiunto)
+            // Se la mappa è già presente, dobbiamo mantenere il div #map e aggiungere il resto
+            const existingMap = document.getElementById('map');
+            if (existingMap) {
+                // Sostituiamo solo il contenuto dopo la mappa
+                const nextSibling = existingMap.nextSibling;
+                // Rimuoviamo tutto dopo la mappa
+                while (existingMap.nextSibling) {
+                    existingMap.parentNode.removeChild(existingMap.nextSibling);
+                }
+                // Inseriamo il nuovo HTML dopo la mappa
+                existingMap.insertAdjacentHTML('afterend', html);
+            } else {
+                // Se non c'è mappa, sostituiamo tutto
+                container.innerHTML = `<div id="map" style="width:100%;height:380px;border-radius:16px;border:2px solid #ddd;margin-bottom:16px;"></div>` + html;
+                // Inizializza la mappa se non lo è già
+                if (!mapInitialized) {
+                    initMap();
+                }
+            }
+
+            // Se la mappa è già inizializzata, ri-applichiamo l'evidenziazione dopo un breve delay per sicurezza
+            setTimeout(() => {
+                if (mapInitialized) {
+                    evidenziaPaese(domanda.paese);
+                }
+            }, 300);
+        }
+
+        // ======================================================================
+        //  RISPOSTA BANDIERA
+        // ======================================================================
+        function rispondiBandiera(indice) {
+            if (!gameState) return;
+            const giocatori = gameState.giocatori || {};
+            const mio = giocatori[currentUserId];
+            const idx = gameState.domandaCorrente || 0;
+            if (mio && mio.totali !== undefined && mio.totali > idx) {
+                return; // già risposto
+            }
+
+            const domande = gameState.domande || [];
+            if (idx >= domande.length) return;
+
+            const domanda = domande[idx];
+            const isCorrect = domanda.opzioni[indice].codice === domanda.paese.codice;
+
+            const update = {};
+            const punteggio = mio.punteggio || 0;
+            const corrette = mio.corrette || 0;
+            const totali = (mio.totali || 0) + 1;
+
+            update['giocatori/' + currentUserId + '/punteggio'] = isCorrect ? punteggio + 10 : punteggio;
+            update['giocatori/' + currentUserId + '/corrette'] = isCorrect ? corrette + 1 : corrette;
+            update['giocatori/' + currentUserId + '/totali'] = totali;
+            update['domande/' + idx + '/rispostaUtente'] = indice;
+
+            db.ref('sfidaBandiere/partite/' + currentGameId).update(update).then(() => {
+                // Disabilita i bottoni e mostra feedback
+                const grid = document.getElementById('flagOptions');
+                const feedback = document.getElementById('feedbackArea');
+                const status = document.getElementById('gameStatus');
+                if (grid) {
+                    grid.querySelectorAll('button').forEach((btn, i) => {
+                        btn.disabled = true;
+                        const isCorr = domanda.opzioni[i].codice === domanda.paese.codice;
+                        if (isCorr) btn.classList.add('correct');
+                        else if (i === indice && !isCorr) btn.classList.add('wrong');
+                    });
+                }
+                if (feedback) {
+                    feedback.innerHTML = `
+                        <div class="feedback-bar ${isCorrect ? 'correct' : 'wrong'}">
+                            ${isCorrect ? '✅ Corretto!' : '❌ Sbagliato! La risposta corretta era: ' + domanda.paese.nome}
+                        </div>
+                    `;
+                }
+                if (status) status.innerHTML = '⏳ Prossima domanda tra 2 secondi...';
+
+                // Dopo 2 secondi, passa alla prossima domanda
+                setTimeout(() => {
+                    const prossimaIdx = idx + 1;
+                    db.ref('sfidaBandiere/partite/' + currentGameId).update({
+                        domandaCorrente: prossimaIdx
+                    });
+                }, 2000);
+            });
+        }
+
+        // ======================================================================
+        //  CLASSIFICA FINALE
+        // ======================================================================
+        function mostraClassifica(data) {
+            showSection('section-final');
+            const giocatori = data.giocatori || {};
+            const ranking = Object.keys(giocatori).map(id => ({
+                id: id,
+                nickname: giocatori[id].nickname || 'Sconosciuto',
+                punteggio: giocatori[id].punteggio || 0,
+                corrette: giocatori[id].corrette || 0,
+                totali: giocatori[id].totali || 0
+            })).sort((a, b) => b.punteggio - a.punteggio);
+
+            const container = document.getElementById('rankingContainer');
+            if (ranking.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#6a7a8a;">Nessun dato disponibile.</p>';
+                return;
+            }
+
+            container.innerHTML = ranking.map((r, idx) => {
+                let pos = `${idx + 1}.`;
+                let cls = '';
+                if (idx === 0) cls = 'gold';
+                else if (idx === 1) cls = 'silver';
+                else if (idx === 2) cls = 'bronze';
+                const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+                return `
+                    <div class="rank-item">
+                        <span class="pos ${cls}">${medal} ${pos}</span>
+                        <span style="flex:1;font-weight:600;color:#1a2634;">${r.nickname}</span>
+                        <span style="font-weight:700;color:#f4c542;">${r.punteggio} pts</span>
+                        <span style="font-size:0.8rem;color:#6a7a8a;">✅ ${r.corrette}/${r.totali}</span>
+                    </div>
+                `;
+            }).join('');
+
+            db.ref('sfidaBandiere/partite/' + currentGameId).off();
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            currentGameId = null;
+            isGameCreator = false;
+            document.getElementById('gamePanel').style.display = 'none';
+            document.getElementById('btnCreaPartita').disabled = false;
+            // Resetta la mappa
+            if (map) {
+                map.remove();
+                map = null;
+                mapInitialized = false;
+                geoJsonLayer = null;
+                highlightLayer = null;
+            }
+        }
+
+        // ======================================================================
+        //  TORNA ALLA LOBBY
+        // ======================================================================
+        function tornaAllaLobby() {
+            if (currentGameId) {
+                db.ref('sfidaBandiere/partite/' + currentGameId).off();
+                db.ref('sfidaBandiere/utenti/' + currentUserId).update({ inGame: false });
+                if (timerInterval) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                }
+                currentGameId = null;
+            }
+            isGameCreator = false;
+            invitatiAccettati = [];
+            document.getElementById('gamePanel').style.display = 'none';
+            document.getElementById('btnCreaPartita').disabled = false;
+            showSection('section-lobby');
+            ascoltaInviti();
+            // Resetta la mappa
+            if (map) {
+                map.remove();
+                map = null;
+                mapInitialized = false;
+                geoJsonLayer = null;
+                highlightLayer = null;
+            }
+        }
+
+        function tornaLobby() {
+            tornaAllaLobby();
+        }
+
+        // ======================================================================
+        //  AVVIO
+        // ======================================================================
+        window.onload = function() {
+            showSection('section-login');
+        };
+    </script>
+
+</body>
+  </html>
