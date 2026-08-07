@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🌍 Indovina la bandiera sulla mappa</title>
 
-    <!-- Leaflet (per la mappa) -->
+    <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -80,8 +80,13 @@
             background: #e8ecf0;
         }
 
-        /* Nasconde i nomi dei paesi sulla mappa */
+        /* ============================================================
+           NASCONDE I TOOLTIP/POPUP (per sicurezza)
+           ============================================================ */
         .leaflet-tooltip {
+            display: none !important;
+        }
+        .leaflet-popup {
             display: none !important;
         }
 
@@ -240,7 +245,7 @@
 
     <script>
         // ======================================================================
-        //  GIOCO: INDOVINA LA BANDIERA SULLA MAPPA
+        //  GIOCO: INDOVINA LA BANDIERA SULLA MAPPA (SENZA NOMI)
         // ======================================================================
 
         // ===== LISTA PAESI (con coordinate centro per la mappa) =====
@@ -488,7 +493,7 @@
             } catch (e) {}
         }
 
-        // ===== INIZIALIZZA MAPPA =====
+        // ===== INIZIALIZZA MAPPA (SENZA NOMI) =====
         function initMap() {
             if (mapInitialized) return;
 
@@ -499,7 +504,11 @@
                 attributionControl: false,
             });
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            // ============================================================
+            //  USIAMO UN LAYER SENZA NOMI!
+            //  light_nolabels = mappa chiara senza etichette
+            // ============================================================
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
                 attribution: '',
                 subdomains: 'abcd',
                 maxZoom: 19,
@@ -521,7 +530,7 @@
                             };
                         },
                         onEachFeature: function(feature, layer) {
-                            // NON aggiungiamo tooltip con i nomi
+                            // NON aggiungiamo tooltip/popup
                         }
                     }).addTo(map);
 
@@ -541,7 +550,6 @@
                 return;
             }
 
-            // Filtra paesi non usati
             const disponibili = PAESI.filter(p => !stato.paesiUsati.includes(p.codice));
 
             if (disponibili.length === 0) {
@@ -551,16 +559,13 @@
                 return;
             }
 
-            // Scegli paese casuale
             const idx = Math.floor(Math.random() * disponibili.length);
             const paese = disponibili[idx];
             currentCountry = paese;
 
-            // Segna come usato
             stato.paesiUsati.push(paese.codice);
             salvaStato();
 
-            // Scegli 3 paesi sbagliati
             const altri = PAESI.filter(p => p.codice !== paese.codice);
             let opzioni = [paese];
             let tentativi = 0;
@@ -576,17 +581,12 @@
             currentOptions = opzioni;
             answered = false;
 
-            // Aggiorna mappa (evidenzia il paese)
             evidenziaPaese(paese);
-
-            // Mostra le bandiere (solo immagini, senza nome)
             mostraBandiere(opzioni);
 
-            // Pulisci feedback
             document.getElementById('feedbackArea').innerHTML = '';
             document.getElementById('nextButtonContainer').innerHTML = '';
 
-            // Aggiorna stats
             aggiornaStats();
         }
 
@@ -594,13 +594,11 @@
         function evidenziaPaese(paese) {
             if (!geoJsonLayer) return;
 
-            // Rimuovi highlight precedente
             if (highlightLayer) {
                 map.removeLayer(highlightLayer);
                 highlightLayer = null;
             }
 
-            // Cerca il feature con il nome corrispondente (approssimativo)
             let found = false;
             geoJsonLayer.eachLayer(function(layer) {
                 const props = layer.feature?.properties;
@@ -642,7 +640,7 @@
             }
         }
 
-        // ===== MOSTRA BANDIERE (SOLO IMMAGINI) =====
+        // ===== MOSTRA BANDIERE =====
         function mostraBandiere(opzioni) {
             const container = document.getElementById('flagOptions');
             container.innerHTML = opzioni.map((p, idx) => `
@@ -670,7 +668,6 @@
             salvaStato();
             aggiornaStats();
 
-            // Mostra feedback
             const feedback = document.getElementById('feedbackArea');
             if (corretta) {
                 feedback.innerHTML = `
@@ -682,7 +679,6 @@
                 `;
             }
 
-            // Evidenzia risposte
             const buttons = document.querySelectorAll('#flagOptions button');
             buttons.forEach((btn, i) => {
                 btn.disabled = true;
@@ -694,7 +690,6 @@
                 }
             });
 
-            // Mostra pulsante prossima
             document.getElementById('nextButtonContainer').innerHTML = `
                 <button class="next-btn" onclick="prossimaDomanda()">➡️ Prossima domanda</button>
             `;
@@ -780,7 +775,6 @@
             initMap();
         }
 
-        // Avvia quando la pagina è caricata
         document.addEventListener('DOMContentLoaded', avvia);
     </script>
 </body>
