@@ -640,6 +640,13 @@ function prossimaDomanda() {
 
 // ===== RIAVVIA =====
 function riavvia() {
+    // Mostra un messaggio di conferma solo se la partita è in corso
+    if (!stato.gameCompleted && stato.sequenza.length > 0) {
+        if (!confirm('⚠️ Sei sicuro di voler ricominciare? Perderai tutti i progressi.')) {
+            return; // se l'utente clicca "Annulla", esce senza resettare
+        }
+    }
+    // Reset dello stato
     stato = {
         punteggio: 0,
         tentativi: 0,
