@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assistente Vocale - Apri Siti</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(145deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 48px;
+            padding: 40px 35px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .sub {
+            color: #b0b0d0;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+        }
+
+        .mic-button {
+            background: #6c5ce7;
+            border: none;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px auto 25px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 8px 30px rgba(108, 92, 231, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .mic-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 40px rgba(108, 92, 231, 0.7);
+        }
+
+        .mic-button:active {
+            transform: scale(0.95);
+        }
+
+        .mic-button.listening {
+            background: #e17055;
+            box-shadow: 0 0 0 0 rgba(225, 112, 85, 0.7);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(225, 112, 85, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 20px rgba(225, 112, 85, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(225, 112, 85, 0);
+            }
+        }
+
+        .mic-icon {
+            width: 60px;
+            height: 60px;
+            fill: #fff;
+            transition: 0.2s;
+        }
+
+        .status-box {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 60px;
+            padding: 16px 22px;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            margin-top: 15px;
+            margin-bottom: 25px;
+        }
+
+        #statusText {
+            color: #e8e8ff;
+            font-size: 1.15rem;
+            font-weight: 400;
+            word-break: break-word;
+            line-height: 1.5;
+        }
+
+        .command-hint {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0 10px;
+        }
+
+        .hint-chip {
+            background: rgba(255, 255, 255, 0.07);
+            color: #c8c8f0;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(4px);
+            transition: 0.2s;
+        }
+
+        .hint-chip:hover {
+            background: rgba(255, 255, 255, 0.13);
+            color: #fff;
+        }
+
+        .footer {
+            margin-top: 30px;
+            color: #7a7aa0;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .footer a {
+            color: #9b9bcf;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 500px) {
+            .card {
+                padding: 28px 18px;
+            }
+            .mic-button {
+                width: 100px;
+                height: 100px;
+            }
+            .mic-icon {
+                width: 48px;
+                height: 48px;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>🎤 Assistente vocale</h1>
+        <p class="sub">Premi il microfono e parla per aprire un sito</p>
+
+        <!-- Pulsante microfono -->
+        <button class="mic-button" id="micButton" aria-label="Attiva riconoscimento vocale">
+            <svg class="mic-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 16c-2.206 0-4-1.794-4-4V6c0-2.206 1.794-4 4-4s4 1.794 4 4v6c0 2.206-1.794 4-4 4zm8-4h-2c0 3.309-2.691 6-6 6s-6-2.691-6-6H4c0 4.071 3.061 7.436 7 7.931V22h2v-2.069c3.939-.495 7-3.86 7-7.931z"/>
+            </svg>
+        </button>
+
+        <!-- Stato / testo riconosciuto -->
+        <div class="status-box">
+            <span id="statusText">⏺️ In attesa...</span>
+        </div>
+
+        <!-- Comandi suggeriti -->
+        <div class="command-hint">
+            <span class="hint-chip">📺 "apri YouTube"</span>
+            <span class="hint-chip">🎵 "apri Spotify"</span>
+            <span class="hint-chip">💬 "apri WhatsApp"</span>
+            <span class="hint-chip">👍 "apri Facebook"</span>
+            <span class="hint-chip">📸 "apri Instagram"</span>
+        </div>
+
+        <div class="footer">
+            Compatibile con Chrome, Edge e Safari (iOS 16+)
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // Mappa comandi -> URL (con apertura in nuova scheda)
+            const SITE_MAP = {
+                'youtube': 'https://www.youtube.com',
+                'spotify': 'https://open.spotify.com',
+                'whatsapp': 'https://web.whatsapp.com',
+                'facebook': 'https://www.facebook.com',
+                'instagram': 'https://www.instagram.com'
+            };
+
+            // Elementi DOM
+            const micButton = document.getElementById('micButton');
+            const statusText = document.getElementById('statusText');
+
+            // Riferimento al riconoscimento vocale
+            let recognition = null;
+            let isListening = false;
+
+            // Inizializza il riconoscimento vocale (Web Speech API)
+            function initSpeechRecognition() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    statusText.textContent = '❌ Il tuo browser non supporta il riconoscimento vocale. Usa Chrome/Edge/Safari.';
+                    micButton.disabled = true;
+                    micButton.style.opacity = '0.5';
+                    micButton.style.cursor = 'not-allowed';
+                    return null;
+                }
+
+                const rec = new SpeechRecognition();
+                rec.lang = 'it-IT'; // Lingua italiana
+                rec.continuous = false; // Ascolta un singolo comando
+                rec.interimResults = false; // Solo risultati finali
+                rec.maxAlternatives = 1;
+
+                // Evento: risultato
+                rec.onresult = function(event) {
+                    const last = event.results.length - 1;
+                    const transcript = event.results[last][0].transcript.trim().toLowerCase();
+                    statusText.textContent = `🗣️ Hai detto: "${transcript}"`;
+
+                    // Cerca il comando
+                    const matched = findCommand(transcript);
+                    if (matched) {
+                        // Apre il sito in una nuova scheda
+                        window.open(matched, '_blank');
+                        statusText.textContent = `✅ Apertura di ${getSiteName(matched)}...`;
+                    } else {
+                        statusText.textContent = `❌ Comando non riconosciuto. Prova: "apri YouTube"`;
+                    }
+                };
+
+                // Evento: fine riconoscimento
+                rec.onend = function() {
+                    isListening = false;
+                    micButton.classList.remove('listening');
+                    if (statusText.textContent.startsWith('🗣️') || statusText.textContent.startsWith('✅') || statusText
+                        .textContent.startsWith('❌')) {
+                        // Mantieni il messaggio
+                    } else {
+                        statusText.textContent = '⏺️ In attesa...';
+                    }
+                };
+
+                // Evento: errore
+                rec.onerror = function(event) {
+                    console.warn('Errore riconoscimento vocale:', event.error);
+                    isListening = false;
+                    micButton.classList.remove('listening');
+
+                    if (event.error === 'not-allowed') {
+                        statusText.textContent = '🚫 Permesso microfono negato. Concedi l\'accesso e riprova.';
+                    } else if (event.error === 'no-speech') {
+                        statusText.textContent = '🔇 Nessun discorso rilevato. Riprova.';
+                    } else {
+                        statusText.textContent = `⚠️ Errore: ${event.error}`;
+                    }
+                };
+
+                return rec;
+            }
+
+            // Trova il sito corrispondente nel testo
+            function findCommand(text) {
+                // Cerca le parole chiave nell'ordine: prima controlla se c'è "apri" + nome, altrimenti solo nome
+                const lower = text;
+
+                // Lista dei nomi dei siti (chiavi della mappa)
+                const siteNames = Object.keys(SITE_MAP);
+
+                // Prova a trovare "apri [nome]" oppure "vai su [nome]" oppure "apri [nome]"
+                for (const name of siteNames) {
+                    // Pattern: "apri youtube", "apriyoutube", "vai su youtube", "youtube" (se è l'unica parola)
+                    const regex = new RegExp(`(apri|vai\\s+su|apri\\s+)?\\s*${name}`, 'i');
+                    if (regex.test(lower)) {
+                        return SITE_MAP[name];
+                    }
+                }
+
+                // Se non trovato, prova a vedere se una delle parole chiave è presente come parola intera
+                for (const name of siteNames) {
+                    if (lower.includes(name)) {
+                        return SITE_MAP[name];
+                    }
+                }
+
+                return null;
+            }
+
+            // Ottiene il nome del sito dall'URL (per messaggi)
+            function getSiteName(url) {
+                for (const [name, siteUrl] of Object.entries(SITE_MAP)) {
+                    if (siteUrl === url) {
+                        // Capitalizza
+                        return name.charAt(0).toUpperCase() + name.slice(1);
+                    }
+                }
+                return 'Sito';
+            }
+
+            // Avvia / ferma il riconoscimento
+            function toggleListening() {
+                if (!recognition) {
+                    // Inizializza se non esiste
+                    recognition = initSpeechRecognition();
+                    if (!recognition) return;
+                }
+
+                if (isListening) {
+                    // Ferma
+                    recognition.stop();
+                    isListening = false;
+                    micButton.classList.remove('listening');
+                    statusText.textContent = '⏹️ Ascolto interrotto';
+                    return;
+                }
+
+                // Avvia
+                try {
+                    recognition.start();
+                    isListening = true;
+                    micButton.classList.add('listening');
+                    statusText.textContent = '🎙️ Ascolto... Parla ora';
+                } catch (error) {
+                    console.warn('Impossibile avviare il riconoscimento:', error);
+                    statusText.textContent = '⚠️ Riprova, il microfono potrebbe essere occupato.';
+                }
+            }
+
+            // Evento click sul pulsante
+            micButton.addEventListener('click', toggleListening);
+
+            // Inizializza il riconoscimento al caricamento della pagina
+            window.addEventListener('load', function() {
+                recognition = initSpeechRecognition();
+                if (recognition) {
+                    statusText.textContent = '🎤 Premi il microfono e parla';
+                }
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
