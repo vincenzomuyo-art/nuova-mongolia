@@ -1630,6 +1630,11 @@ setClassificaPeggiori(data) { this.classificaPeggiori = data; this.saveToCloud()
     return db.ref('nuovaMongolia').once('value').then(snapshot => {
         const data = snapshot.val() || {};
         this.laws = data.laws || [];
+        // Assicura che ogni legge abbia il campo modifiche
+        this.laws = this.laws.map(law => ({
+            ...law,
+                modifiche: law.modifiche || 0
+                }));
         this.presidents = data.presidents || [];
         this.projects = data.projects || '';
         this.costruzioni = data.costruzioni || [];
@@ -1737,23 +1742,27 @@ laws: this.laws,
                 this.saveToCloud();
                 this._notify('laws'); },
             addLaw(content) {
-                const id = this.nextLawId++;
-                const law = { id, content };
-                this.laws.push(law);
-                this.saveToCloud();
-                this._notify('laws');
-                return law;
-            },
+                    const id = this.nextLawId++;
+                        const law = { id, content, modifiche: 0 };
+                            this.laws.push(law);
+                                this.saveToCloud();
+                                    this._notify('laws');
+                                        return law;
+                                        },
+            
             updateLaw(id, content) {
-                const idx = this.laws.findIndex(l => l.id === id);
-                if (idx !== -1) {
-                    this.laws[idx].content = content;
-                    this.saveToCloud();
-                    this._notify('laws');
-                    return true;
-                }
-                return false;
-            },
+                    const idx = this.laws.findIndex(l => l.id === id);
+                        if (idx !== -1) {
+                                this.laws[idx].content = content;
+                                        // Incrementa il contatore delle modifiche
+                                                this.laws[idx].modifiche = (this.laws[idx].modifiche || 0) + 1;
+                                                        this.saveToCloud();
+                                                                this._notify('laws');
+                                                                        return true;
+                                                                            }
+                                                                                return false;
+                                                                                },
+            
             deleteLaw(id) {
                 this.laws = this.laws.filter(l => l.id !== id);
                 this.saveToCloud();
@@ -2788,6 +2797,36 @@ document.getElementById('settingsBtn').addEventListener('click', function() {
                     passwordInput.removeEventListener('keydown', handler); }
             });
         }
+
+        function renderLaws() {
+                const container = $('lawsContainer');
+                    const laws = DATA.getLaws();
+                        if (!laws || laws.length === 0) {
+                                container.innerHTML = `
+                                            <div class="empty-state">
+                                                            <span class="big-icon">📜</span>
+                                                                            <p>Nessuna legge ancora promulgata.</p>
+                                                                                            <p style="font-size:0.9rem;margin-top:4px;">Clicca il tasto <strong>+</strong> per gestire le leggi.</p>
+                                                                                                        </div>
+                                                                                                                `;
+                                                                                                                        return;
+                                                                                                                            }
+                                                                                                                                container.innerHTML = laws.map((law, idx) => {
+                                                                                                                                        const numLegge = idx + 1;
+                                                                                                                                                const modifiche = law.modifiche || 0;
+                                                                                                                                                        let titolo = `Legge Nº ${numLegge}`;
+                                                                                                                                                                if (modifiche > 0) {
+                                                                                                                                                                            titolo += ` comma ${modifiche}`;
+                                                                                                                                                                                    }
+                                                                                                                                                                                            return `
+                                                                                                                                                                                                        <div class="law-card">
+                                                                                                                                                                                                                        <div class="law-number">${titolo}</div>
+                                                                                                                                                                                                                                        <div class="law-content">${law.content || ''}</div>
+                                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                                            `;
+                                                                                                                                                                                                                                                                }).join('');
+                                                                                                                                                                                                                                                                }
+        
 
         // ======================================================================
         //  MODALE GENERICO
